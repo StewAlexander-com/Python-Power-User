@@ -87,10 +87,9 @@ Not a checkbox test. You read the expression, type what you think Python will do
 
     > False
     Not quite — the answer is True
-    This one trips up a lot of people! The list contains something,
-             so it's truthy — even though that something is 0.
-             Python checks 'is the container empty?', not 'are the
-             contents truthy?'.  [0] has one element → True.
+    Python asks "is the container empty?" not "are the contents truthy?"
+    [0] has one element, so the list is not empty → True. Same idea in
+    the code: see 04 Booleans & None.
 ```
 
 Get it right and you'll learn something extra you didn't know. Get it wrong and the explanation actually teaches you why — no shame, no "WRONG", just "here's what's happening under the hood."
@@ -104,14 +103,18 @@ At the end, it tells you exactly which sections to revisit and gives you the com
     → 07 Dictionaries  (python python_poweruser.py -s dicts)
 ```
 
-**A 15-minute session looks like this:** (1) Pick a section from `python python_poweruser.py -l` (or the TUI). (2) Read the **Goal (Beginner)** or **Goal (Power User)** line at the top. (3) Answer each **#?** in your head, then run the **Try this** or **Speed run** cells. (4) Every few sessions, run `-t` and revisit the sections it suggests.
+**A 15-minute session looks like this:**  
+1. Pick a section from `python python_poweruser.py -l` (or the TUI).  
+2. Read the **Goal (Beginner)** or **Goal (Power User)** line at the top of that section.  
+3. Answer each **#?** in your head, then run the **Try this (Beginner)** or **Speed run (Power User)** cells.  
+4. Every few sessions, run `-t` and revisit the sections it suggests.
 
 ---
 
 ## How to use this (two paths)
 
-- **If you're new to Python:** Start at Part 1. Follow the **Goal (Beginner)** line in each section, run every **Try this (Beginner)** cell, and run the quiz every few sessions to see what to revisit.
-- **If you already know Python:** Skim the **TL;DR** at the start of each Part and the **#! Power tip** comments. Jump with `-s` and `-f`, run **Speed run (Power User)** cells, and use the quiz to find weak spots.
+- **If you're new to Python:** Start at Part 1 and always run the **Try this (Beginner)** cells. Follow the **Goal (Beginner)** line in each section; run the quiz every few sessions and revisit the sections it lists.
+- **If you already know Python:** Skim each Part's **TL;DR** and **#! Power tip** comments. Jump with `-s` and `-f`; run **Speed run (Power User)** cells and use the quiz to find weak spots.
 
 ---
 
@@ -159,6 +162,8 @@ Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Ea
 | `#! Power tip:` | Idiom, gotcha, or performance angle. |
 | `#?` | Prediction question (answer in your head, then run). |
 | `#* Try this (Beginner)` / `#* Speed run (Power User)` | Hands-on practice. |
+| `#* Answers:` | Brief follow-up to Try this / Speed run (1–2 sentences). |
+| `#* Quiz tag:` / `#* See also:` | Quiz alignment and cross-references to other sections. |
 
 ---
 
@@ -168,6 +173,10 @@ Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Ea
 - A terminal with at least 80×22 for the TUI
 - No external dependencies — stdlib only
 - `windows-curses` auto-installs on Windows if needed
+
+### Prerequisites & classroom use
+
+No prior coding required; basic terminal usage (run a command, move between folders) is enough. For instructors: assign specific Parts as weekly reading; have students run the quiz and revisit the sections it suggests; use `python python_poweruser.py -r` for in-class demos.
 
 ## License
 

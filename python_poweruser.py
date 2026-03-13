@@ -518,7 +518,7 @@ SECTION_GOALS: Mapping[str, Tuple[str, str]] = {
     "strings": ("Create, slice, and combine strings without surprises.", "Use str methods and immutability to write clear, efficient code."),
     "booleans": ("Use True/False and None and write simple conditions.", "Master truthiness, short-circuiting, and the one way to test for None."),
     "lists": ("Build and change lists with append, slice, and loops.", "Choose lists vs other sequences; avoid mutating while iterating."),
-    "tuples": ("Use tuples for fixed data and multiple return values.", "Know when tuples beat lists: keys, unpacking, and performance."),
+    "tuples": ("Use tuples for fixed data and multiple return values.", "Know when to choose a list vs tuple in real code (keys, unpacking, immutability)."),
     "dicts": ("Store and look up key-value pairs with dicts.", "Use dicts as the default data structure; know .get, views, and merge patterns."),
     "sets": ("Store unique items and do simple set math.", "Use sets for membership and dedup; know hashability and set comps."),
     "structures": ("Use namedtuple and dataclass for readable structured data.", "Pick namedtuple/dataclass/defaultdict/Counter by use case."),
@@ -564,11 +564,11 @@ SECTION_GOALS: Mapping[str, Tuple[str, str]] = {
 
 # Short TUI hints (beginner, power user); keep each under ~80 chars.
 SECTION_HINTS: Mapping[str, Tuple[str, str]] = {
-    "variables": ("Say out loud what you expect before running.", "Try changing the value and predicting which names change."),
+    "variables": ("Tip: Say what you expect before running each cell.", "Tip: Try changing the value and predict which names change."),
     "numbers": ("Guess the result of 0.1 + 0.2 before running.", "Try math.isclose for float comparison."),
     "strings": ("Predict what each slice returns.", "Try rewriting a loop with a str method."),
     "booleans": ("Predict: what is truthy vs falsy for [], None, 0?", "Remember: 'is' for None, '==' for value."),
-    "lists": ("Will this mutate the list or return a new one?", "Try a list comp instead of a for+append."),
+    "lists": ("Tip: Say what you expect before running each cell.", "Tip: Try rewriting this as a one-liner or comprehension."),
     "tuples": ("What happens if you try to change a tuple?", "Use a tuple as a dict key and see."),
     "dicts": ("Predict the value after .get on a missing key.", "Try merging two dicts with | or **."),
     "sets": ("What happens when you add a duplicate?", "Try set() on a string or list."),
@@ -2165,6 +2165,18 @@ def demo_variables():
     # Try this: change a to [10, 20, 30], run again, and watch b and c.
 
 
+# %% #* Try this (Beginner)
+# 1. Change a to [10, 20, 30] and run the demo again; watch what b and c print.
+# 2. Create d = a.copy(), then d.append(99). Print a and d — is a unchanged?
+# 3. Try x = "hi"; y = x; y = y + "!" then print(x). Does x change? Why?
+# %% #* Speed run (Power User)
+# 1. In one line, build a list of three names and assign it to both p and q; mutate via q; confirm p changed.
+# 2. Write a line that makes an independent copy of a list L (without using .copy()) using slicing.
+# %% #* Answers:
+# Beginner: (1) b follows a so both show [10,20,30,4]; c is a copy. (2) a is unchanged; d is a new list. (3) x stays "hi" — strings are immutable; y = y + "!" creates a new string.
+# Power: (1) p = q = ["a","b","c"]; q.append("d"); print(p) → same list. (2) L_copy = L[:]
+
+
 # %% 02 — Numbers & Math
 #* Goal (Beginner): Use integers and floats safely and know when they behave oddly.
 #* Goal (Power User): Know int/float/Decimal trade-offs and use math.isclose for floats.
@@ -2213,6 +2225,18 @@ def demo_numbers():
     # Try this: change 0.1 and 0.2 to other decimals and see when isclose still helps.
 
 
+# %% #* Try this (Beginner)
+# 1. In the REPL, type 0.1 + 0.2 and then 0.1 + 0.2 == 0.3. What do you get?
+# 2. Use math.isclose(0.1 + 0.2, 0.3) and print the result.
+# 3. Try int(1e10) and 2**100; confirm integers can be huge.
+# %% #* Speed run (Power User)
+# 1. Compare two floats with a relative tolerance using math.isclose(a, b, rel_tol=1e-5).
+# 2. Use Decimal("0.1") + Decimal("0.2") and print the result; compare to 0.1 + 0.2.
+# %% #* Answers:
+# Beginner: (1) 0.30000000000000004 and False — float representation. (2) True. (3) Both work; ints are unbounded.
+# Power: (1) rel_tol for relative comparison. (2) Decimal gives 0.3 exactly; use for money.
+
+
 # %% 03 — Strings
 #* Goal (Beginner): Create, slice, and combine strings without surprises.
 #* Goal (Power User): Use str methods and immutability to write clear, efficient code.
@@ -2254,6 +2278,18 @@ def demo_strings():
     print("text[::2]  =", text[::2],  " # every second character: keep 0,2,4,… and skip the rest")
 
     # Try this: change text to your name and guess what text[0:3] and text[-2:] are before running.
+
+
+# %% #* Try this (Beginner)
+# 1. Set text to your name; predict text[0:3] and text[-2:] before running.
+# 2. Try text[::-1] and text[::2]; say what each does in words.
+# 3. Intentionally use an index that is too large (e.g. text[99]) and see the error.
+# %% #* Speed run (Power User)
+# 1. Reverse a string in one expression (no loop). Check that the original is unchanged.
+# 2. Use str.join to combine a list of words with " " and with "-".
+# %% #* Answers:
+# Beginner: (1) first 3 chars; last 2 chars. (2) reversed; every other char. (3) IndexError — strings don't grow to fit.
+# Power: (1) text[::-1]; strings are immutable. (2) " ".join(words); "-".join(words).
 
 
 # %% 04 — Booleans & None
@@ -2363,6 +2399,18 @@ def demo_booleans():
     # Try this: call greet("") and see which branch runs (empty string is falsy).
 
 
+# %% #* Try this (Beginner)
+# 1. Call greet("") and see which branch runs (empty string is falsy).
+# 2. In the REPL, try bool(""), bool(" "), bool([]), bool([0]). Predict first.
+# 3. Write if not score: and set score = 0 — run with score = 0 and with score = 100.
+# %% #* Speed run (Power User)
+# 1. Use one short-circuit expression to get the first truthy of (None, 0, "", "fallback").
+# 2. Write "x is None" and "x == None" in a tiny script; when would they differ for a custom class?
+# %% #* Answers:
+# Beginner: (1) greet("") uses "World" because "" is falsy. (2) False, True, False, True — container emptiness. (3) Only when score is 0 (or falsy) does the block run.
+# Power: (1) None or 0 or "" or "fallback" → "fallback". (2) A class can override __eq__ so == None is True while is None is False; always use is None.
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # ██████╗  █████╗ ██████╗ ████████╗    ██████╗
 # ██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝    ╚════██╗
@@ -2470,9 +2518,21 @@ def demo_lists():
     # Try this: try nums[1:4] = [] and see what happens (or use a slice on the left of =).
 
 
+# %% #* Try this (Beginner)
+# 1. Try nums[1:4] = [] and see what happens (slice on the left of =).
+# 2. Append one item to a list, then use .pop() and print the result.
+# 3. Intentionally call .index(99) on a list that has no 99; see the error.
+# %% #* Speed run (Power User)
+# 1. Build a list of squares with a list comprehension: [x**2 for x in range(6)].
+# 2. Will sorted(my_list) change my_list? Predict, then run.
+# %% #* Answers:
+# Beginner: (1) Removes elements at indices 1,2,3. (2) .pop() removes and returns the last item. (3) ValueError — 99 not in list.
+# Power: (1) [0,1,4,9,16,25]. (2) No — sorted() returns a new list; list is unchanged.
+
+
 # %% 06 — Tuples
 #* Goal (Beginner): Use tuples for fixed data and multiple return values.
-#* Goal (Power User): Know when tuples beat lists: keys, unpacking, and performance.
+#* Goal (Power User): Know when to choose a list vs tuple in real code (keys, unpacking, immutability).
 #* Big idea: tuples are fixed-size and hashable; use them where "this stays the same" matters.
 #! Power tip: tuples as dict keys, function multi-return, and in "in" checks are O(1) with set/dict.
 def demo_tuples():
@@ -2554,6 +2614,7 @@ def demo_tuples():
 #* Goal (Power User): Use dicts as the default data structure; know .get, views, and merge patterns.
 #* Big idea: dicts map keys to values with fast lookup; keys must be hashable (no lists).
 #! Power tip: .get(key, default) avoids KeyError; dict | other and ** merge; use views for keys/values/items.
+#* Quiz tag: dicts, .get, KeyError. See also: 05 Lists, 08 Sets.
 def demo_dicts():
     """
     07 — DICTIONARIES
@@ -2602,6 +2663,7 @@ def demo_dicts():
     from_kwargs = dict(x=10, y=20)                  # keyword style
 
     #* ── ACCESSING ──
+    #? What do you think person.get('email') returns? What about person.get('email', 'N/A')?
     print(f"person['name']        → {person['name']}")
     print(f"person.get('email')   → {person.get('email')}")          # None
     print(f"person.get('email', 'N/A') → {person.get('email', 'N/A')}")  # default
@@ -2649,6 +2711,18 @@ def demo_dicts():
     #  This avoids the if-key-not-in-dict-then-create dance
 
     # Try this: build a dict that counts how many times each letter appears in "hello world".
+
+
+# %% #* Try this (Beginner)
+# 1. Build a dict that counts how many times each letter appears in "hello world".
+# 2. Use .get(key, 0) in a loop to count; then print the dict.
+# 3. Try person["missing_key"] and see the error; use .get("missing_key", "N/A") instead.
+# %% #* Speed run (Power User)
+# 1. Invert a dict: {v: k for k, v in d.items()} (assume unique values).
+# 2. Merge two dicts with d1 | d2 (Python 3.9+) or {**d1, **d2}.
+# %% #* Answers:
+# Beginner: (1) Loop over the string, counts[c] = counts.get(c, 0) + 1. (2) .get returns 0 when key missing. (3) KeyError; .get avoids it.
+# Power: (1) New dict with values as keys. (2) | or ** merge; later keys overwrite.
 
 
 # %% 08 — Sets
@@ -6017,11 +6091,9 @@ def run_self_tests():
             "bool([0])",
             bool([0]),
             "booleans",
-            "Nice catch — the list ISN'T empty, so it's truthy.  The 0 inside doesn't matter.",
-            "This one trips up a lot of people! The list contains something,\n"
-            "         so it's truthy — even though that something is 0.\n"
-            "         Python checks 'is the container empty?', not 'are the\n"
-            "         contents truthy?'.  [0] has one element → True."
+            "Nice catch — the list isn't empty, so it's truthy. The 0 inside doesn't matter.",
+            "Python asks 'is the container empty?' not 'are the contents truthy?'\n"
+            "         [0] has one element, so the list is not empty → True."
         ),
         (
             "Division type",
