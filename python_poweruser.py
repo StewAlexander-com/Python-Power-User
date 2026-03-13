@@ -39,6 +39,10 @@
 #
 # ─────────────────────────────────────────────────────────────────────────────
 #
+from __future__ import annotations
+
+from typing import Any, Callable, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+
 #  TABLE OF CONTENTS
 #  ─────────────────
 #
@@ -140,7 +144,7 @@ except locale.Error:
 #  HELPER: Pretty section headers for terminal output
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _header(num, title):
+def _header(num: int, title: str) -> None:
     """Print a clean section header."""
     print(f"\n{'─' * 70}")
     print(f"  {num:02d} │ {title}")
@@ -235,7 +239,7 @@ PARTS_LIST = [
 ]
 
 
-def _get_sections_for_part(part_index):
+def _get_sections_for_part(part_index: int) -> List[Tuple[str, int, str, int, str]]:
     """Return section metadata entries for a given part index."""
     return [s for s in SECTION_META if s[3] == part_index]
 
@@ -314,7 +318,7 @@ class _FaultTolerantParser(argparse.ArgumentParser):
         raise _ParseError(message or "")
 
 
-def _build_parser():
+def _build_parser() -> "_FaultTolerantParser":
     """Build the fault-tolerant argparse parser with all flags and help text.
 
     Uses RawDescriptionHelpFormatter so the epilog (TUI nav keys,
@@ -407,7 +411,7 @@ def _build_parser():
     return parser
 
 
-def _cli_list():
+def _cli_list() -> None:
     """Pretty-print all sections organized by part."""
     print(f"\n{'─' * 60}")
     print(f"  PYTHON POWER USER — All {len(SECTION_META)} Sections")
@@ -426,7 +430,7 @@ def _cli_list():
     print(f"{'─' * 60}\n")
 
 
-def _cli_find(term):
+def _cli_find(term: str) -> None:
     """Search section names/content for a keyword."""
     term_lower = term.lower()
     hits = []
@@ -462,7 +466,7 @@ def _cli_find(term):
 #  TUI: Curses-based interactive terminal interface
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _can_use_curses():
+def _can_use_curses() -> bool:
     """Check if we can use the curses TUI.
 
     Checks (in order): TTY, TERM, curses import, Windows auto-install.
@@ -508,7 +512,7 @@ def _can_use_curses():
     return False
 
 
-def _syntax_highlight_tokens(line):
+def _syntax_highlight_tokens(line: str) -> List[Tuple[str, str]]:
     """Parse a line of Python into (text, color_name) tokens for curses rendering.
 
     Returns a list of (text, style) tuples where style is one of:
@@ -612,7 +616,7 @@ class PowerUserTUI:
     C_FUNCNAME   = 12  # Function names after def/class (bold green)
     C_DIM        = 13  # Gutters, borders, muted text
 
-    def __init__(self, stdscr, registry):
+    def __init__(self, stdscr: Any, registry: Mapping[str, Callable[[], None]]) -> None:
         import curses
         self.curses = curses
         self.stdscr = stdscr
@@ -625,7 +629,7 @@ class PowerUserTUI:
         self.sec_idx = 0
         self.scroll_offset = 0
         self.search_query = ""
-        self.search_results = []
+        self.search_results: List[Tuple[str, int, int]] = []
         self.search_sel = 0
         self.viewer_lines = []
 
@@ -1454,7 +1458,7 @@ class PowerUserTUI:
             self.search_sel = 0
 
 
-def _launch_tui(registry):
+def _launch_tui(registry: Mapping[str, Callable[[], None]]) -> None:
     """Launch the interactive TUI. Falls back gracefully on failure.
 
     Fallback chain:
@@ -1496,7 +1500,7 @@ def _launch_tui(registry):
         print("  Try: python python_poweruser.py --help\n")
 
 
-def _parse_args_and_run():
+def _parse_args_and_run() -> None:
     """Parse CLI arguments via argparse and dispatch.
 
     Fault-tolerant: _FaultTolerantParser never calls sys.exit().
@@ -1553,7 +1557,7 @@ def _parse_args_and_run():
         _launch_tui(DEMO_REGISTRY)
 
 
-def _run_section_or_suggest(name):
+def _run_section_or_suggest(name: str) -> None:
     """Run a section by name, or suggest close matches on typo.
 
     Uses difflib.get_close_matches for Levenshtein-style fuzzy matching
@@ -5417,7 +5421,7 @@ def run_self_tests():
 #  DEMO REGISTRY & MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 
-DEMO_REGISTRY = {
+DEMO_REGISTRY: Mapping[str, Callable[[], None]] = {
     # Part 1 — Foundations
     "variables":      demo_variables,
     "numbers":        demo_numbers,
