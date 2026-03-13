@@ -5502,7 +5502,8 @@ def run_all():
     print("═" * 70)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point used by both `python python_poweruser.py` and the console script."""
     try:
         _parse_args_and_run()
     except KeyboardInterrupt:
@@ -5513,3 +5514,7 @@ if __name__ == "__main__":
         # Piped to head/less that closed early — suppress
         sys.stderr.close()
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

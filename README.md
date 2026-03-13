@@ -40,6 +40,43 @@ Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fi
 
 ---
 
+## Download & Run
+
+You can use Python Power User in two ways: **directly from the script** or **installed as a CLI tool**.
+
+### 1. Run the single file directly
+
+1. Download `python_poweruser.py` from the repo (`Code → Download ZIP` or `curl`/`wget`).
+2. Put it anywhere on your machine.
+3. Run it with your system Python:
+
+```bash
+cd /path/to/where/you/saved/it
+python python_poweruser.py          # full TUI
+python python_poweruser.py -l       # list all sections
+python python_poweruser.py -s dicts # jump to a section
+python python_poweruser.py -t       # quiz
+```
+
+No virtualenv required, no external deps — just Python 3.10+.
+
+### 2. Install as a global command (PyPI-style)
+
+With the included `pyproject.toml`, you can install it in editable mode and get a `python-power-user` command:
+
+```bash
+git clone https://github.com/stewalexander/Python-Power-User.git
+cd Python-Power-User
+pip install -e .
+
+python-power-user            # same as: python python_poweruser.py
+python-power-user -l
+python-power-user -s strings
+python-power-user -t
+```
+
+This keeps the script in one file but makes it feel like a normal CLI tool.
+
 ## The Quiz
 
 Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
