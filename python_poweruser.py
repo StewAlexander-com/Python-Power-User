@@ -425,6 +425,188 @@ SECTION_BIG_PICTURE: Mapping[str, str] = {
     ),
 }
 
+# Part-level "Why this matters" and TL;DR for power users (dual-purpose resource).
+PART_WHY: Mapping[int, str] = {
+    1: "Scripts, configs, and APIs all start with variables, numbers, strings, and booleans — get these right and the rest stacks.",
+    2: "Real code is full of lists, dicts, and sets; picking the right structure is half the battle.",
+    3: "Branching and looping are how you direct the program; Pythonic style keeps them readable and concise.",
+    4: "Functions are the unit of reuse; decorators and functools are how pros add behavior without clutter.",
+    5: "OOP in Python is about data + behavior in one place; dunders and protocols are what make your types feel native.",
+    6: "Exceptions and context managers keep failure paths clean and resources safe.",
+    7: "Iterators and generators power streaming and pipelines; itertools is the toolbox.",
+    8: "Files, JSON, and paths are how Python talks to the world; pathlib and context managers keep it safe.",
+    9: "Regex, formatting, and datetime cover most text and time tasks in the wild.",
+    10: "collections, os, subprocess, and typing are the stdlib power tools you reach for daily.",
+    11: "Idioms, performance, and gotchas separate readable, fast code from surprising bugs.",
+    12: "Reference tables are Ctrl+F heaven when you need precedence, built-ins, or the exception tree.",
+    13: "Virtual envs and debugging tools keep projects isolated and bugs findable.",
+    14: "Recipes are copy-paste solutions for real-world micro-tasks.",
+    15: "The appendix is the cheat sheet: everything at a glance.",
+}
+
+PART_TLDR: Mapping[int, List[str]] = {
+    1: [
+        "Variables are names; assignment never copies. int is unbounded, float approximate; use Decimal for money.",
+        "str is immutable; slicing returns new strings. Only None, False, 0, '', (), [], {} are falsy.",
+    ],
+    2: [
+        "Lists: ordered, mutable. Tuples: fixed, hashable, great for keys and multi-return. Dicts: O(1) lookup.",
+        "Sets: unique, unordered. Prefer dict/set comps and built-ins (in, len) over manual loops.",
+    ],
+    3: [
+        "match/case for multi-branch; ternary x if c else y. for with enumerate/zip; avoid while when for fits.",
+        "Comprehensions > loop-and-append; generator expressions when you need lazy/one-pass.",
+    ],
+    4: [
+        "Default args evaluated once at def time; use None + assign for mutables. *args/**kwargs for flex APIs.",
+        "Decorators wrap functions; use functools.wraps. lru_cache and partial are your friends.",
+    ],
+    5: [
+        "Composition over deep inheritance. __repr__ for devs, __str__ for users. Protocols/ABCs for interfaces.",
+        "dataclass for data; __slots__ when you have many instances and care about memory.",
+    ],
+    6: [
+        "Catch specific exceptions; let generic ones bubble. with for resources; __enter__/__exit__ for custom.",
+        "Custom exceptions inherit from Exception; keep hierarchy shallow.",
+    ],
+    7: [
+        "Iterators: __iter__ + __next__; for consumes them. Generators: yield = lazy; one-pass only.",
+        "itertools.chain, islice, groupby for pipelines; avoid materializing huge lists.",
+    ],
+    8: [
+        "Open files with with; use pathlib for paths. json.load/dump; csv.DictReader/DictWriter for CSV.",
+        "Encoding: specify encoding='utf-8' explicitly for portability.",
+    ],
+    9: [
+        "re: findall, search, sub; compile for repeated use. f-strings and .format for formatting.",
+        "datetime: timezone-aware when you care; use datetime.timezone.utc or zoneinfo.",
+    ],
+    10: [
+        "deque for queues/stacks; Counter for counts; ChainMap for layered config.",
+        "subprocess.run with capture_output=True; avoid shell=True when possible.",
+    ],
+    11: [
+        "EAFP over LBYL. Unpacking, with, and comprehensions over manual loops.",
+        "Measure first; optimize algorithms and data structures before micro-optimizing.",
+    ],
+    12: [
+        "Precedence: ** then * / // % then + -; use parens when in doubt.",
+        "Know the exception tree so you don't catch BaseException or mask bugs.",
+    ],
+    13: [
+        "One venv per project; pip freeze > requirements.txt. breakpoint() and pdb for debugging.",
+        "cProfile for hotspots; timeit for small snippets.",
+    ],
+    14: [
+        "One-liners: invert dict, merge configs, count frequencies — see section 46.",
+    ],
+    15: [
+        "Cheat sheet: quick scan; details live in the sections above.",
+    ],
+}
+
+# Section-level goals (Beginner = what you'll learn; Power User = what you'll sharpen).
+SECTION_GOALS: Mapping[str, Tuple[str, str]] = {
+    "variables": ("Understand that variables are names for values and how assignment works.", "Internalize that assignment never copies and when that matters."),
+    "numbers": ("Use integers and floats safely and know when they behave oddly.", "Know int/float/Decimal trade-offs and use math.isclose for floats."),
+    "strings": ("Create, slice, and combine strings without surprises.", "Use str methods and immutability to write clear, efficient code."),
+    "booleans": ("Use True/False and None and write simple conditions.", "Master truthiness, short-circuiting, and the one way to test for None."),
+    "lists": ("Build and change lists with append, slice, and loops.", "Choose lists vs other sequences; avoid mutating while iterating."),
+    "tuples": ("Use tuples for fixed data and multiple return values.", "Know when tuples beat lists: keys, unpacking, and performance."),
+    "dicts": ("Store and look up key-value pairs with dicts.", "Use dicts as the default data structure; know .get, views, and merge patterns."),
+    "sets": ("Store unique items and do simple set math.", "Use sets for membership and dedup; know hashability and set comps."),
+    "structures": ("Use namedtuple and dataclass for readable structured data.", "Pick namedtuple/dataclass/defaultdict/Counter by use case."),
+    "conditionals": ("Write if/elif/else and use simple match/case.", "Use match/case and ternary where they reduce noise."),
+    "loops": ("Loop with for and while and use range.", "Use enumerate, zip, and early exit; avoid manual index loops."),
+    "comprehensions": ("Write list comprehensions instead of simple loops.", "Use dict/set/gen comps; know when genex beats list comp."),
+    "functions": ("Define functions with arguments and return values.", "Design APIs with *args/**kwargs and mutable default gotchas."),
+    "scope": ("See where names are visible (local vs global).", "Apply LEGB and closures; use nonlocal when needed."),
+    "lambda": ("Use lambda for tiny one-line functions.", "Know when lambda/map/filter help and when a loop is clearer."),
+    "decorators": ("Wrap a function to add behavior without changing call sites.", "Write decorators that preserve metadata and take arguments."),
+    "functools": ("Use lru_cache and partial for common patterns.", "Apply wraps, partial, and reduce where they simplify code."),
+    "classes": ("Define classes with __init__ and methods.", "Use classes for data+behavior; prefer composition."),
+    "inheritance": ("Reuse code with inheritance and super().", "Prefer composition and shallow hierarchies."),
+    "dunders": ("Use __init__ and __repr__ correctly.", "Implement the right dunders so your types feel native."),
+    "properties": ("Use @property for computed attributes.", "Choose @property vs __slots__ by clarity and memory."),
+    "abcs": ("Understand interfaces and duck typing.", "Use ABCs and Protocol for optional static checks."),
+    "exceptions": ("Use try/except to handle errors.", "Catch specific exceptions; use else/finally correctly."),
+    "context": ("Use with for files and locks.", "Write __enter__/__exit__ or use contextlib."),
+    "custom_errors": ("Define your own exception types.", "Keep custom exception hierarchies shallow and named clearly."),
+    "iterators": ("See how for loops consume iterables.", "Implement __iter__/__next__ when you need custom streaming."),
+    "generators": ("Use yield to produce values one at a time.", "Build lazy pipelines and avoid materializing huge lists."),
+    "itertools": ("Use a few itertools functions for common loops.", "Compose chain, islice, groupby for iterator pipelines."),
+    "files": ("Open, read, write, and close files safely.", "Use with and pathlib; specify encoding."),
+    "json_csv": ("Read and write JSON and CSV files.", "Use json load/dump and csv.DictReader/Writer; handle encoding."),
+    "pathlib": ("Use Path objects instead of string paths.", "Use pathlib everywhere for portable, readable paths."),
+    "regex": ("Match and find patterns in text with re.", "Compile for repeated use; know character classes and groups."),
+    "formatting": ("Format strings with f-strings and .format.", "Use alignment, width, and number formats where needed."),
+    "datetime": ("Work with dates and times using datetime.", "Be timezone-aware; use zoneinfo or timezone.utc."),
+    "collections": ("Use deque, Counter, and OrderedDict when they fit.", "Reach for collections before reinventing with dict/list."),
+    "os": ("Run shell commands and use os for paths/env.", "Use subprocess.run; avoid shell=True when possible."),
+    "typing": ("Add type hints to function signatures.", "Use typing for generics and Protocol; run mypy."),
+    "idioms": ("Recognize common Pythonic patterns.", "Use EAFP, unpacking, and with routinely."),
+    "performance": ("Know that measurement comes first.", "Profile then optimize algorithms and data structures."),
+    "gotchas": ("Avoid classic traps (mutable defaults, is vs ==).", "Know mutability, scope, and reference semantics cold."),
+    "precedence": ("Look up which operator runs first.", "Use parens when in doubt; know ** and unary bind tight."),
+    "builtins": ("Use built-in functions instead of manual code.", "Scan the table when you're about to write a loop."),
+    "exceptions_ref": ("Find the right exception type in the hierarchy.", "Catch specific types; don't catch BaseException."),
+    "venv": ("Create and use a virtual environment per project.", "pip freeze > requirements.txt; use venv or virtualenv."),
+    "debugging": ("Use breakpoint() and print to find bugs.", "Use pdb and cProfile when print isn't enough."),
+    "recipes": ("Copy and adapt one-liners for common tasks.", "Invert dicts, merge configs, count items — then tweak."),
+    "cheatsheet": ("Scan the cheat sheet for quick answers.", "Use it as a refresher; details are in the sections."),
+}
+
+# Short TUI hints (beginner, power user); keep each under ~80 chars.
+SECTION_HINTS: Mapping[str, Tuple[str, str]] = {
+    "variables": ("Say out loud what you expect before running.", "Try changing the value and predicting which names change."),
+    "numbers": ("Guess the result of 0.1 + 0.2 before running.", "Try math.isclose for float comparison."),
+    "strings": ("Predict what each slice returns.", "Try rewriting a loop with a str method."),
+    "booleans": ("Predict: what is truthy vs falsy for [], None, 0?", "Remember: 'is' for None, '==' for value."),
+    "lists": ("Will this mutate the list or return a new one?", "Try a list comp instead of a for+append."),
+    "tuples": ("What happens if you try to change a tuple?", "Use a tuple as a dict key and see."),
+    "dicts": ("Predict the value after .get on a missing key.", "Try merging two dicts with | or **."),
+    "sets": ("What happens when you add a duplicate?", "Try set() on a string or list."),
+    "structures": ("Create a small dataclass and print it.", "Compare namedtuple vs dataclass for your use."),
+    "conditionals": ("Which branch runs? Say it before running.", "Rewrite with match/case or a ternary."),
+    "loops": ("Count how many times the loop runs.", "Use enumerate or zip instead of range(len)."),
+    "comprehensions": ("Convert a for-loop into a list comp.", "Try a generator expression (parens) and check type."),
+    "functions": ("What does this return? Trace the arguments.", "Try a mutable default and see the gotcha."),
+    "scope": ("Which x is used: local or global?", "Try nonlocal and see the difference."),
+    "lambda": ("Replace a lambda with a def and back.", "When is a list comp clearer than map/filter?"),
+    "decorators": ("What runs first: the wrapper or the function?", "Add @wraps and compare __name__."),
+    "functools": ("Run the cached function twice; see the speedup.", "Use partial to fix one argument."),
+    "classes": ("What is self? Trace one method call.", "Add a __repr__ and print the instance."),
+    "inheritance": ("Which method runs: parent or child?", "Prefer composition: pass in a helper."),
+    "dunders": ("What triggers __repr__ vs __str__?", "Implement __add__ and use + on your type."),
+    "properties": ("Change the attribute and see the setter run.", "Compare memory with and without __slots__."),
+    "abcs": ("What must a subclass implement?", "Use Protocol for structural typing."),
+    "exceptions": ("Which except block catches this error?", "Add else and finally; see the order."),
+    "context": ("What happens if an error occurs inside with?", "Write a tiny context manager with __enter__/__exit__."),
+    "custom_errors": ("Catch your exception specifically.", "Add an attribute to the exception."),
+    "iterators": ("Consume an iterator twice; what happens?", "Implement __next__ and use in for."),
+    "generators": ("Is this evaluated once or on each next()?", "Pipe two generators together."),
+    "itertools": ("Replace a loop with chain or islice.", "Build a pipeline: chain -> islice -> list."),
+    "files": ("What happens if you don't close? Use with.", "Open with encoding='utf-8' explicitly."),
+    "json_csv": ("Load JSON and print the type of the root.", "Write a CSV with DictWriter."),
+    "pathlib": ("Use Path('.').cwd() and .glob('*.py').", "Replace string path logic with pathlib."),
+    "regex": ("Predict what this pattern matches.", "Compile the pattern and use it twice."),
+    "formatting": ("Format a number with commas and 2 decimals.", "Use f'{x:>10}' and see alignment."),
+    "datetime": ("What timezone is this datetime in?", "Create a timezone-aware datetime."),
+    "collections": ("Use Counter on a list of words.", "Use deque.popleft for a queue."),
+    "os": ("Run a simple command with subprocess.run.", "Avoid shell=True; use list of args."),
+    "typing": ("Add a type hint and run mypy.", "Use Optional[X] and List[X] correctly."),
+    "idioms": ("Find one EAFP and one LBYL in the section.", "Rewrite a snippet the Pythonic way."),
+    "performance": ("Time two approaches with timeit.", "Profile first; then optimize one hotspot."),
+    "gotchas": ("Which examples surprise you? Run them.", "Fix the mutable default and the is vs ==."),
+    "precedence": ("Add parens to make the order explicit.", "Look up ** and unary minus."),
+    "builtins": ("Find a built-in that replaces a loop.", "Use any(), all(), or next() in a comp."),
+    "exceptions_ref": ("Find the parent of ValueError.", "Don't catch Exception when you need specific."),
+    "venv": ("Create a venv and install one package.", "pip freeze and inspect requirements.txt."),
+    "debugging": ("Set breakpoint() and step once.", "Run under cProfile and find the hotspot."),
+    "recipes": ("Paste one recipe and adapt it.", "Combine two recipes into a small script."),
+    "cheatsheet": ("Find one item you didn't know.", "Use as a quick reference for a section."),
+}
+
 PARTS_LIST = [
     (1,  "Foundations"),
     (2,  "Data Structures"),
@@ -1267,6 +1449,14 @@ class PowerUserTUI:
             self.viewer_lines.append(_safe_tokenize("# " + "-" * 60))
             self.viewer_lines.append(_safe_tokenize(""))
 
+        # Section goals (dual-purpose: beginner vs power user)
+        goals = SECTION_GOALS.get(sec_key)
+        if goals:
+            beg, pwr = goals
+            self.viewer_lines.append(_safe_tokenize("#* Goal (Beginner): " + beg))
+            self.viewer_lines.append(_safe_tokenize("#* Goal (Power User): " + pwr))
+            self.viewer_lines.append(_safe_tokenize(""))
+
         # Docstring next (teaching content specific to the demo)
         try:
             doc = func.__doc__
@@ -1298,6 +1488,14 @@ class PowerUserTUI:
                 self.viewer_lines.append(
                     [("(Could not read source code)", "comment")]
                 )
+
+        # Teaching hints at bottom (beginner + power user, ~80 chars each)
+        hints = SECTION_HINTS.get(sec_key)
+        if hints:
+            self.viewer_lines.append(_safe_tokenize(""))
+            self.viewer_lines.append(_safe_tokenize("# " + "-" * 60))
+            self.viewer_lines.append(_safe_tokenize("Tip (beginner): " + hints[0]))
+            self.viewer_lines.append(_safe_tokenize("Tip (power): " + hints[1]))
 
     def _draw_viewer(self):
         """Draw the section source viewer with syntax highlighting."""
@@ -1905,9 +2103,16 @@ def _run_section_or_suggest(name: str) -> None:
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝        ╚═╝
 #  FOUNDATIONS — The atoms everything else is built from
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Scripts, configs, and APIs all start with variables, numbers, strings, and booleans — get these right and the rest stacks.
+#* TL;DR for power users:
+#* • Variables are names; assignment never copies. int is unbounded, float approximate; use Decimal for money.
+#* • str is immutable; slicing returns new strings. Only None, False, 0, '', (), [], {} are falsy.
 
 # %% 01 — Variables & Types
+#* Goal (Beginner): Understand that variables are names for values and how assignment works.
+#* Goal (Power User): Internalize that assignment never copies and when that matters.
+#* Big idea: names point at objects (not boxes); shared references vs copies are what to "see" here.
+#! Power tip: assignment never copies; a = b makes both names point at the same object — matters for lists/dicts.
 # Global idea: names point at objects (not boxes),
 # and shared references vs copies are the core thing to “see” here.
 def demo_variables():
@@ -1937,6 +2142,7 @@ def demo_variables():
 
     # Now we make a SECOND sticky note "b" that points at the SAME list.
     b = a            # no new list is created here
+    #? What do you think a and b will show after the next line? Same list or two lists?
 
     # When we change the list through "b", we are changing the single shared list.
     b.append(4)
@@ -1954,6 +2160,10 @@ def demo_variables():
 
 
 # %% 02 — Numbers & Math
+#* Goal (Beginner): Use integers and floats safely and know when they behave oddly.
+#* Goal (Power User): Know int/float/Decimal trade-offs and use math.isclose for floats.
+#* Big idea: ints are exact and unbounded; floats are fast but approximate — 0.1 + 0.2 != 0.3 in float.
+#! Power tip: use math.isclose for float comparison; use Decimal for money or exact base-10.
 # Global idea: ints are exact and unbounded, floats are approximate,
 # and Decimal / math.isclose are the tools to reason safely about numbers.
 def demo_numbers():
@@ -1976,6 +2186,7 @@ def demo_numbers():
 
     # Floats are “numbers with a decimal point”. Inside the computer they are
     # stored in binary, which cannot represent 0.1 exactly.
+    #? What do you think this prints? True or False?
     print("\n0.1 + 0.2 == 0.3 ?", 0.1 + 0.2 == 0.3)   # looks like it should be True…
     print("0.1 + 0.2 gives     ", 0.1 + 0.2)          # …but the tiny tail proves otherwise
 
@@ -1997,6 +2208,10 @@ def demo_numbers():
 
 
 # %% 03 — Strings
+#* Goal (Beginner): Create, slice, and combine strings without surprises.
+#* Goal (Power User): Use str methods and immutability to write clear, efficient code.
+#* Big idea: strings are immutable; slicing and methods return new strings, they never change in place.
+#! Power tip: prefer str methods (join, split, strip) and f-strings over concatenation and %.
 # Global idea: strings never change once created; slicing is the same
 # universal pattern you’ll use on many sequence types, not just text.
 def demo_strings():
@@ -2036,6 +2251,11 @@ def demo_strings():
 
 
 # %% 04 — Booleans & None
+#* Goal (Beginner): Use True/False and None and write simple conditions.
+#* Goal (Power User): Master truthiness, short-circuiting, and the one way to test for None.
+#* Big idea: Python asks "is this empty/zero/None?" (truthiness), not "is it exactly True?".
+#! Power tip: test for None with "x is None"; use "if x:" for "has content", "if not x:" for empty.
+#* Quiz tag: booleans, truthiness, None. See also: 01 Variables, 05 Lists, 07 Dictionaries.
 def demo_booleans():
     """04 — Booleans & None: truthiness and 'None' done right.
 
@@ -2088,7 +2308,7 @@ def demo_booleans():
       "a" and "b"     → "b"
     """
     _header(4, "BOOLEANS & NONE")
-
+    #? Is [] truthy or falsy? What about [0]? (Python asks "is this empty?" not "are its contents truthy?")
     # When Python sees code like “if something: …”, it quietly asks bool(something).
     # Some values answer “I count as False”, everything else counts as True.
     falsy_values = [False, 0, 0.0, "", [], {}, set(), None, 0j]
@@ -2146,9 +2366,16 @@ def demo_booleans():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚══════╝
 #  DATA STRUCTURES — Your toolbox for organizing information
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Real code is full of lists, dicts, and sets; picking the right structure is half the battle.
+#* TL;DR for power users:
+#* • Lists: ordered, mutable. Tuples: fixed, hashable, great for keys and multi-return. Dicts: O(1) lookup.
+#* • Sets: unique, unordered. Prefer dict/set comps and built-ins (in, len) over manual loops.
 
 # %% 05 — Lists
+#* Goal (Beginner): Build and change lists with append, slice, and loops.
+#* Goal (Power User): Choose lists vs other sequences; avoid mutating while iterating.
+#* Big idea: lists are ordered and mutable; indexing and slicing are the same pattern as strings.
+#! Power tip: don't mutate a list while iterating over it; build a new list or iterate over a copy/slice.
 def demo_lists():
     """
     05 — LISTS
@@ -2238,6 +2465,10 @@ def demo_lists():
 
 
 # %% 06 — Tuples
+#* Goal (Beginner): Use tuples for fixed data and multiple return values.
+#* Goal (Power User): Know when tuples beat lists: keys, unpacking, and performance.
+#* Big idea: tuples are fixed-size and hashable; use them where "this stays the same" matters.
+#! Power tip: tuples as dict keys, function multi-return, and in "in" checks are O(1) with set/dict.
 def demo_tuples():
     """
     06 — TUPLES
@@ -2313,6 +2544,10 @@ def demo_tuples():
 
 
 # %% 07 — Dictionaries
+#* Goal (Beginner): Store and look up key-value pairs with dicts.
+#* Goal (Power User): Use dicts as the default data structure; know .get, views, and merge patterns.
+#* Big idea: dicts map keys to values with fast lookup; keys must be hashable (no lists).
+#! Power tip: .get(key, default) avoids KeyError; dict | other and ** merge; use views for keys/values/items.
 def demo_dicts():
     """
     07 — DICTIONARIES
@@ -2411,6 +2646,10 @@ def demo_dicts():
 
 
 # %% 08 — Sets
+#* Goal (Beginner): Store unique items and do simple set math.
+#* Goal (Power User): Use sets for membership and dedup; know hashability and set comps.
+#* Big idea: sets are unordered and unique; membership is O(1); elements must be hashable.
+#! Power tip: set() on a list dedupes; use & | - ^ for intersection, union, difference, symmetric diff.
 def demo_sets():
     """
     08 — SETS
@@ -2481,6 +2720,10 @@ def demo_sets():
 
 
 # %% 09 — Advanced Structures
+#* Goal (Beginner): Use namedtuple and dataclass for readable structured data.
+#* Goal (Power User): Pick namedtuple/dataclass/defaultdict/Counter by use case.
+#* Big idea: namedtuple and dataclass give you "records with names" without full class ceremony.
+#! Power tip: dataclass for mutable records; defaultdict for "missing key = default"; Counter for counts.
 def demo_advanced_structures():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2565,9 +2808,16 @@ def demo_advanced_structures():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═════╝
 #  CONTROL FLOW — Directing the program's path
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Branching and looping are how you direct the program; Pythonic style keeps them readable and concise.
+#* TL;DR for power users:
+#* • match/case for multi-branch; ternary x if c else y. for with enumerate/zip; avoid while when for fits.
+#* • Comprehensions > loop-and-append; generator expressions when you need lazy/one-pass.
 
 # %% 10 — Conditionals
+#* Goal (Beginner): Write if/elif/else and use simple match/case.
+#* Goal (Power User): Use match/case and ternary where they reduce noise.
+#* Big idea: conditions choose which branch runs; keep predicates clear and avoid deep nesting.
+#! Power tip: match/case for multiple values or patterns; "x if c else y" for one expression.
 def demo_conditionals():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2641,6 +2891,10 @@ def demo_conditionals():
 
 
 # %% 11 — Loops
+#* Goal (Beginner): Loop with for and while and use range.
+#* Goal (Power User): Use enumerate, zip, and early exit; avoid manual index loops.
+#* Big idea: for consumes iterables; enumerate/zip give you index or parallel iteration without range(len).
+#! Power tip: for i, x in enumerate(it): ...; for a, b in zip(xs, ys): ...; avoid while when for fits.
 def demo_loops():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2710,6 +2964,11 @@ def demo_loops():
 
 
 # %% 12 — Comprehensions
+#* Goal (Beginner): Write list comprehensions instead of simple loops.
+#* Goal (Power User): Use dict/set/gen comps; know when genex beats list comp.
+#* Big idea: comprehensions are "build a collection in one expression"; genex is lazy, list comp is eager.
+#! Power tip: (x for x in it) is a generator — one-pass, memory-friendly; [...] materializes a list.
+#* See also: 05 Lists, 07 Dictionaries, 08 Sets, 27 Generators.
 def demo_comprehensions():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2786,9 +3045,16 @@ def demo_comprehensions():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝            ╚═╝
 #  FUNCTIONS — Reusable building blocks
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Functions are the unit of reuse; decorators and functools are how pros add behavior without clutter.
+#* TL;DR for power users:
+#* • Default args evaluated once at def time; use None + assign for mutables. *args/**kwargs for flex APIs.
+#* • Decorators wrap functions; use functools.wraps. lru_cache and partial are your friends.
 
 # %% 13 — Function Basics
+#* Goal (Beginner): Define functions with arguments and return values.
+#* Goal (Power User): Design APIs with *args/**kwargs and mutable default gotchas.
+#* Big idea: def binds a name to a callable; default values are evaluated once at definition time.
+#! Power tip: mutable default (e.g. def f(x, L=[])) is evaluated once; use def f(x, L=None): L = L or [] (or L = [] if L is None else L).
 def demo_functions():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2869,6 +3135,10 @@ def demo_functions():
 
 
 # %% 14 — Scope & Closures
+#* Goal (Beginner): See where names are visible (local vs global).
+#* Goal (Power User): Apply LEGB and closures; use nonlocal when needed.
+#* Big idea: Python looks up names in order: Local, Enclosing, Global, Built-in (LEGB).
+#! Power tip: closures capture variables by name; reassigning in inner scope needs nonlocal (or global).
 def demo_scope():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -2948,6 +3218,10 @@ def demo_scope():
 
 
 # %% 15 — Lambda & Functional
+#* Goal (Beginner): Use lambda for tiny one-line functions.
+#* Goal (Power User): Know when lambda/map/filter help and when a loop is clearer.
+#* Big idea: lambda is a one-expression function; map/filter/reduce apply functions over iterables.
+#! Power tip: list comprehensions are often clearer than map/filter; use lambda where a callback is required.
 def demo_lambda():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3011,6 +3285,10 @@ def demo_lambda():
 
 
 # %% 16 — Decorators
+#* Goal (Beginner): Wrap a function to add behavior without changing call sites.
+#* Goal (Power User): Write decorators that preserve metadata and take arguments.
+#* Big idea: a decorator is a function that takes a function and returns a (usually wrapped) function.
+#! Power tip: use functools.wraps(f) inside your wrapper so __name__ and __doc__ are preserved.
 def demo_decorators():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3112,6 +3390,10 @@ def demo_decorators():
 
 
 # %% 17 — Functools
+#* Goal (Beginner): Use lru_cache and partial for common patterns.
+#* Goal (Power User): Apply wraps, partial, and reduce where they simplify code.
+#* Big idea: lru_cache memoizes; partial fixes some arguments; wraps copies metadata to the wrapper.
+#! Power tip: @lru_cache(maxsize=None) for pure functions with hashable args; partial for callback APIs.
 def demo_functools():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3171,9 +3453,16 @@ def demo_functools():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚══════╝
 #  OOP — Object-Oriented Programming
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: OOP in Python is about data + behavior in one place; dunders and protocols make your types feel native.
+#* TL;DR for power users:
+#* • Composition over deep inheritance. __repr__ for devs, __str__ for users. Protocols/ABCs for interfaces.
+#* • dataclass for data; __slots__ when you have many instances and care about memory.
 
 # %% 18 — Classes
+#* Goal (Beginner): Define classes with __init__ and methods.
+#* Goal (Power User): Use classes for data+behavior; prefer composition.
+#* Big idea: a class is a blueprint; instances get their own data; self is the instance.
+#! Power tip: __repr__ should be unambiguous (for devs); __str__ for pretty print; implement __repr__ first.
 def demo_classes():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3253,6 +3542,10 @@ def demo_classes():
 
 
 # %% 19 — Inheritance
+#* Goal (Beginner): Reuse code with inheritance and super().
+#* Goal (Power User): Prefer composition and shallow hierarchies.
+#* Big idea: subclass inherits methods; super() delegates to the parent; override to specialize.
+#! Power tip: composition ("has-a") often beats inheritance ("is-a"); use ABCs/Protocols for interfaces.
 def demo_inheritance():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3323,6 +3616,10 @@ def demo_inheritance():
 
 
 # %% 20 — Dunder Methods
+#* Goal (Beginner): Use __init__ and __repr__ correctly.
+#* Goal (Power User): Implement the right dunders so your types feel native.
+#* Big idea: dunders hook into language features (+, in, len, with); they're the protocol Python uses.
+#! Power tip: __eq__ without __hash__ makes the type unhashable; implement both for value objects in sets/dicts.
 def demo_dunders():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3418,6 +3715,10 @@ def demo_dunders():
 
 
 # %% 21 — Properties & Slots
+#* Goal (Beginner): Use @property for computed attributes.
+#* Goal (Power User): Choose @property vs __slots__ by clarity and memory.
+#* Big idea: @property lets you run code on attribute access; __slots__ fixes the instance dict for memory.
+#! Power tip: __slots__ saves memory when you have many small instances; no __dict__ means no dynamic attributes.
 def demo_properties():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3493,6 +3794,10 @@ def demo_properties():
 
 
 # %% 22 — ABCs & Protocols
+#* Goal (Beginner): Understand interfaces and duck typing.
+#* Goal (Power User): Use ABCs and Protocol for optional static checks.
+#* Big idea: ABCs declare "must implement these methods"; Protocol is structural (duck typing for type checkers).
+#! Power tip: from typing import Protocol; class P(Protocol): def method(self): ... then any class with method() satisfies P.
 def demo_abcs():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3568,9 +3873,16 @@ def demo_abcs():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝        ╚═════╝
 #  ERROR HANDLING — Graceful failure
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Exceptions and context managers keep failure paths clean and resources safe.
+#* TL;DR for power users:
+#* • Catch specific exceptions; let generic ones bubble. with for resources; __enter__/__exit__ for custom.
+#* • Custom exceptions inherit from Exception; keep hierarchy shallow.
 
 # %% 23 — Exceptions
+#* Goal (Beginner): Use try/except to handle errors.
+#* Goal (Power User): Catch specific exceptions; use else/finally correctly.
+#* Big idea: try/except separates "what we try" from "what we do when it fails"; exceptions bubble until caught.
+#! Power tip: except Exception (not BaseException); use else for code that runs only when no exception; finally always runs.
 def demo_exceptions():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3668,6 +3980,10 @@ def demo_exceptions():
 
 
 # %% 24 — Context Managers
+#* Goal (Beginner): Use with for files and locks.
+#* Goal (Power User): Write __enter__/__exit__ or use contextlib.
+#* Big idea: with guarantees setup and teardown; the context manager runs __enter__ then __exit__ (even on exception).
+#! Power tip: @contextlib.contextmanager + yield is the quick way to write a manager; __exit__ receives exception info.
 def demo_context_managers():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3744,6 +4060,10 @@ def demo_context_managers():
 
 
 # %% 25 — Custom Exceptions
+#* Goal (Beginner): Define your own exception types.
+#* Goal (Power User): Keep custom exception hierarchies shallow and named clearly.
+#* Big idea: subclass Exception (or a specific built-in); raise and catch by type; add attributes for details.
+#! Power tip: one module or package of custom exceptions; inherit from ValueError/TypeError when that fits.
 def demo_custom_exceptions():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3804,9 +4124,16 @@ def demo_custom_exceptions():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝         ╚═╝
 #  ITERATORS & GENERATORS — Lazy evaluation
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Iterators and generators power streaming and pipelines; itertools is the toolbox.
+#* TL;DR for power users:
+#* • Iterators: __iter__ + __next__; for consumes them. Generators: yield = lazy; one-pass only.
+#* • itertools.chain, islice, groupby for pipelines; avoid materializing huge lists.
 
 # %% 26 — Iterators
+#* Goal (Beginner): See how for loops consume iterables.
+#* Goal (Power User): Implement __iter__/__next__ when you need custom streaming.
+#* Big idea: iterables have __iter__; iterators also have __next__; for calls both; iterators are one-pass.
+#! Power tip: iter(it) gets an iterator; calling next() exhausts it; a second for would see nothing.
 def demo_iterators():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3858,6 +4185,10 @@ def demo_iterators():
 
 
 # %% 27 — Generators
+#* Goal (Beginner): Use yield to produce values one at a time.
+#* Goal (Power User): Build lazy pipelines and avoid materializing huge lists.
+#* Big idea: a function with yield is a generator; it runs until the first yield, then pauses until next().
+#! Power tip: generator expressions (x for x in it) are one-pass and memory-friendly; list(gen) materializes.
 def demo_generators():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -3944,6 +4275,10 @@ def demo_generators():
 
 
 # %% 28 — itertools
+#* Goal (Beginner): Use a few itertools functions for common loops.
+#* Goal (Power User): Compose chain, islice, groupby for iterator pipelines.
+#* Big idea: itertools returns iterators (lazy); chain, islice, cycle, groupby are building blocks.
+#! Power tip: chain.from_iterable(iterables) avoids unpacking; islice(it, n) takes first n without consuming all.
 def demo_itertools():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4029,9 +4364,16 @@ def demo_itertools():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝        ╚════╝
 #  FILE I/O & DATA — Reading and writing the world
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Files, JSON, and paths are how Python talks to the world; pathlib and context managers keep it safe.
+#* TL;DR for power users:
+#* • Open files with with; use pathlib for paths. json.load/dump; csv.DictReader/DictWriter for CSV.
+#* • Encoding: specify encoding='utf-8' explicitly for portability.
 
 # %% 29 — File Operations
+#* Goal (Beginner): Open, read, write, and close files safely.
+#* Goal (Power User): Use with and pathlib; specify encoding.
+#* Big idea: open() returns a file object; with closes it even on error; always pass encoding for text.
+#! Power tip: Path from pathlib is preferred over string paths; open(Path(...), encoding='utf-8').
 def demo_files():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4091,6 +4433,10 @@ def demo_files():
 
 
 # %% 30 — JSON & CSV
+#* Goal (Beginner): Read and write JSON and CSV files.
+#* Goal (Power User): Use json load/dump and csv.DictReader/Writer; handle encoding.
+#* Big idea: json turns dict/list/str/numbers to text and back; CSV is row-based, use DictReader for headers.
+#! Power tip: json.dumps(obj, indent=2) for readable files; csv.DictWriter with fieldnames for clean writes.
 def demo_json_csv():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4160,6 +4506,10 @@ def demo_json_csv():
 
 
 # %% 31 — Pathlib
+#* Goal (Beginner): Use Path objects instead of string paths.
+#* Goal (Power User): Use pathlib everywhere for portable, readable paths.
+#* Big idea: Path is an object that knows how to join, exists(), glob, read_text; / operator joins.
+#! Power tip: Path.cwd(), path.iterdir(), path.glob('*.py'), path.read_text(encoding='utf-8').
 def demo_pathlib():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4233,9 +4583,16 @@ def demo_pathlib():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚════╝
 #  TEXT MASTERY — Regex, formatting, dates
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Regex, formatting, and datetime cover most text and time tasks in the wild.
+#* TL;DR for power users:
+#* • re: findall, search, sub; compile for repeated use. f-strings and .format for formatting.
+#* • datetime: timezone-aware when you care; use datetime.timezone.utc or zoneinfo.
 
 # %% 32 — Regex
+#* Goal (Beginner): Match and find patterns in text with re.
+#* Goal (Power User): Compile for repeated use; know character classes and groups.
+#* Big idea: re compiles a pattern; search/findall/sub apply it; raw strings r'...' avoid backslash surprises.
+#! Power tip: re.compile(pattern) when using the same pattern in a loop; capture groups with ().
 def demo_regex():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4326,6 +4683,10 @@ def demo_regex():
 
 
 # %% 33 — String Formatting
+#* Goal (Beginner): Format strings with f-strings and .format.
+#* Goal (Power User): Use alignment, width, and number formats where needed.
+#* Big idea: f'{x}' and .format() interpolate values; :.2f, :>10, :, for decimals, alignment, thousands.
+#! Power tip: f'{n:,.2f}' for money; f'{s:>20}' right-align; f'{x:.2%}' for percentage.
 def demo_formatting():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4388,6 +4749,10 @@ def demo_formatting():
 
 
 # %% 34 — Datetime
+#* Goal (Beginner): Work with dates and times using datetime.
+#* Goal (Power User): Be timezone-aware; use zoneinfo or timezone.utc.
+#* Big idea: datetime has date, time, datetime; naive vs aware (timezone); timedelta for duration.
+#! Power tip: from zoneinfo import ZoneInfo; dt.astimezone(ZoneInfo('UTC')) for conversion.
 def demo_datetime():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4476,9 +4841,16 @@ def demo_datetime():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝ ╚═════╝
 #  STANDARD LIBRARY POWER TOOLS
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: collections, os, subprocess, and typing are the stdlib power tools you reach for daily.
+#* TL;DR for power users:
+#* • deque for queues/stacks; Counter for counts; ChainMap for layered config.
+#* • subprocess.run with capture_output=True; avoid shell=True when possible.
 
 # %% 35 — Collections
+#* Goal (Beginner): Use deque, Counter, and OrderedDict when they fit.
+#* Goal (Power User): Reach for collections before reinventing with dict/list.
+#* Big idea: deque is list-like with fast append/pop from both ends; Counter counts; ChainMap layers dicts.
+#! Power tip: Counter(list_of_items).most_common(n); deque(maxlen=k) for a sliding window.
 def demo_collections():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4529,6 +4901,10 @@ def demo_collections():
 
 
 # %% 36 — OS & Subprocess
+#* Goal (Beginner): Run shell commands and use os for paths/env.
+#* Goal (Power User): Use subprocess.run; avoid shell=True when possible.
+#* Big idea: subprocess.run() runs another program; capture_output=True gets stdout/stderr; pass a list, not a string.
+#! Power tip: subprocess.run([cmd, arg1], check=True, capture_output=True, text=True); shell=True is a security risk.
 def demo_os():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4580,6 +4956,10 @@ def demo_os():
 
 
 # %% 37 — Typing & Type Hints
+#* Goal (Beginner): Add type hints to function signatures.
+#* Goal (Power User): Use typing for generics and Protocol; run mypy.
+#* Big idea: annotations don't run at runtime; they document and enable static checkers (mypy, pyright).
+#! Power tip: Optional[X] = Union[X, None]; List[str], Dict[K,V]; Protocol for structural typing.
 def demo_typing():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4665,9 +5045,16 @@ def demo_typing():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝
 #  PYTHONIC PATTERNS — The edge
 # ═════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Idioms, performance, and gotchas separate readable, fast code from surprising bugs.
+#* TL;DR for power users:
+#* • EAFP over LBYL. Unpacking, with, and comprehensions over manual loops.
+#* • Measure first; optimize algorithms and data structures before micro-optimizing.
 
 # %% 38 — Idioms
+#* Goal (Beginner): Recognize common Pythonic patterns.
+#* Goal (Power User): Use EAFP, unpacking, and with routinely.
+#* Big idea: "Easier to Ask Forgiveness than Permission" — try then except; unpack for clarity.
+#! Power tip: for k, v in d.items(); a, *rest = seq; try/except for control flow, not just errors.
 def demo_idioms():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4766,6 +5153,10 @@ def demo_idioms():
 
 
 # %% 39 — Performance
+#* Goal (Beginner): Know that measurement comes first.
+#* Goal (Power User): Profile then optimize algorithms and data structures.
+#* Big idea: don't guess — use timeit for snippets, cProfile for whole runs; fix the bottleneck.
+#! Power tip: the right algorithm and data structure beat micro-optimization; avoid premature optimization.
 def demo_performance():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4834,6 +5225,11 @@ def demo_performance():
 
 
 # %% 40 — Gotchas
+#* Goal (Beginner): Avoid classic traps (mutable defaults, is vs ==).
+#* Goal (Power User): Know mutability, scope, and reference semantics cold.
+#* Big idea: mutable default args, is vs ==, late-binding closures, and "list += vs list = list +" trip people up.
+#! Power tip: x is None for None; == for value; default=None then if x is None: x = [] inside the function.
+#* Quiz tag: mutability, default args, is vs ==. See also: 01 Variables, 05 Lists, 13 Function Basics.
 def demo_gotchas():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -4927,9 +5323,14 @@ def demo_gotchas():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝╚══════╝
 #  CHEAT SHEET — Quick reference
 # ═════════════════════════════════════════════════════════════════════════════
+#* Why this Part matters: The appendix is the cheat sheet: everything at a glance.
+#* TL;DR for power users:
+#* • Cheat sheet: quick scan; details live in the sections above.
 
-
-# %% 41 — Quick Reference
+# %% 41 — Quick Reference  (Appendix: section 47)
+#* Goal (Beginner): Scan the cheat sheet for quick answers.
+#* Goal (Power User): Use it as a refresher; details are in the sections.
+#* Big idea: one-page scan for syntax and patterns; dive into the section for "why".
 def demo_cheatsheet():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5007,9 +5408,14 @@ def demo_cheatsheet():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝╚══════╝
 #  REFERENCE TABLES — Ctrl+F heaven
 # ═══════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Reference tables are Ctrl+F heaven when you need precedence, built-ins, or the exception tree.
+#* TL;DR for power users:
+#* • Precedence: ** then * / // % then + -; use parens when in doubt.
+#* • Know the exception tree so you don't catch BaseException or mask bugs.
 
 # %% 41 — Operator Precedence
+#* Goal (Beginner): Look up which operator runs first.
+#* Goal (Power User): Use parens when in doubt; know ** and unary bind tight.
 def demo_operator_precedence():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5069,6 +5475,8 @@ def demo_operator_precedence():
 
 
 # %% 42 — Built-in Functions
+#* Goal (Beginner): Use built-in functions instead of manual code.
+#* Goal (Power User): Scan the table when you're about to write a loop.
 def demo_builtins():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5173,6 +5581,9 @@ def demo_builtins():
 
 
 # %% 43 — Exception Hierarchy
+#* Goal (Beginner): Find the right exception type in the hierarchy.
+#* Goal (Power User): Catch specific types; don't catch BaseException.
+#* See also: 23 Exceptions, 25 Custom Exceptions.
 def demo_exception_tree():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5258,9 +5669,14 @@ def demo_exception_tree():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝╚═════╝
 #  ENVIRONMENT & TOOLING — The stuff around the code
 # ═══════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Virtual envs and debugging tools keep projects isolated and bugs findable.
+#* TL;DR for power users:
+#* • One venv per project; pip freeze > requirements.txt. breakpoint() and pdb for debugging.
+#* • cProfile for hotspots; timeit for small snippets.
 
 # %% 44 — Virtual Environments
+#* Goal (Beginner): Create and use a virtual environment per project.
+#* Goal (Power User): pip freeze > requirements.txt; use venv or virtualenv.
 def demo_venv():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5331,6 +5747,8 @@ def demo_venv():
 
 
 # %% 45 — Debugging & Profiling
+#* Goal (Beginner): Use breakpoint() and print to find bugs.
+#* Goal (Power User): Use pdb and cProfile when print isn't enough.
 def demo_debugging():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
@@ -5414,9 +5832,13 @@ def demo_debugging():
 # ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝     ╚═╝
 #  REAL-WORLD RECIPES — Copy-paste solutions
 # ═══════════════════════════════════════════════════════════════════════════════
-
+#* Why this Part matters: Recipes are copy-paste solutions for real-world micro-tasks.
+#* TL;DR for power users:
+#* • One-liners: invert dict, merge configs, count frequencies — see section 46.
 
 # %% 46 — One-Liner Recipes
+#* Goal (Beginner): Copy and adapt one-liners for common tasks.
+#* Goal (Power User): Invert dicts, merge configs, count items — then tweak.
 def demo_recipes():
     """
     ┌─────────────────────────────────────────────────────────────────────┐
