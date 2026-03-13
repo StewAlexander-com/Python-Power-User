@@ -154,16 +154,6 @@ def _header(num: int, title: str) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  TUI — Interactive Terminal User Interface (curses-based)
 # ═══════════════════════════════════════════════════════════════════════════════
-#
-#  This section implements a BTOP-quality interactive TUI using Python's
-#  built-in curses library. It provides:
-#    • Two-pane main menu (Parts on left, Sections on right)
-#    • Source code viewer with syntax highlighting
-#    • Keyboard navigation (arrow keys, vim keys, search)
-#    • Graceful fallback when curses is unavailable
-#
-#  All TUI code is self-contained and does not modify any demo functions.
-# ═══════════════════════════════════════════════════════════════════════════════
 
 _TUI_VERSION = "3.0"
 
