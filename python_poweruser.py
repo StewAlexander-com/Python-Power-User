@@ -582,6 +582,65 @@ def _syntax_highlight_tokens(line: str) -> List[Tuple[str, str]]:
     return tokens if tokens else [("", "normal")]
 
 
+def _strip_leading_docstring(src: str) -> str:
+    """Remove a leading triple-quoted docstring from a function source.
+
+    The TUI already renders the function's docstring as teaching content
+    above the source code. Showing the docstring again inside the source
+    makes the comments appear duplicated in the viewer. This helper
+    strips only the first top-level triple-quoted block immediately
+    following the def line, if present.
+    """
+    lines = src.split("\n")
+    if not lines:
+        return src
+
+    new_lines: List[str] = []
+    in_doc = False
+    saw_def = False
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.lstrip()
+
+        if not saw_def:
+            new_lines.append(line)
+            if stripped.startswith("def ") or stripped.startswith("async def "):
+                saw_def = True
+            i += 1
+            continue
+
+        if not in_doc:
+            if stripped.startswith('"""') or stripped.startswith("'''"):
+                quote = '"""' if stripped.startswith('"""') else "'''"
+                # Single-line docstring: def ...: \"\"\"doc\"\"\"
+                if stripped.count(quote) >= 2:
+                    i += 1
+                    # docstring fully consumed on this line
+                    break
+                in_doc = True
+                i += 1
+                continue
+            else:
+                # First non-docstring line after def
+                new_lines.append(line)
+                i += 1
+                break
+        else:
+            # Inside docstring: look for closing triple quotes
+            if '"""' in stripped or "'''" in stripped:
+                in_doc = False
+                i += 1
+                break
+            i += 1
+
+    # Append the rest of the lines unchanged
+    if i < len(lines):
+        new_lines.extend(lines[i:])
+
+    return "\n".join(new_lines)
+
 
 
 class PowerUserTUI:
@@ -965,6 +1024,7 @@ class PowerUserTUI:
         try:
             src = inspect.getsource(func)
             src = textwrap.dedent(src)
+            src = _strip_leading_docstring(src)
             for line in src.split("\n"):
                 self.viewer_lines.append(_safe_tokenize(line))
         except (OSError, TypeError):
