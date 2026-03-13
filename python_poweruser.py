@@ -15,11 +15,16 @@
 #
 #  HOW TO USE THIS FILE
 #  ────────────────────
-#  This is a REFERENCE, not a textbook. It's designed to be:
-#    • Skimmed fast when you need a refresher
-#    • Read section-by-section when learning a topic
-#    • Searched with Ctrl+F when you need a specific pattern
-#    • Run as a script to see everything in action
+#  New to Python? Start with Part 1 (Foundations). Open the TUI (run this file
+#  with no arguments) and work through sections 01–04, or run one section from
+#  the terminal:  python python_poweruser.py -s variables
+#
+#  This file works as both a learning guide and a reference:
+#    • Learn: read Part 1 → Part 2, run each section (press r in TUI), try the
+#      "Try this" suggestions in the comments
+#    • Refresh: skim a section when you need a reminder
+#    • Look up: use Ctrl+F or the TUI search when you need a specific pattern
+#    • Self-check: run  python python_poweruser.py test  after Part 2 or 3
 #
 #  VS CODE SETUP (do these once, thank me forever):
 #    1. Install "Python" extension (ms-python.python) — enables Run Cell,
@@ -53,8 +58,8 @@ from typing import Any, Callable, Iterable, Iterator, List, Mapping, MutableMapp
 #    04  Booleans & None           Truth, falsity, and nothingness
 #
 #  PART 2 — DATA STRUCTURES
-#    05  Lists                     Ordered, mutable sequences
-#    06  Tuples                    Immutable sequences
+#    05  Lists                     Ordered collections you can change
+#    06  Tuples                    Ordered collections you keep fixed
 #    07  Dictionaries              Key-value lookup tables
 #    08  Sets                      Unique collections & set math
 #    09  Advanced Structures       namedtuple, dataclass, defaultdict, Counter
@@ -219,16 +224,16 @@ SECTION_META = [
 SECTION_BIG_PICTURE: Mapping[str, str] = {
     # Part 1 — Foundations
     "variables": (
-        "Variables are names pointing at objects; the real skill is seeing when "
-        "multiple names share the same mutable object versus working on copies."
+        "Variables are names pointing at values; the real skill is seeing when "
+        "multiple names share the same changeable value versus working on copies."
     ),
     "numbers": (
         "Integers are exact and unbounded, floats are fast approximations, and "
         "Decimal / math.isclose are how you stay honest about numeric comparisons."
     ),
     "strings": (
-        "Strings are immutable sequences of characters; slicing and indexing are "
-        "the universal tools you’ll reuse on lists, tuples, ranges, and more."
+        "Strings are sequences of characters that never change once created; slicing and "
+        "indexing are tools you’ll reuse on lists, tuples, ranges, and more."
     ),
     "booleans": (
         "Python has a small set of falsy values and a huge space of truthy ones; "
@@ -236,12 +241,12 @@ SECTION_BIG_PICTURE: Mapping[str, str] = {
     ),
     # Part 2 — Data Structures
     "lists": (
-        "Lists are ordered, growable, mutable sequences — your go‑to tool for most "
-        "collections when order matters and you need to append or pop."
+        "Lists are ordered, growable collections you can change — your go‑to tool for "
+        "most groups of items when order matters and you need to append or remove."
     ),
     "tuples": (
-        "Tuples are fixed‑size, immutable sequences that work well for lightweight "
-        "records, dictionary keys, and returning multiple values."
+        "Tuples are fixed‑size collections that you do not change after creating them; "
+        "they work well for lightweight records, dictionary keys, and returning multiple values."
     ),
     "dicts": (
         "Dictionaries map keys to values with O(1) average lookup time and are the "
@@ -274,8 +279,8 @@ SECTION_BIG_PICTURE: Mapping[str, str] = {
         "reason about small units instead of giant scripts."
     ),
     "scope": (
-        "The LEGB (Local, Enclosing, Global, Builtins) rules explain where names come "
-        "from and why closures capture variables the way they do."
+        "Python looks up names in order: current function, then enclosing functions, "
+        "then the module, then built-ins. That order explains closures and why 'nonlocal' matters."
     ),
     "lambda": (
         "Lambda and functional tools like map, filter, and reduce shine when you want "
@@ -1909,34 +1914,43 @@ def demo_variables():
     """01 — Variables & Types: names pointing to objects.
 
     Big picture:
-      - A “variable” is just a name pointing at an object in memory.
-      - Two names can point at the same object (shared reference) or at
-        separate-but-equal objects (copies).
-      - Most real-world bugs here come from accidentally sharing a mutable
-        object (like a list or dict) between multiple names.
+      - A “variable” is just a name pointing at a value in memory.
+      - Two names can point at the same value (shared reference) or at
+        separate-but-equal values (copies).
+      - Many beginner bugs come from accidentally sharing a changeable
+        value (like a list or dict) between multiple names.
     """
     _header(1, "VARIABLES & TYPES")
 
-    # Variables are just names that point to objects.
-    name = "Stewart"
-    age = 49
+    # Think of a variable as a sticky note with a name on it.
+    # The arrow (=) tells Python which value that sticky note should point to.
+    name = "Stewart"  # the sticky note called "name" now points at this text
+    age = 49          # "age" points at the number 49
 
+    # type(thing).__name__ asks “what kind of thing is this?” in plain English.
     print("name:", name, "type:", type(name).__name__)
     print("age: ", age,  "type:", type(age).__name__)
 
-    # Two names can point to the same list.
+    # A list is an ordered collection of values written in square brackets.
+    # Here we create ONE list object and give it the sticky note "a".
     a = [1, 2, 3]
-    b = a          # no copy; both names share one list
+
+    # Now we make a SECOND sticky note "b" that points at the SAME list.
+    b = a            # no new list is created here
+
+    # When we change the list through "b", we are changing the single shared list.
     b.append(4)
     print("\nshared list a:", a)
     print("shared list b:", b)
-    print("same object?", id(a) == id(b))
+    print("same object?", id(a) == id(b))  # True → both names point at one list
 
-    # To get a separate list, make a copy.
-    c = a.copy()
-    c.append(5)
+    # If we really want a separate list, we must ask Python to make a copy.
+    c = a.copy()     # new list that starts with the same contents as a
+    c.append(5)      # only c changes this time
     print("\ncopy c:", c)
     print("original a:", a)
+
+    # Try this: change a to [10, 20, 30], run again, and watch b and c.
 
 
 # %% 02 — Numbers & Math
@@ -1954,34 +1968,43 @@ def demo_numbers():
     """
     _header(2, "NUMBERS & MATH")
 
-    # Integers never overflow — they just get more digits.
-    big = 2 ** 1000
+    # Integers are whole numbers (…,-2,-1,0,1,2,…). In Python they can grow
+    # as big as you like — Python will quietly use more memory for you.
+    big = 2 ** 1000              # “2 to the power of 1000”
+    # We turn the number into text with str(...) so we can count how many digits it has.
     print("2**1000 has", len(str(big)), "digits")
 
-    # Floats are approximate — 0.1 cannot be represented exactly.
-    print("\n0.1 + 0.2 == 0.3 ?", 0.1 + 0.2 == 0.3)
-    print("0.1 + 0.2 gives     ", 0.1 + 0.2)
+    # Floats are “numbers with a decimal point”. Inside the computer they are
+    # stored in binary, which cannot represent 0.1 exactly.
+    print("\n0.1 + 0.2 == 0.3 ?", 0.1 + 0.2 == 0.3)   # looks like it should be True…
+    print("0.1 + 0.2 gives     ", 0.1 + 0.2)          # …but the tiny tail proves otherwise
 
-    # Use math.isclose for comparisons.
+    # math.isclose says “these two floats are close enough” using a small tolerance.
     import math
-    print("math.isclose(0.1 + 0.2, 0.3) →",
-          math.isclose(0.1 + 0.2, 0.3))
+    print(
+        "math.isclose(0.1 + 0.2, 0.3) →",
+        math.isclose(0.1 + 0.2, 0.3),
+    )
 
-    # For exact decimal math (e.g. money), use Decimal.
+    # Decimal stores decimal digits the way humans write them, so money like
+    # $0.10 + $0.20 adds up exactly.
     from decimal import Decimal
+
     amount = Decimal("0.10") + Decimal("0.20")
     print("\nDecimal('0.10') + Decimal('0.20') =", amount)
 
+    # Try this: change 0.1 and 0.2 to other decimals and see when isclose still helps.
+
 
 # %% 03 — Strings
-# Global idea: strings are immutable sequences, and slicing is the
+# Global idea: strings never change once created; slicing is the same
 # universal pattern you’ll use on many sequence types, not just text.
 def demo_strings():
     """03 — Strings & slicing: index, slice, reverse.
 
     Big picture:
-      - Strings are immutable sequences of characters; operations make
-        new strings instead of changing them in place.
+      - Strings are sequences of characters that never change once created;
+        actions that “modify” a string really create a new string.
       - Slicing `[start:stop:step]` is the common language for working
         with any sequence (strings, lists, tuples, ranges, etc.).
       - Once you “see” how indexes map to characters, reversing and
@@ -1990,18 +2013,26 @@ def demo_strings():
     _header(3, "STRINGS & SLICING")
     text = "Hello, Python"
 
+    # A “string” is just text. repr(text) shows it the way Python sees it,
+    # including the quotes, so spaces and punctuation are easy to spot.
     print("text =", repr(text))
 
-    # Indexing and simple slices.
-    print("\ntext[0]   =", text[0],   " # first character")
-    print("text[-1]  =", text[-1],  " # last character")
-    print("text[0:5] =", text[0:5], " # 'Hello' (0–4)")
-    print("text[7:]  =", text[7:],  " # 'Python' from index 7")
+    # You can think of a string as a row of letter “slots”.
+    # Index 0 is the first slot, index 1 the second, and so on.
+    print("\ntext[0]   =", text[0],   " # first character (index 0)")
+    print("text[-1]  =", text[-1],  " # last character (index -1: one from the end)")
 
-    # Negative indices and steps.
+    # A slice cuts out a piece of the string: text[start:stop]
+    # starts at start and stops *before* stop.
+    print("text[0:5] =", text[0:5], " # characters 0–4 → 'Hello'")
+    print("text[7:]  =", text[7:],  " # from index 7 all the way to the end → 'Python'")
+
+    # Negative indices count from the right; a third “step” part lets you skip.
     print("\ntext[-6:]  =", text[-6:],  " # last 6 characters → 'Python'")
-    print("text[::-1] =", text[::-1], " # reversed")
-    print("text[::2]  =", text[::2],  " # every second character")
+    print("text[::-1] =", text[::-1], " # the whole string, but stepped backwards (reversed)")
+    print("text[::2]  =", text[::2],  " # every second character: keep 0,2,4,… and skip the rest")
+
+    # Try this: change text to your name and guess what text[0:3] and text[-2:] are before running.
 
 
 # %% 04 — Booleans & None
@@ -2058,51 +2089,52 @@ def demo_booleans():
     """
     _header(4, "BOOLEANS & NONE")
 
-    #* ── FALSY VALUES: These are ALL False in a boolean context ──
-    #  Know these cold. Everything else is True.
+    # When Python sees code like “if something: …”, it quietly asks bool(something).
+    # Some values answer “I count as False”, everything else counts as True.
     falsy_values = [False, 0, 0.0, "", [], {}, set(), None, 0j]
-    print("Falsy values (all evaluate to False):")
+    print("Falsy values (all behave like False in an if-statement):")
     for val in falsy_values:
+        # str(val) shows how the value prints; bool(val) shows how it behaves in a condition.
         print(f"  bool({str(val):>10}) → {bool(val)}")
 
-    #* ── TRUTHY: Non-empty, non-zero = True ──
-    print(f"\nbool([0])    → {bool([0])}   ← non-empty list, even if contents are 0")
-    print(f"bool(' ')    → {bool(' ')}   ← space is not empty")
-    print(f"bool(-1)     → {bool(-1)}   ← negative numbers are truthy")
+    # A few surprising examples of things that count as True.
+    print(f"\nbool([0])    → {bool([0])}   ← list is not empty, even though it holds 0")
+    print(f"bool(' ')    → {bool(' ')}   ← a space is still one character")
+    print(f"bool(-1)     → {bool(-1)}   ← any non‑zero number is True")
 
-    #* ── PYTHONIC EMPTY CHECKS ──
+    # Instead of writing “len(items) == 0”, Python style is to ask “is this empty?”
+    # by using the value directly in an if.
     items = []
-    if not items:                           # DON'T: if len(items) == 0
+    if not items:                           # reads as “if there are no items”
         print("\nPythonic: 'if not items' checks emptiness")
 
     name = ""
-    if not name:                            # DON'T: if name == ""
+    if not name:                            # reads as “if the name is empty”
         print("Pythonic: 'if not name' checks empty string")
 
-    #* ── NONE: Python's "nothing" — it's a singleton object ──
+    # None is Python’s special “no value yet” marker.
     x = None
-    print(f"\nx is None → {x is None}")     # ALWAYS use 'is', never ==
-    print(f"x == None → {x == None}")       # Works but WRONG — use 'is'
+    print(f"\nx is None → {x is None}")     # 'is' asks “are these the very same object?”
+    print(f"x == None → {x == None}")       # works, but '==' can be redefined by classes
 
-    #? Why 'is' not '=='? Because '==' can be overridden by classes.
-    #  'is' checks identity (same object), '==' checks equality (same value).
-    #  None is a singleton — there's exactly ONE None object in all of Python.
+    # 'or' and 'and' don’t just return True/False — they return one of the original values.
+    # This makes it easy to say “use this value, or fall back to that one”.
+    print(f"\n'' or 'default'     → {'default'}")           # empty string → use default
+    print(f"'hello' or 'default' → {'hello' or 'default'}") # 'hello' is non‑empty → keep it
+    print(f"0 or 42              → {0 or 42}")              # 0 is False‑ish → use 42
+    print(f"'hello' and 'world'  → {'hello' and 'world'}")  # both True‑ish → last value
+    print(f"'' and 'world'       → {'' and 'world'!r}")     # first False‑ish → stop early
 
-    #* ── SHORT-CIRCUIT EVALUATION ──
-    #  'and' returns first falsy or last value
-    #  'or' returns first truthy or last value
-    print(f"\n'' or 'default'     → {'default'}")           # common default pattern
-    print(f"'hello' or 'default' → {'hello' or 'default'}")
-    print(f"0 or 42              → {0 or 42}")
-    print(f"'hello' and 'world'  → {'hello' and 'world'}")  # both truthy → last
-    print(f"'' and 'world'       → {'' and 'world'!r}")     # first falsy → ''
-
-    #* POWER USER: None as default argument guard
+    # A very common pattern: provide a default value when the caller passes nothing in.
     def greet(name=None):
-        name = name or "World"     # if name is falsy, use "World"
+        # If name is empty/None, use 'World' instead.
+        name = name or "World"
         return f"Hello, {name}"
+
     print(f"\ngreet()         → {greet()}")
     print(f"greet('Stewart') → {greet('Stewart')}")
+
+    # Try this: call greet("") and see which branch runs (empty string is falsy).
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2163,14 +2195,14 @@ def demo_lists():
     mixed = [1, "two", 3.0, True, None]    # can mix types (but usually don't)
 
     #* ── ADDING ──
-    nums.append(6)              # add to end — O(1), fast
-    nums.insert(0, 0)           #! add at position — O(n), slow (shifts everything)
+    nums.append(6)              # add to end — fast no matter how long the list is
+    nums.insert(0, 0)           #! add at position 0 — Python has to shift the rest; slower on long lists
     nums.extend([7, 8])         # add multiple — same as += [7, 8]
 
     #* ── REMOVING ──
     nums.remove(0)              # remove first occurrence by VALUE
-    popped = nums.pop()         # remove & return last — O(1)
-    popped_at = nums.pop(2)     # remove & return at index — O(n)
+    popped = nums.pop()         # remove and return last — fast
+    popped_at = nums.pop(2)     # remove and return at index — shifting makes this slower on long lists
     print(f"After mutations: {nums}")
 
     #* ── SLICING (same as strings) ──
@@ -2195,12 +2227,14 @@ def demo_lists():
     print(f"\noriginal after shallow copy mutation: {original}")   # [1,2,99] — oops!
     print(f"deep copy is safe: {deep}")                            # [1,2] — untouched
 
-    #* POWER USER: List as a stack (LIFO)
+    #* POWER USER: Use a list like a stack (“last thing in is the first out”)
     stack = []
     stack.append("first")
     stack.append("second")
     stack.append("third")
     print(f"\nStack pop: {stack.pop()}")     # "third" — last in, first out
+
+    # Try this: try nums[1:4] = [] and see what happens (or use a slice on the left of =).
 
 
 # %% 06 — Tuples
@@ -2209,18 +2243,18 @@ def demo_tuples():
     06 — TUPLES
 
     HOW IT WORKS:
-      • Tuples are immutable sequences — once created, their contents
-        never change.
-      • Because they’re immutable and hashable (if elements are hashable),
-        tuples can be used as dictionary keys and set members.
+      • Tuples are sequences whose contents you do not change after creating
+        them; they stay the same for their whole lifetime.
+      • Because they stay the same, Python can use them as dictionary keys and
+        set members (unlike lists, which can change).
       • Multiple assignment and unpacking (`a, b = point`) are powered
         by tuples.
 
     WHY IT MATTERS:
       • Use tuples for fixed collections of values (coordinates, RGB,
         database rows, etc.).
-      • Immutability lets you safely share tuples without worrying that
-        some other part of the code will modify them.
+      • Because you never change a tuple, you can pass it around without
+        worrying that some other part of the code will modify it.
 
     EXAMPLES (code → result):
 
@@ -2275,6 +2309,8 @@ def demo_tuples():
 
     #  3. Named tuples give you the best of both worlds (see Section 09)
 
+    # Try this: add another (lat, lon) pair to location_data and look it up by key.
+
 
 # %% 07 — Dictionaries
 def demo_dicts():
@@ -2282,10 +2318,12 @@ def demo_dicts():
     07 — DICTIONARIES
 
     HOW IT WORKS:
-      • Dicts map keys to values using a hash table — lookups, inserts,
-        and deletes are O(1) on average.
-      • Keys must be hashable (immutable types like str, int, tuple of
-        immutables); values can be anything.
+      • Dicts map keys to values like a phone book: you look up one thing
+        (the key) to get another (the value), and Python makes this lookup
+        very fast under the hood.
+      • Keys must be “stable” values that don’t change over time
+        (things like strings, numbers, or tuples of those); values can be
+        anything.
       • `.get()` and `.setdefault()` are your friends for “maybe present”
         keys.
 
@@ -2369,6 +2407,8 @@ def demo_dicts():
     #* setdefault() → if key missing, set it to default AND return it
     #  This avoids the if-key-not-in-dict-then-create dance
 
+    # Try this: build a dict that counts how many times each letter appears in "hello world".
+
 
 # %% 08 — Sets
 def demo_sets():
@@ -2378,8 +2418,8 @@ def demo_sets():
     HOW IT WORKS:
       • Sets are unordered collections of unique elements — duplicates
         are automatically removed.
-      • Membership checks (`x in my_set`) are O(1) on average, compared
-        to O(n) for lists.
+      • Membership checks (`x in my_set`) are very fast even on large sets,
+        whereas checking "x in list" can be slow when the list is long.
       • Support set operations: union (`|`), intersection (`&`), difference
         (`-`), and symmetric difference (`^`).
 
@@ -2424,9 +2464,7 @@ def demo_sets():
     big_list = list(range(100_000))
     big_set = set(big_list)
 
-    #  "Is 99999 in here?"
-    #  list: scans up to 100,000 items → O(n)
-    #  set:  one hash lookup           → O(1)
+    #  "Is 99999 in here?" — list scans; set looks up in one step
     print(f"\n99999 in big_set → {99999 in big_set}")   # instant
 
     #* ── PRACTICAL: Finding differences between collections ──
@@ -2435,9 +2473,11 @@ def demo_sets():
     need = required - have
     print(f"\nSkills to learn: {need}")
 
-    #* ── FROZEN SETS: immutable sets (can be dict keys) ──
+    #* ── FROZEN SETS: sets you don’t change (can be dict keys) ──
     frozen = frozenset([1, 2, 3])
     # frozen.add(4)   #! AttributeError — can't modify
+
+    # Try this: build two sets of your own (e.g. favorite fruits vs. today's snacks) and try a - b and a & b.
 
 
 # %% 09 — Advanced Structures
@@ -2452,14 +2492,14 @@ def demo_advanced_structures():
     """
     _header(9, "ADVANCED STRUCTURES")
 
-    #* ── NAMEDTUPLE: Tuple with names (lightweight, immutable) ──
+    #* ── NAMEDTUPLE: Tuple with names (lightweight, stays the same) ──
     from collections import namedtuple
 
     Point = namedtuple("Point", ["x", "y"])
     p = Point(3, 4)
     print(f"NamedTuple: p.x={p.x}, p.y={p.y}")
     print(f"  Still a tuple: p[0]={p[0]}")
-    # p.x = 5   #! Can't modify — it's still immutable
+    # p.x = 5   #! Can't assign here — namedtuples are not meant to change
 
     #* ── DATACLASS (Python 3.7+): The modern way to make data holders ──
     from dataclasses import dataclass, field
@@ -2469,7 +2509,7 @@ def demo_advanced_structures():
         name: str
         title: str
         salary: float
-        skills: list = field(default_factory=list)   #* mutable defaults need field()
+        skills: list = field(default_factory=list)   #* use default_factory for changeable defaults
 
         @property
         def annual(self):
@@ -2512,6 +2552,8 @@ def demo_advanced_structures():
     restock = Counter(apple=10, banana=10, cherry=5)
     after = sales + restock
     print(f"  After restock:  {after}")
+
+    # Try this: create a Counter from a string (e.g. "mississippi") and call .most_common(3).
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2595,6 +2637,8 @@ def demo_conditionals():
     print(f"match 'pick up key' → {handle_command('pick up key')}")
     print(f"match 'dance'       → {handle_command('dance')}")
 
+    # Try this: add a new case to handle_command for "drop item" and run it.
+
 
 # %% 11 — Loops
 def demo_loops():
@@ -2662,6 +2706,8 @@ def demo_loops():
     for key, val in d.items():
         print(f"  {key}: {val}")
 
+    # Try this: use enumerate to print only every other fruit (e.g. 0, 2, 4) from the fruits list.
+
 
 # %% 12 — Comprehensions
 def demo_comprehensions():
@@ -2728,6 +2774,8 @@ def demo_comprehensions():
     first_big = next((n for n in data if n > 7), None)
     print(f"First > 7:  {first_big}")
 
+    # Try this: write a list comprehension that keeps only words longer than 3 characters from a list of words.
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ██████╗  █████╗ ██████╗ ████████╗    ██╗  ██╗
@@ -2770,7 +2818,7 @@ def demo_functions():
     print(f"\ngreet('Stewart')           → {greet('Stewart')}")
     print(f"greet('Stewart', 'Hey')    → {greet('Stewart', 'Hey')}")
 
-    #! DANGER: Mutable default arguments are shared across calls!
+    #! DANGER: A default value that is a list (or dict) is created once and shared across every call!
     def bad_append(item, items=[]):     # BUG: this [] is created ONCE
         items.append(item)
         return items
@@ -2817,6 +2865,8 @@ def demo_functions():
     operations = {"add": add, "greet": greet}
     print(f"\nFunctions in a dict: {operations['add'](10, 20)}")
 
+    # Try this: write a function that takes *args and returns their sum. Call it with sum_all(1, 2, 3).
+
 
 # %% 14 — Scope & Closures
 def demo_scope():
@@ -2825,8 +2875,9 @@ def demo_scope():
     │  14 — SCOPE & CLOSURES                                             │
     │                                                                     │
     │  Einstein says: "God does not play dice with the universe."        │
-    │  Neither does Python with variable scope. It follows the LEGB     │
-    │  rule — Local, Enclosing, Global, Built-in — in that exact order. │
+    │  Python looks up names in a fixed order: your current function,   │
+    │  then any enclosing function, then the module (global), then     │
+    │  built-in names. That order is what people mean by "LEGB."       │
     │                                                                     │
     │  A closure is a function that remembers variables from its         │
     │  enclosing scope even after that scope has finished executing.     │
@@ -2835,7 +2886,7 @@ def demo_scope():
     """
     _header(14, "SCOPE & CLOSURES")
 
-    #* ── LEGB RULE ──
+    #* ── Where does Python look for a name? (Local → Enclosing → Global → Built-in) ──
     global_var = "I'm global"               # G — module level
 
     def outer():
@@ -2892,6 +2943,8 @@ def demo_scope():
 
     c = make_counter_v2(10)
     print(f"\nnonlocal counter: {c()}, {c()}, {c()}")    # 11, 12, 13
+
+    # Try this: change the starting value in make_counter_v2(10) to 0 and run again.
 
 
 # %% 15 — Lambda & Functional
@@ -2953,6 +3006,8 @@ def demo_lambda():
     #  List comprehension > map/filter for most cases (more readable)
     #  Lambda + sorted() is THE standard pattern — learn it cold
     #  reduce() is rarely needed — sum(), max(), min() cover most cases
+
+    # Try this: use sorted() with key=lambda x: -x to sort a list of numbers descending.
 
 
 # %% 16 — Decorators
@@ -3053,6 +3108,8 @@ def demo_decorators():
     print(f"\n")
     process([3, 1, 4, 1, 5])
 
+    # Try this: add a simple decorator that prints "before" and "after" around any function you call.
+
 
 # %% 17 — Functools
 def demo_functools():
@@ -3101,6 +3158,8 @@ def demo_functools():
     from operator import mul
     factorial_10 = reduce(mul, range(1, 11))
     print(f"\n10! = {factorial_10}")
+
+    # Try this: use @lru_cache(maxsize=128) on a function that takes one argument and run it twice with the same value.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3190,6 +3249,8 @@ def demo_classes():
     print(f"Bank: {acct.bank_name}")
     print(f"Bank: {acct2.bank_name}")
 
+    # Try this: add a method transfer(self, other, amount) that moves money between two accounts.
+
 
 # %% 19 — Inheritance
 def demo_inheritance():
@@ -3257,6 +3318,8 @@ def demo_inheritance():
 
     #* ── METHOD RESOLUTION ORDER (MRO) ──
     print(f"\nSquare MRO: {[c.__name__ for c in Square.__mro__]}")
+
+    # Try this: add a Triangle class that also inherits from Shape and give it an area() method.
 
 
 # %% 20 — Dunder Methods
@@ -3351,6 +3414,8 @@ def demo_dunders():
     #   __call__     object() — make instance callable like a function
     #   __enter__/__exit__  context manager (with statement)
 
+    # Try this: add __add__ to Vector2D so that v1 + v2 returns a new Vector2D with summed x, y.
+
 
 # %% 21 — Properties & Slots
 def demo_properties():
@@ -3424,6 +3489,8 @@ def demo_properties():
     print(f"With slots:    {sys.getsizeof(p1)} bytes")
     print(f"Without slots: {sys.getsizeof(p2)} + {sys.getsizeof(p2.__dict__)} dict bytes")
 
+    # Try this: add a property that returns the distance from (0,0) for the PointWithSlots instance.
+
 
 # %% 22 — ABCs & Protocols
 def demo_abcs():
@@ -3488,6 +3555,8 @@ def demo_abcs():
     #  ABC:      "You must inherit from me" → explicit, enforced
     #  Protocol: "Just have the methods"    → flexible, duck typing
     #  Prefer Protocol for loose coupling. Use ABC when you need strict contracts.
+
+    # Try this: define a Protocol that requires a .name attribute and use it as a type hint.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3595,6 +3664,8 @@ def demo_exceptions():
     #? Python prefers EAFP. It's faster when the key usually exists
     #  (no double lookup), and handles race conditions better.
 
+    # Try this: wrap a division (a / b) in try/except and catch ZeroDivisionError; print a friendly message.
+
 
 # %% 24 — Context Managers
 def demo_context_managers():
@@ -3669,6 +3740,8 @@ def demo_context_managers():
     # No crash — FileNotFoundError is silently caught
     print("\n  suppress() swallowed the FileNotFoundError")
 
+    # Try this: use the Timer context manager around a loop that runs 1000 times to see the elapsed time.
+
 
 # %% 25 — Custom Exceptions
 def demo_custom_exceptions():
@@ -3718,6 +3791,8 @@ def demo_custom_exceptions():
     #? Pattern: Create a base exception for your app/module.
     #  All custom exceptions inherit from it. Callers can catch
     #  the base to handle ALL your errors, or specific ones.
+
+    # Try this: add a custom exception TimeoutError that inherits from AppError and raise it in a try block.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3778,6 +3853,8 @@ def demo_iterators():
     #? Lists are ITERABLE (can create iterators), but not iterators themselves.
     #  You can iterate over a list multiple times because each for loop
     #  calls iter() to get a FRESH iterator.
+
+    # Try this: change Countdown(5) to Countdown(10) and run; then iterate over the same Countdown(10) twice in a row and see the second loop is empty.
 
 
 # %% 27 — Generators
@@ -3863,6 +3940,8 @@ def demo_generators():
     result = list(chain([1, 2], [3, 4], [5, 6]))
     print(f"\nyield from: {result}")
 
+    # Try this: write a generator that yields the first n even numbers (0, 2, 4, ...) and take the first 5 with list(...).
+
 
 # %% 28 — itertools
 def demo_itertools():
@@ -3938,6 +4017,8 @@ def demo_itertools():
     except AttributeError:
         print("batched:     (requires Python 3.12+)")
 
+    # Try this: use it.chain to combine two lists, then use it.islice to take only the first 3 elements.
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ██████╗  █████╗ ██████╗ ████████╗     █████╗
@@ -4006,6 +4087,8 @@ def demo_files():
     os.remove(tmpfile)
     print("\n  Temp file cleaned up")
 
+    # Try this: open a file in 'a' mode and append one more line, then read the file and print it.
+
 
 # %% 30 — JSON & CSV
 def demo_json_csv():
@@ -4073,6 +4156,8 @@ def demo_json_csv():
     for row in reader:
         print(f"  DictReader: {row['Name']} from {row['City']}")
 
+    # Try this: use json.dumps with indent=2 on a small dict and print the result.
+
 
 # %% 31 — Pathlib
 def demo_pathlib():
@@ -4135,6 +4220,8 @@ def demo_pathlib():
     #  os.path way:  os.path.join(os.path.expanduser("~"), "file.txt")
     #  pathlib way:  Path.home() / "file.txt"
     #  Which would you rather read?
+
+    # Try this: use Path.home() / "Desktop" (or "Documents") and check .exists().
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4235,6 +4322,8 @@ def demo_regex():
     }
     print(f"\nPattern library: {list(patterns.keys())}")
 
+    # Try this: use re.findall(r'\d+', 'I have 2 apples and 5 oranges') and print the result.
+
 
 # %% 33 — String Formatting
 def demo_formatting():
@@ -4294,6 +4383,8 @@ def demo_formatting():
     print(f"  {'─'*12} {'─'*8} {'─'*6}")
     for lang, ver, year in data:
         print(f"  {lang:<12} {ver:>8.2f} {year:>6}")
+
+    # Try this: format the number 1234567.89 with commas and two decimal places using an f-string.
 
 
 # %% 34 — Datetime
@@ -4373,6 +4464,8 @@ def demo_datetime():
     # ISO format (universal exchange format)
     print(f"ISO: {now.isoformat()}")
 
+    # Try this: create a date one week ago with today - timedelta(days=7) and print it.
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ██████╗  █████╗ ██████╗ ████████╗    ██╗ ██████╗
@@ -4432,6 +4525,8 @@ def demo_collections():
     #? ChainMap doesn't merge — it searches dicts in order.
     #  Perfect for configuration layering: CLI > user > defaults.
 
+    # Try this: create a deque, append a few items, then use .popleft() and .pop() and print the results.
+
 
 # %% 36 — OS & Subprocess
 def demo_os():
@@ -4480,6 +4575,8 @@ def demo_os():
     #! NEVER use shell=True with user input — security risk (injection)
     #  subprocess.run(f"rm {user_input}", shell=True)  ← DANGEROUS
     #  subprocess.run(["rm", user_input])               ← SAFE
+
+    # Try this: run subprocess.run(["ls", "-la"], capture_output=True, text=True) and print .stdout (or use "dir" on Windows).
 
 
 # %% 37 — Typing & Type Hints
@@ -4555,6 +4652,8 @@ def demo_typing():
 
     #? Type hints are NEVER enforced at runtime. Use mypy or pyright
     #  to check them: `mypy script.py` or let VS Code's Pylance do it.
+
+    # Try this: add a type hint to a function that takes a list of strings and returns the longest one.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4663,6 +4762,8 @@ def demo_idioms():
     x, _, z = coords                         # ignore y
     print(f"  x={x}, z={z}")
 
+    # Try this: use dict(zip(keys, values)) to build a small lookup table from two lists you choose.
+
 
 # %% 39 — Performance
 def demo_performance():
@@ -4729,6 +4830,8 @@ def demo_performance():
   ├─ Use functools.lru_cache for repeated calculations
   └─ Profile before optimizing: python -m cProfile script.py""")
 
+    # Try this: time a list comprehension vs a for-loop that appends (use time.perf_counter() and a large N).
+
 
 # %% 40 — Gotchas
 def demo_gotchas():
@@ -4743,8 +4846,8 @@ def demo_gotchas():
     """
     _header(40, "GOTCHAS")
 
-    #* ── GOTCHA 1: Mutable default arguments ──
-    print("1. Mutable default arguments:")
+    #* ── GOTCHA 1: Default argument that is a list or dict is shared across every call ──
+    print("1. Default argument that is a list or dict is shared across every call:")
     def append_to(item, target=[]):          #! BUG: [] is created ONCE
         target.append(item)
         return target
@@ -4783,8 +4886,8 @@ def demo_gotchas():
     shallow[0].append(99)
     print(f"   Original after shallow copy edit: {original}")  # [[1,2,99],[3,4]]
 
-    #* ── GOTCHA 5: String immutability ──
-    print("\n5. Strings are immutable:")
+    #* ── GOTCHA 5: Strings never change in place ──
+    print("\n5. Strings never change in place:")
     s = "hello"
     # s[0] = 'H'                             #! TypeError
     s = 'H' + s[1:]                          # creates a NEW string
@@ -4811,6 +4914,8 @@ def demo_gotchas():
     print(f"   0.1 + 0.2 == 0.3: {0.1 + 0.2 == 0.3}")  # False!
     import math
     print(f"   isclose: {math.isclose(0.1 + 0.2, 0.3)}")  # True
+
+    # Try this: fix the append_to function using the None-default pattern and verify the second call returns ['b'] only.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4888,6 +4993,8 @@ def demo_cheatsheet():
   └─────────────────────────────────────────────────────────────────────┘
     """)
 
+    # Try this: pick one pattern from the cheat sheet (e.g. dict(zip(keys, values))) and use it in a 3-line script.
+
 
 
 
@@ -4946,6 +5053,8 @@ def demo_operator_precedence():
   └───────────────────────────────────────────────────────────────────────┘
     """)
 
+    # Try this: try 2 + 3 * 4 and (2 + 3) * 4 in the REPL and see how precedence changes the result.
+
     #* ── WHY THIS MATTERS ──
     print("  Precedence gotchas:")
     print(f"    2 ** 3 ** 2   = {2 ** 3 ** 2}")       # 512 (right-assoc: 2^(3^2)=2^9)
@@ -4994,9 +5103,9 @@ def demo_builtins():
   * tuple(x)          → convert iterable to tuple
   * dict(x)           → create dict from pairs
   * set(x)            → convert iterable to set
-    frozenset(x)      → immutable set
-    bytes(x)          → immutable byte sequence
-    bytearray(x)      → mutable byte sequence
+    frozenset(x)      → set you do not plan to change
+    bytes(x)          → bytes of data that stay the same
+    bytearray(x)      → bytes of data you can change in place
     chr(n)            → Unicode char from int (chr(65)→'A')
     ord(c)            → int from Unicode char (ord('A')→65)
     bin(n)            → binary string ('0b1010')
@@ -5059,6 +5168,8 @@ def demo_builtins():
     print(f"    any([0,0,1])={any([0,0,1])}  all([1,1,0])={all([1,1,0])}")
     print(f"    callable(print)={callable(print)}  callable(42)={callable(42)}")
     print(f"    hash('hello')={hash('hello')}")
+
+    # Try this: in the REPL, try zip([1,2], ['a','b','c']) and list(zip(...)) to see how zip stops at the shortest.
 
 
 # %% 43 — Exception Hierarchy
@@ -5133,6 +5244,9 @@ def demo_exception_tree():
   FileNotFoundError       ...specifically missing files
   KeyError                ...specifically missing dict keys
     """)
+
+    # Try this: write a try/except that catches LookupError and prints "missing key or index".
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -5213,6 +5327,8 @@ def demo_venv():
     print(f"  VENV:      {venv}")
     print(f"  Platform:  {sys.platform}")
 
+    # Try this: create a new folder, run python3 -m venv .venv inside it, then activate and run pip list.
+
 
 # %% 45 — Debugging & Profiling
 def demo_debugging():
@@ -5284,6 +5400,9 @@ def demo_debugging():
   logger.error("Something broke")     # ← errors
   logger.debug("Detailed trace")      # ← dev only, hidden at INFO level
     """)
+
+    # Try this: add breakpoint() in a small script, run it, and practice 'n', 'p variable_name', and 'c' in pdb.
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -5361,6 +5480,8 @@ def demo_recipes():
     nums = [1, 2, 3, 4, 5]
     running = list(accumulate(nums))
     print(f"  Running sum: {nums} → {running}")
+
+    # Try this: use the "Dedup preserving order" pattern on a list of words and print the result.
 
     #* ── QUICK HTTP REQUEST (stdlib, no pip install) ──
     # from urllib.request import urlopen
@@ -5555,7 +5676,7 @@ def run_self_tests():
             "Right — * repeats strings.  Works on lists too: [0] * 5 = [0, 0, 0, 0, 0].",
             "The * operator repeats sequences.  'ha' * 3 = 'hahaha'.\n"
             "         Works on lists too: [0] * 3 = [0, 0, 0].\n"
-            "         But be careful with mutable contents:\n"
+            "         But be careful when the repeated item is a list or dict:\n"
             "         [[]] * 3 creates three references to the SAME inner list."
         ),
         (
@@ -5613,7 +5734,7 @@ def run_self_tests():
             "         Works anywhere: first, *rest = [1,2,3] → rest = [2,3]."
         ),
         (
-            "Mutable default",
+            "Default list/dict shared",
             "def f(x=[]):\n             x.append(1)\n             return x\n"
             "         f(); f(); f()  — what does the last call return?",
             [1, 1, 1],
