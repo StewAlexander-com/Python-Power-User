@@ -5035,75 +5035,382 @@ def demo_recipes():
 # %% Self-Test
 def run_self_tests():
     """
-    Quick knowledge check — predict the output before running!
+    Interactive quiz — type your prediction, get instant feedback.
+
+    Teaches through encouragement: when you miss one, the explanation
+    helps you understand WHY, not just WHAT.  Designed so you walk
+    away smarter every time, even on a perfect score.
     """
+
+    # ── Quiz questions ──────────────────────────────────────────────────
+    # (name, code_shown, answer, section, teach_right, teach_wrong)
+    #
+    #  code_shown:   the expression displayed to the user
+    #  answer:       the actual Python result (evaluated at definition time)
+    #  section:      which section covers this topic (for cross-reference)
+    #  teach_right:  short congrats + deeper insight (shown on correct answer)
+    #  teach_wrong:  encouraging explanation (shown on wrong answer)
+    # ───────────────────────────────────────────────────────────────────
+    tests = [
+        (
+            "Slicing",
+            '"hello"[1:4]',
+            "hello"[1:4],
+            "strings",
+            "Nailed it. Slicing is [start:stop) — stop is always exclusive."
+            "  This half-open interval convention is the same in range(), "
+            "and once it clicks you'll never get an off-by-one error again.",
+            "Almost! Slicing uses [start:stop) — the stop index is exclusive.\n"
+            "         So 'hello'[1:4] grabs indices 1, 2, 3 → 'ell'.\n"
+            "         Think of it like a fence: start is the first post,\n"
+            "         stop is where you STOP (not where you include)."
+        ),
+        (
+            "Negative index",
+            "[10, 20, 30, 40][-2]",
+            [10, 20, 30, 40][-2],
+            "lists",
+            "Exactly. Negative indices count from the end: -1 is last, -2 is second-last.",
+            "Close — negative indices count backward from the end.\n"
+            "         -1 is the last element (40), -2 is second-to-last (30).\n"
+            "         Think of it as len(list) + index: 4 + (-2) = index 2."
+        ),
+        (
+            "Nested length",
+            "len([1, [2, 3], 4])",
+            len([1, [2, 3], 4]),
+            "lists",
+            "Right — [2, 3] is ONE element.  len() counts top-level items, not contents.",
+            "Good instinct, but [2, 3] counts as a single element.\n"
+            "         The outer list has three items: 1, [2,3], and 4.\n"
+            "         len() only counts the top level — it doesn't peek inside."
+        ),
+        (
+            "Dict .get()",
+            '{"a": 1}.get("b", 0)',
+            {"a": 1}.get("b", 0),
+            "dicts",
+            "Spot on. .get() returns the default when the key is missing — no KeyError."
+            "  This is the Pythonic way to handle missing keys without try/except.",
+            "Think of .get(key, default) as 'try this key, but if it's\n"
+            "         not there, give me this instead.'  'b' isn't in the dict,\n"
+            "         so it returns the default: 0.  This is safer than dict['b']\n"
+            "         which would raise a KeyError."
+        ),
+        (
+            "Bool of empty",
+            "bool([])",
+            bool([]),
+            "booleans",
+            "Yes — empty containers are falsy.  [], {}, set(), '', 0, None → all False.",
+            "This is Python's 'truthiness' system: empty containers are falsy.\n"
+            "         [], {}, set(), '', 0, and None all evaluate to False.\n"
+            "         Anything with content is truthy.  This is why you can write\n"
+            "         'if my_list:' instead of 'if len(my_list) > 0:'."
+        ),
+        (
+            "Bool of [0]",
+            "bool([0])",
+            bool([0]),
+            "booleans",
+            "Nice catch — the list ISN'T empty, so it's truthy.  The 0 inside doesn't matter.",
+            "This one trips up a lot of people! The list contains something,\n"
+            "         so it's truthy — even though that something is 0.\n"
+            "         Python checks 'is the container empty?', not 'are the\n"
+            "         contents truthy?'.  [0] has one element → True."
+        ),
+        (
+            "Division type",
+            "type(10 / 2).__name__",
+            type(10 / 2).__name__,
+            "numbers",
+            "Got it — / ALWAYS returns float in Python 3, even for 10/2.  Use // for int.",
+            "Careful — in Python 3, / always gives you a float.\n"
+            "         Even 10 / 2 = 5.0, not 5.  This changed from Python 2.\n"
+            "         If you want integer division, use //: 10 // 2 = 5."
+        ),
+        (
+            "Floor division",
+            "17 // 5",
+            17 // 5,
+            "numbers",
+            "Right — // floors toward negative infinity.  17 / 5 = 3.4, floored to 3.",
+            "// is floor division — it rounds DOWN to the nearest integer.\n"
+            "         17 / 5 = 3.4, and floor(3.4) = 3.\n"
+            "         Watch out with negatives: -17 // 5 = -4 (not -3),\n"
+            "         because floor() goes toward negative infinity."
+        ),
+        (
+            "Ternary",
+            '"yes" if "" else "no"',
+            "yes" if "" else "no",
+            "conditionals",
+            "Exactly — empty string is falsy, so the else branch fires.",
+            "Remember Python's truthiness: empty string '' is falsy.\n"
+            "         The ternary pattern is: VALUE_IF_TRUE if CONDITION else VALUE_IF_FALSE.\n"
+            "         Since '' is falsy, the condition fails → 'no'."
+        ),
+        (
+            "Tuple trap",
+            "type((42,)).__name__",
+            type((42,)).__name__,
+            "tuples",
+            "Yes! The COMMA makes the tuple, not the parentheses.  This catches everyone once.",
+            "Here's the thing — the comma makes the tuple, not the parentheses.\n"
+            "         (42,) has a trailing comma → it's a tuple.\n"
+            "         (42) has no comma → it's just grouping, same as plain 42.\n"
+            "         Once you see it, you never forget it."
+        ),
+        (
+            "Not a tuple",
+            "type((42)).__name__",
+            type((42)).__name__,
+            "tuples",
+            "Exactly — no comma, no tuple.  (42) is just 42 in parentheses.",
+            "This is the flip side of the comma rule: without a trailing comma,\n"
+            "         parentheses are just grouping.  (42) == 42, which is an int.\n"
+            "         To make a single-element tuple: (42,) — note the comma."
+        ),
+        (
+            "Comprehension",
+            "[x*2 for x in range(4)]",
+            [x*2 for x in range(4)],
+            "comprehensions",
+            "Clean.  Comprehensions are the Pythonic way to transform sequences.",
+            "range(4) produces 0, 1, 2, 3 (four numbers, starting at 0).\n"
+            "         Each gets doubled: 0*2=0, 1*2=2, 2*2=4, 3*2=6.\n"
+            "         Result: [0, 2, 4, 6].  Remember: range(n) gives you\n"
+            "         n numbers starting from 0."
+        ),
+        (
+            "Chained compare",
+            "1 < 2 < 3",
+            1 < 2 < 3,
+            "conditionals",
+            "Yes — Python chains comparisons naturally.  It means (1<2) and (2<3).",
+            "Python lets you chain comparisons like math notation.\n"
+            "         1 < 2 < 3 means (1 < 2) AND (2 < 3) — both True → True.\n"
+            "         This works with any comparisons: a <= b < c == d."
+        ),
+        (
+            "String repeat",
+            '"ha" * 3',
+            "ha" * 3,
+            "strings",
+            "Right — * repeats strings.  Works on lists too: [0] * 5 = [0, 0, 0, 0, 0].",
+            "The * operator repeats sequences.  'ha' * 3 = 'hahaha'.\n"
+            "         Works on lists too: [0] * 3 = [0, 0, 0].\n"
+            "         But be careful with mutable contents:\n"
+            "         [[]] * 3 creates three references to the SAME inner list."
+        ),
+        (
+            "Substring",
+            '"py" in "python"',
+            "py" in "python",
+            "strings",
+            "Yes — 'in' checks for substring containment in strings.",
+            "The 'in' operator checks for substrings in strings.\n"
+            "         'py' appears at the start of 'python' → True.\n"
+            "         For lists, 'in' checks for element membership instead."
+        ),
+        (
+            "Dict merge",
+            "{1: 'a', 2: 'b'} | {2: 'c'}",
+            {1: 'a', 2: 'b'} | {2: 'c'},
+            "dicts",
+            "Exactly — | merges dicts, right side wins on conflicts.  Python 3.9+ feature.",
+            "The | operator merges two dicts (Python 3.9+).\n"
+            "         When both have the same key (2), the right side wins.\n"
+            "         So key 2 gets 'c' (from the right dict), not 'b'.\n"
+            "         Result: {1: 'a', 2: 'c'}."
+        ),
+        (
+            "Walrus",
+            "(n := 10) > 5",
+            (n := 10) > 5,
+            "conditionals",
+            "Got it — := assigns AND returns the value in one shot.  10 > 5 = True.",
+            "The walrus operator := assigns a value AND returns it.\n"
+            "         (n := 10) assigns 10 to n, then the expression becomes 10 > 5.\n"
+            "         10 > 5 is True.  This is useful in while-loops and if-conditions\n"
+            "         where you need the value AND the test."
+        ),
+        (
+            "Set intersection",
+            "{1,2,3} & {2,3,4}",
+            {1,2,3} & {2,3,4},
+            "sets",
+            "Right — & gives you elements in BOTH sets.  Set math is underrated.",
+            "& is set intersection — elements that appear in BOTH sets.\n"
+            "         {1,2,3} and {2,3,4} share 2 and 3 → {2, 3}.\n"
+            "         Other set ops: | (union), - (difference), ^ (symmetric diff)."
+        ),
+        (
+            "Star unpacking",
+            "a, *b, c = [1,2,3,4,5]\n         What is (a, b, c)?",
+            (1, [2, 3, 4], 5),
+            "variables",
+            "Yes — *b captures everything in the middle as a list.  Powerful for APIs.",
+            "The * in unpacking captures 'the rest' into a list.\n"
+            "         a gets the first element: 1\n"
+            "         c gets the last element: 5\n"
+            "         *b gets everything in between: [2, 3, 4]\n"
+            "         Works anywhere: first, *rest = [1,2,3] → rest = [2,3]."
+        ),
+        (
+            "Mutable default",
+            "def f(x=[]):\n             x.append(1)\n             return x\n"
+            "         f(); f(); f()  — what does the last call return?",
+            [1, 1, 1],
+            "gotchas",
+            "You spotted the trap! Default args are evaluated ONCE — the same list persists.",
+            "This is Python's most famous gotcha.  Default arguments are\n"
+            "         evaluated ONCE when the function is defined, not on each call.\n"
+            "         So every call to f() appends to the SAME list object.\n"
+            "         After three calls: [1, 1, 1].\n"
+            "         Fix: use 'def f(x=None): x = x or []'."
+        ),
+    ]
+
+    # ── Normalize an answer for flexible comparison ────────────────────
+    def _normalize(text):
+        """Strip whitespace, quotes, and normalize Python literals for comparison."""
+        t = text.strip()
+        # Strip matching outer quotes: 'ell' or "ell" → ell
+        if len(t) >= 2 and t[0] == t[-1] and t[0] in ('"', "'"):
+            t = t[1:-1]
+        return t
+
+    def _check_answer(user_input, expected):
+        """Compare user's text answer against the expected Python value.
+
+        Flexible: accepts 'ell', "ell", ell for string answers;
+        True/true/TRUE for booleans; {2, 3} or {3, 2} for sets; etc.
+        """
+        raw = user_input.strip()
+        if not raw:
+            return False
+
+        norm = _normalize(raw)
+        exp_str = repr(expected)
+        exp_norm = _normalize(exp_str)
+
+        # Direct match against repr
+        if norm == exp_norm:
+            return True
+
+        # Try evaluating the user's input as a Python literal
+        try:
+            user_val = eval(raw, {"__builtins__": {}}, {})
+            if user_val == expected:
+                return True
+        except Exception:
+            pass
+
+        # Case-insensitive match for simple types (True/False/None, strings)
+        if isinstance(expected, bool):
+            return norm.lower() in ("true", "false") and \
+                   (norm.lower() == "true") == expected
+        if isinstance(expected, str):
+            return norm == expected
+        if isinstance(expected, (int, float)):
+            try:
+                return float(norm) == float(expected)
+            except (ValueError, TypeError):
+                return False
+
+        return False
+
+    # ── Run the quiz ──────────────────────────────────────────────────
     print("\n" + "─" * 70)
     print("  SELF-TEST QUIZ")
     print("─" * 70)
-    print("  Predict each answer, then check. Hints provided for wrong answers.\n")
-
-    tests = [
-        ("Slicing",         "hello"[1:4],             "ell",
-         "Slicing is [start:stop) — stop is exclusive"),
-        ("Negative index",  [10, 20, 30, 40][-2],     30,
-         "Negative indices count from the end: -1=last, -2=second-last"),
-        ("List in list",    len([1, [2, 3], 4]),       3,
-         "[2, 3] is ONE element — a nested list"),
-        ("Dict .get()",     {"a": 1}.get("b", 0),     0,
-         ".get() returns the default when key is missing"),
-        ("Set dedup",       len(set([1, 1, 2, 2, 3])), 3,
-         "Sets automatically remove duplicates"),
-        ("Bool of empty",   bool([]),                  False,
-         "Empty containers are falsy"),
-        ("Bool of [0]",     bool([0]),                 True,
-         "Non-empty list is truthy even if contents are falsy"),
-        ("Division type",   type(10 / 2).__name__,     "float",
-         "/ always returns float in Python 3. Use // for int"),
-        ("Floor division",  17 // 5,                   3,
-         "// rounds down to nearest integer"),
-        ("Ternary",         "yes" if "" else "no",     "no",
-         "Empty string is falsy → else branch"),
-        ("Tuple single",    type((42,)).__name__,      "tuple",
-         "The comma makes the tuple, not the parentheses"),
-        ("Not a tuple",     type((42)).__name__,       "int",
-         "Without comma, parens are just grouping: (42) == 42"),
-        ("Comprehension",   [x*2 for x in range(4)],  [0, 2, 4, 6],
-         "range(4) = 0, 1, 2, 3"),
-        ("Chained compare", 1 < 2 < 3,                True,
-         "Python chains comparisons: (1 < 2) and (2 < 3)"),
-        ("String multiply", "ha" * 3,                  "hahaha",
-         "String * int repeats the string"),
-        ("in operator",     "py" in "python",          True,
-         "'in' checks for substring in strings"),
-        ("Dict merge",      {1: 'a', 2: 'b'} | {2: 'c'},  {1: 'a', 2: 'c'},
-         "| merges dicts — right side wins on conflicts"),
-        ("Walrus",          (n := 10) > 5,             True,
-         ":= assigns AND returns the value. 10 > 5 = True"),
-        ("Set ops",         {1,2,3} & {2,3,4},         {2, 3},
-         "& is set intersection — elements in BOTH sets"),
-        ("Unpacking",       (lambda: (a, *b, c := [1,2,3,4,5]) and (a, b, c))() if False else (1, [2,3,4], 5),
-         (1, [2, 3, 4], 5),
-         "first, *middle, last = [1,2,3,4,5] captures the rest"),
-    ]
+    print("  Type your answer for each expression.  No peeking at the REPL!")
+    print("  Press Enter with no answer to skip.  Ctrl+C to quit early.\n")
 
     passed = 0
-    for name, actual, expected, hint in tests:
-        if actual == expected:
-            print(f"  PASS  {name:<20} → {actual!r}")
+    skipped = 0
+    wrong = 0
+    weak_areas = []  # (section_key, question_name) for missed questions
+    total = len(tests)
+
+    for i, (name, code, answer, section, teach_right, teach_wrong) in enumerate(tests, 1):
+        print(f"  [{i}/{total}] What does this evaluate to?")
+        print(f"         {code}")
+        print()
+
+        try:
+            user = input("    > ")
+        except (EOFError, KeyboardInterrupt):
+            print("\n")
+            break
+
+        if not user.strip():
+            skipped += 1
+            print(f"    Skipped.  Answer: {answer!r}")
+            print(f"    {teach_wrong.split(chr(10))[0]}")
+            print()
+            weak_areas.append((section, name))
+            continue
+
+        if _check_answer(user, answer):
             passed += 1
+            print(f"    Correct! {answer!r}")
+            print(f"    {teach_right.split(chr(10))[0]}")
         else:
-            print(f"  FAIL  {name:<20} → got {actual!r}, expected {expected!r}")
-            print(f"        Hint: {hint}")
+            wrong += 1
+            print(f"    Not quite — the answer is {answer!r}")
+            # Print the full encouraging explanation, indented
+            for line in teach_wrong.split("\n"):
+                print(f"    {line}")
+            weak_areas.append((section, name))
 
-    print(f"\n  Score: {passed}/{len(tests)}")
-    if passed == len(tests):
-        print("  You know your Python. Go build something.")
-    elif passed > len(tests) * 0.7:
-        print("  Solid foundation. Review the misses and you're golden.")
+        print()
+
+    # ── Results ──────────────────────────────────────────────────────
+    answered = passed + wrong
+    print("─" * 70)
+    print(f"  Score: {passed}/{total}", end="")
+    if skipped:
+        print(f"  ({skipped} skipped)", end="")
+    print("\n")
+
+    if passed == total:
+        print("  You know your Python.  Go build something.")
+    elif passed >= total * 0.8:
+        print("  Strong showing.  A few rough edges to polish, but you're")
+        print("  well ahead of the curve.")
+    elif passed >= total * 0.5:
+        print("  Solid start — you've got the foundations.  The ones you missed")
+        print("  are the same ones that trip up experienced devs.  Keep going.")
+    elif answered > 0:
+        print("  No worries — every expert started exactly where you are.")
+        print("  The fact that you're testing yourself puts you ahead of most.")
     else:
-        print("  Read through the sections above — the examples will click fast.")
+        print("  Quiz cut short — come back any time.  No rush.")
 
-    return passed, len(tests)
+    # ── Targeted study suggestions ───────────────────────────────────
+    if weak_areas:
+        # Group by section, deduplicate
+        sections_to_review = []
+        seen = set()
+        for sec_key, q_name in weak_areas:
+            if sec_key not in seen:
+                seen.add(sec_key)
+                # Look up the section title
+                title = sec_key
+                for sk, sn, st, _, _ in SECTION_META:
+                    if sk == sec_key:
+                        title = f"{sn:02d} {st}"
+                        break
+                sections_to_review.append((sec_key, title))
+
+        print("\n  Sections worth revisiting:")
+        for sec_key, title in sections_to_review:
+            print(f"    → {title}  (python python_poweruser.py -s {sec_key})")
+
+    print(f"\n{'─' * 70}")
+    return passed, total
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
