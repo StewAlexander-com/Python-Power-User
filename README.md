@@ -1,16 +1,20 @@
 # Python Power User
 
-A comprehensive Python language reference & interactive TUI learning tool — all in a single file.
+A complete Python language reference and interactive learning tool in a single file. No installs, no dependencies, no setup. Just run it.
 
-**47 sections** across 15 parts, from Foundations to Competitive Edge. Read it in VS Code, or run it in your terminal for a full curses-based interactive experience.
+**47 sections** across 15 parts — from your first variable to the patterns that separate senior devs from everyone else. Read it in VS Code or run it in your terminal for the full experience.
 
 Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 ---
 
-## TUI
+## The TUI
+
+Not a wall of text. A real terminal interface with two-pane navigation, syntax highlighting, and vim keys.
 
 ![Main Menu](screenshots/tui-main-menu.png)
+
+Browse any section's source with Monokai-themed syntax highlighting, line numbers, and scroll.
 
 ![Syntax-Highlighted Viewer](screenshots/tui-viewer.png)
 
@@ -19,24 +23,50 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 ## Quick Start
 
 ```bash
-# Interactive TUI
 python python_poweruser.py
-
-# List all sections
-python python_poweruser.py -l
-
-# Run a specific section
-python python_poweruser.py -s decorators
-
-# Search
-python python_poweruser.py -f lambda
-
-# Self-test quiz
-python python_poweruser.py -t
-
-# Run all demos
-python python_poweruser.py -r
 ```
+
+That's it. Arrow keys or j/k to navigate, Enter to open, / to search, q to quit.
+
+```bash
+python python_poweruser.py -s decorators   # Jump straight to a section
+python python_poweruser.py -f lambda        # Search across all 47 sections
+python python_poweruser.py -l               # See everything at a glance
+python python_poweruser.py -r               # Run all demos back to back
+python python_poweruser.py -t               # Take the interactive quiz
+```
+
+Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fix it. Piped to `head`? No crash. No curses? Falls back gracefully. It handles the weird stuff so you don't have to.
+
+---
+
+## The Quiz
+
+Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
+
+```
+  [6/20] What does this evaluate to?
+         bool([0])
+
+    > False
+    Not quite — the answer is True
+    This one trips up a lot of people! The list contains something,
+             so it's truthy — even though that something is 0.
+             Python checks 'is the container empty?', not 'are the
+             contents truthy?'.  [0] has one element → True.
+```
+
+Get it right and you'll learn something extra you didn't know. Get it wrong and the explanation actually teaches you why — no shame, no "WRONG", just "here's what's happening under the hood."
+
+At the end, it tells you exactly which sections to revisit and gives you the command to get there:
+
+```
+  Sections worth revisiting:
+    → 04 Booleans & None  (python python_poweruser.py -s booleans)
+    → 07 Dictionaries  (python python_poweruser.py -s dicts)
+```
+
+---
 
 ## What's Inside
 
@@ -58,24 +88,28 @@ python python_poweruser.py -r
 | 14 | Recipes | One-Liner Recipes |
 | A | Appendix | Cheat Sheet |
 
-## Features
+Every section has Einstein/Feynman-style explanations that make hard concepts click fast. Comments are written to teach, not to document.
 
-- **Monokai-themed curses TUI** — two-pane navigation, syntax highlighting, search, vim keys
-- **Fault-tolerant CLI** — argparse with fuzzy matching, graceful fallbacks, never crashes
-- **20-question self-test** — predict the output, learn from hints
-- **VS Code optimized** — `# %%` cell markers, fold-friendly structure, Better Comments support
-- **Zero dependencies** — stdlib only (`windows-curses` auto-installed on Windows if needed)
+---
 
 ## VS Code Setup
 
-1. Install the **Python** extension (`ms-python.python`)
-2. Install **Better Comments** — colors the `#*` `#!` `#?` `#TODO` markers
-3. Install **Indent Rainbow** — makes nesting visually obvious
+Three extensions, one-time install:
+
+1. **Python** (`ms-python.python`) — enables Run Cell, IntelliSense, and the `# %%` cell markers
+2. **Better Comments** — colors the `#*` `#!` `#?` `#TODO` markers used throughout
+3. **Indent Rainbow** — makes nesting depth visually obvious
+
+Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Each `# %%` marker is a runnable cell.
+
+---
 
 ## Requirements
 
-- Python 3.10+ (uses `match/case` syntax)
-- A terminal with at least 80×22 for the TUI (adapts to larger)
+- Python 3.10+ (uses `match/case`)
+- A terminal with at least 80×22 for the TUI
+- No external dependencies — stdlib only
+- `windows-curses` auto-installs on Windows if needed
 
 ## License
 
