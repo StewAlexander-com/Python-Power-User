@@ -216,6 +216,210 @@ SECTION_META = [
     ("cheatsheet",     47, "Cheat Sheet",             14, "Appendix"),
 ]
 
+SECTION_BIG_PICTURE: Mapping[str, str] = {
+    # Part 1 — Foundations
+    "variables": (
+        "Variables are names pointing at objects; the real skill is seeing when "
+        "multiple names share the same mutable object versus working on copies."
+    ),
+    "numbers": (
+        "Integers are exact and unbounded, floats are fast approximations, and "
+        "Decimal / math.isclose are how you stay honest about numeric comparisons."
+    ),
+    "strings": (
+        "Strings are immutable sequences of characters; slicing and indexing are "
+        "the universal tools you’ll reuse on lists, tuples, ranges, and more."
+    ),
+    "booleans": (
+        "Python has a small set of falsy values and a huge space of truthy ones; "
+        "understanding truthiness, None, and short‑circuiting makes conditions readable."
+    ),
+    # Part 2 — Data Structures
+    "lists": (
+        "Lists are ordered, growable, mutable sequences — your go‑to tool for most "
+        "collections when order matters and you need to append or pop."
+    ),
+    "tuples": (
+        "Tuples are fixed‑size, immutable sequences that work well for lightweight "
+        "records, dictionary keys, and returning multiple values."
+    ),
+    "dicts": (
+        "Dictionaries map keys to values with O(1) average lookup time and are the "
+        "backbone of most real‑world Python data modeling."
+    ),
+    "sets": (
+        "Sets hold unique elements and shine when you care about membership tests, "
+        "deduplication, and classic set operations like union and intersection."
+    ),
+    "structures": (
+        "Namedtuple, dataclass, and friends give structure and readability to your "
+        "data without the ceremony of full classes."
+    ),
+    # Part 3 — Control Flow
+    "conditionals": (
+        "Conditionals express branching logic; the art is keeping them readable with "
+        "clear predicates instead of deeply nested if/elif ladders."
+    ),
+    "loops": (
+        "Loops let you walk collections; Pythonic style favors for‑loops with "
+        "enumerate, zip, and early exits over manual index bookkeeping."
+    ),
+    "comprehensions": (
+        "Comprehensions turn common loop‑and‑build patterns into compact, readable "
+        "expressions that are both faster and easier to scan."
+    ),
+    # Part 4 — Functions
+    "functions": (
+        "Functions encapsulate behavior behind names so you can reuse, test, and "
+        "reason about small units instead of giant scripts."
+    ),
+    "scope": (
+        "The LEGB (Local, Enclosing, Global, Builtins) rules explain where names come "
+        "from and why closures capture variables the way they do."
+    ),
+    "lambda": (
+        "Lambda and functional tools like map, filter, and reduce shine when you want "
+        "to transform collections without explicit index‑based loops."
+    ),
+    "decorators": (
+        "Decorators wrap functions to add behavior (logging, caching, auth) without "
+        "changing the original call sites everywhere."
+    ),
+    "functools": (
+        "functools provides battle‑tested building blocks like lru_cache and partial "
+        "that let you optimize and adapt functions with minimal code."
+    ),
+    # Part 5 — OOP
+    "classes": (
+        "Classes bundle data and behavior together so related operations live next "
+        "to the state they act on."
+    ),
+    "inheritance": (
+        "Inheritance lets classes reuse and specialize behavior, but composition and "
+        "interfaces often keep designs simpler."
+    ),
+    "dunders": (
+        "Dunder methods (__init__, __repr__, __add__, etc.) define how your objects "
+        "behave with core Python syntax and built‑ins."
+    ),
+    "properties": (
+        "Properties and slots give you control over attribute access, validation, and "
+        "memory usage without changing attribute syntax for callers."
+    ),
+    "abcs": (
+        "Abstract base classes and protocols let you specify required behaviors so "
+        "unrelated types can plug into the same APIs."
+    ),
+    # Part 6 — Error Handling
+    "exceptions": (
+        "Exceptions separate happy‑path code from error handling so failures can "
+        "bubble up to a single, sensible place."
+    ),
+    "context": (
+        "Context managers guarantee setup/teardown (like closing files or releasing "
+        "locks) even when errors happen mid‑operation."
+    ),
+    "custom_errors": (
+        "Custom exception types make it clear what went wrong and let callers catch "
+        "exactly the failures they care about."
+    ),
+    # Part 7 — Iterators & Generators
+    "iterators": (
+        "Iterators power for‑loops under the hood; once you understand the protocol, "
+        "you can stream data instead of materializing it all at once."
+    ),
+    "generators": (
+        "Generators use yield to build lazy pipelines that handle large or infinite "
+        "streams one item at a time."
+    ),
+    "itertools": (
+        "itertools is a toolbox of composable building blocks for creating powerful "
+        "iterator pipelines with little code."
+    ),
+    # Part 8 — File I/O & Data
+    "files": (
+        "File handling is about safely opening, reading, writing, and closing files "
+        "without leaking resources or corrupting data."
+    ),
+    "json_csv": (
+        "JSON and CSV are the everyday wire formats of data interchange; Python’s "
+        "stdlib makes them easy to read, write, and validate."
+    ),
+    "pathlib": (
+        "pathlib replaces stringly‑typed file paths with rich objects that know how "
+        "to join, inspect, and manipulate paths portably."
+    ),
+    # Part 9 — Text Mastery
+    "regex": (
+        "Regular expressions match patterns in text; a few core constructs cover "
+        "most real‑world parsing and validation tasks."
+    ),
+    "formatting": (
+        "String formatting (especially f‑strings) gives you precise control over how "
+        "values are presented to humans and other systems."
+    ),
+    "datetime": (
+        "Datetime handling is about being explicit with timezones, durations, and "
+        "formats so your code works beyond your own machine."
+    ),
+    # Part 10 — Stdlib Power Tools
+    "collections": (
+        "collections provides specialized containers like deque and Counter that solve "
+        "common problems more cleanly than plain lists and dicts."
+    ),
+    "os": (
+        "os and subprocess let your Python code talk to the operating system, run "
+        "commands, and manage files and processes."
+    ),
+    "typing": (
+        "Type hints document the shapes of your data and enable tools to catch whole "
+        "classes of bugs before runtime."
+    ),
+    # Part 11 — Pythonic Patterns
+    "idioms": (
+        "Pythonic idioms are the small patterns (like unpacking, context managers, "
+        "and EAFP) that make code both concise and clear."
+    ),
+    "performance": (
+        "Performance work starts with measurement, then uses algorithms, data "
+        "structures, and profiling to speed up real bottlenecks."
+    ),
+    "gotchas": (
+        "Gotchas are the sharp edges of the language; knowing them means you can "
+        "recognize and avoid surprising behavior in the wild."
+    ),
+    # Part 12 — Reference Tables
+    "precedence": (
+        "Operator precedence tables explain which operations bind tighter so complex "
+        "expressions behave the way you expect."
+    ),
+    "builtins": (
+        "Built‑in functions are the tiny utilities you reach for constantly; learning "
+        "them saves reinventing wheels."
+    ),
+    "exceptions_ref": (
+        "The exception hierarchy shows how error types relate so you can catch broad "
+        "categories without masking unrelated bugs."
+    ),
+    # Part 13 — Env & Tooling / Recipes / Appendix
+    "venv": (
+        "Virtual environments isolate dependencies per project so upgrades and "
+        "experiments don’t break other work."
+    ),
+    "debugging": (
+        "Debugging and profiling tools (breakpoint, pdb, cProfile, timeit) reveal "
+        "what your code is actually doing, not what you assume it does."
+    ),
+    "recipes": (
+        "One‑liner recipes are battle‑tested snippets you can paste in and adapt "
+        "for common day‑to‑day tasks."
+    ),
+    "cheatsheet": (
+        "The cheat sheet is a compressed reference: answers at a glance once you’ve "
+        "seen the full explanations elsewhere."
+    ),
+}
+
 PARTS_LIST = [
     (1,  "Foundations"),
     (2,  "Data Structures"),
@@ -1031,7 +1235,16 @@ class PowerUserTUI:
             self.viewer_lines = [[("Section not found", "normal")]]
             return
 
-        func = self.registry[sec_key]
+        # For the TUI viewer, prefer the teaching-oriented demo_* function
+        # if it exists; fall back to the runtime registry function otherwise.
+        func = None
+        try:
+            demo_name = f"demo_{sec_key}"
+            func = globals().get(demo_name)
+        except Exception:
+            func = None
+        if func is None:
+            func = self.registry[sec_key]
 
         def _safe_tokenize(line):
             try:
@@ -1039,7 +1252,17 @@ class PowerUserTUI:
             except Exception:
                 return [(line, "normal")]
 
-        # Docstring first (teaching content)
+        # Global "Big picture" summary for this section (if available)
+        overview = SECTION_BIG_PICTURE.get(sec_key)
+        if overview:
+            self.viewer_lines.append(_safe_tokenize("Big picture:"))
+            for line in textwrap.fill(overview, width=max(60, self.w - 10)).split("\n"):
+                self.viewer_lines.append(_safe_tokenize("  " + line))
+            self.viewer_lines.append(_safe_tokenize(""))
+            self.viewer_lines.append(_safe_tokenize("# " + "-" * 60))
+            self.viewer_lines.append(_safe_tokenize(""))
+
+        # Docstring next (teaching content specific to the demo)
         try:
             doc = func.__doc__
         except Exception:
@@ -1680,218 +1903,158 @@ def _run_section_or_suggest(name: str) -> None:
 
 
 # %% 01 — Variables & Types
+# Global idea: names point at objects (not boxes),
+# and shared references vs copies are the core thing to “see” here.
 def demo_variables():
-    """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  01 — VARIABLES & TYPES                                            │
-    │                                                                     │
-    │  Feynman says: "A variable is a name tag, not a box."              │
-    │  Python variables don't HOLD data — they POINT to objects in       │
-    │  memory. Two names can point to the same object. This is why       │
-    │  assignment works differently than you might expect from C/Java.   │
-    └─────────────────────────────────────────────────────────────────────┘
+    """01 — Variables & Types: names pointing to objects.
+
+    Big picture:
+      - A “variable” is just a name pointing at an object in memory.
+      - Two names can point at the same object (shared reference) or at
+        separate-but-equal objects (copies).
+      - Most real-world bugs here come from accidentally sharing a mutable
+        object (like a list or dict) between multiple names.
     """
     _header(1, "VARIABLES & TYPES")
 
-    #* Python figures out the type for you — no int x = 5; nonsense
-    name = "Stewart"           # str
-    age = 49                   # int
-    height = 5.11              # float
-    is_learning = True         # bool
-    nothing = None             # NoneType
+    # Variables are just names that point to objects.
+    name = "Stewart"
+    age = 49
 
-    #* type() tells you what something IS
-    print(f"name    → {type(name).__name__:>10}  │  '{name}'")
-    print(f"age     → {type(age).__name__:>10}  │  {age}")
-    print(f"height  → {type(height).__name__:>10}  │  {height}")
-    print(f"is_learning → {type(is_learning).__name__:>6}  │  {is_learning}")
-    print(f"nothing → {type(nothing).__name__:>10}  │  {nothing}")
+    print("name:", name, "type:", type(name).__name__)
+    print("age: ", age,  "type:", type(age).__name__)
 
-    #* isinstance() is the pro way to check types (handles inheritance)
-    print(f"\nisinstance(age, int)          → {isinstance(age, int)}")
-    print(f"isinstance(age, (int, float)) → {isinstance(age, (int, float))}")
-
-    #* Everything in Python is an object — even functions and classes
-    print(f"\ntype(print)  → {type(print)}")
-    print(f"type(int)    → {type(int)}")
-
-    #* POWER USER: id() shows the memory address — proves names are pointers
+    # Two names can point to the same list.
     a = [1, 2, 3]
-    b = a              # b now points to the SAME list object
-    b.append(4)        # modifying b also modifies a — same object!
-    print(f"\na = {a}")
-    print(f"b = {b}")
-    print(f"id(a) == id(b) → {id(a) == id(b)}  (same object in memory)")
+    b = a          # no copy; both names share one list
+    b.append(4)
+    print("\nshared list a:", a)
+    print("shared list b:", b)
+    print("same object?", id(a) == id(b))
 
-    #* To get an actual copy:
-    c = a.copy()       # shallow copy — new list, same inner objects
+    # To get a separate list, make a copy.
+    c = a.copy()
     c.append(5)
-    print(f"c = {c}, a = {a}  (different objects now)")
+    print("\ncopy c:", c)
+    print("original a:", a)
 
 
 # %% 02 — Numbers & Math
+# Global idea: ints are exact and unbounded, floats are approximate,
+# and Decimal / math.isclose are the tools to reason safely about numbers.
 def demo_numbers():
-    """
-    02 — NUMBERS & MATH
+    """02 — Numbers & Math: ints vs floats vs Decimal.
 
-    HOW IT WORKS:
-      • Python integers have *unlimited precision* — they grow as large as
-        needed with no overflow.
-      • Floats are IEEE‑754 double‑precision values; many decimals (like 0.1)
-        cannot be represented exactly.
-      • `/` always returns a float; `//` does floor division and returns an int.
-      • `divmod(a, b)` returns `(quotient, remainder)` in one call.
-
-    WHY IT MATTERS:
-      • Use ints when possible, and `decimal.Decimal` for money or exact
-        base‑10 arithmetic.
-      • Don’t compare floats with `==`; use `math.isclose()` instead.
-      • Knowing the difference between `/` and `//` prevents subtle bugs.
-
-    EXAMPLES (conceptual code, not printed literally):
-      2 + 3        → 5
-      2 ** 10      → 1024
-      17 / 5       → 3.4        # true division → float
-      17 // 5      → 3          # floor division → int
-      17 % 5       → 2          # remainder
-      0.1 + 0.2    → 0.30000000000000004
-      math.isclose(0.1 + 0.2, 0.3) → True
-      Decimal("0.1") + Decimal("0.2") == Decimal("0.3")  → True
+    Big picture:
+      - Python integers are exact and can grow arbitrarily large.
+      - Floats trade exactness for speed and range; many decimals cannot
+        be represented exactly, so equality checks are fragile.
+      - For serious work, you combine `math.isclose` (tolerant compare)
+        and `Decimal` (exact base‑10 arithmetic) to avoid surprises.
     """
     _header(2, "NUMBERS & MATH")
 
-    #* Basic arithmetic — nothing surprising here
-    print(f"2 + 3   = {2 + 3}")
-    print(f"2 ** 10 = {2 ** 10}")       # exponentiation
-    print(f"17 / 5  = {17 / 5}")        # true division → always float
-    print(f"17 // 5 = {17 // 5}")       # floor division → int
-    print(f"17 % 5  = {17 % 5}")        # modulo (remainder)
-
-    #* GOTCHA: Division ALWAYS returns float in Python 3
-    print(f"\n10 / 2  = {10 / 2}  ← float, not int!")
-    print(f"10 // 2 = {10 // 2}  ← use // if you want int")
-
-    #* Python integers have UNLIMITED precision (no overflow!)
+    # Integers never overflow — they just get more digits.
     big = 2 ** 1000
-    print(f"\n2^1000 has {len(str(big))} digits — no overflow, ever")
+    print("2**1000 has", len(str(big)), "digits")
 
-    #! DANGER ZONE: Floating point is approximate
-    print(f"\n0.1 + 0.2 == 0.3 → {0.1 + 0.2 == 0.3}  ← False!")
-    print(f"0.1 + 0.2       → {0.1 + 0.2}")
+    # Floats are approximate — 0.1 cannot be represented exactly.
+    print("\n0.1 + 0.2 == 0.3 ?", 0.1 + 0.2 == 0.3)
+    print("0.1 + 0.2 gives     ", 0.1 + 0.2)
 
-    #* FIX: Use math.isclose() for float comparison
+    # Use math.isclose for comparisons.
     import math
-    print(f"math.isclose(0.1 + 0.2, 0.3) → {math.isclose(0.1 + 0.2, 0.3)}")
+    print("math.isclose(0.1 + 0.2, 0.3) →",
+          math.isclose(0.1 + 0.2, 0.3))
 
-    #* FIX: Use Decimal for exact decimal math (money, etc.)
+    # For exact decimal math (e.g. money), use Decimal.
     from decimal import Decimal
-    print(f"Decimal('0.1') + Decimal('0.2') = {Decimal('0.1') + Decimal('0.2')}")
-
-    #* Useful number tricks
-    print(f"\nabs(-42)        = {abs(-42)}")
-    print(f"round(3.14159, 2) = {round(3.14159, 2)}")
-    print(f"divmod(17, 5)   = {divmod(17, 5)}  ← (quotient, remainder)")
-    print(f"max(3, 7, 1)    = {max(3, 7, 1)}")
-    print(f"min(3, 7, 1)    = {min(3, 7, 1)}")
-
-    #* POWER USER: Underscores as thousands separators (readability)
-    million = 1_000_000
-    print(f"\n1_000_000 = {million}")
-
-    #* POWER USER: Numeric base conversions
-    print(f"bin(255) = {bin(255)}")      # binary
-    print(f"oct(255) = {oct(255)}")      # octal
-    print(f"hex(255) = {hex(255)}")      # hexadecimal
-    print(f"int('ff', 16) = {int('ff', 16)}")  # hex string → int
+    amount = Decimal("0.10") + Decimal("0.20")
+    print("\nDecimal('0.10') + Decimal('0.20') =", amount)
 
 
 # %% 03 — Strings
+# Global idea: strings are immutable sequences, and slicing is the
+# universal pattern you’ll use on many sequence types, not just text.
 def demo_strings():
-    """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  03 — STRINGS                                                      │
-    │                                                                     │
-    │  Feynman says: Strings are immutable sequences of Unicode chars.   │
-    │  "Immutable" = once created, never changed. Every operation that   │
-    │  looks like it modifies a string actually creates a brand new one. │
-    │  This is WHY they can be dict keys and set members — they're       │
-    │  reliable, unchanging labels.                                      │
-    └─────────────────────────────────────────────────────────────────────┘
-    """
-    _header(3, "STRINGS")
+    """03 — Strings & slicing: index, slice, reverse.
 
+    Big picture:
+      - Strings are immutable sequences of characters; operations make
+        new strings instead of changing them in place.
+      - Slicing `[start:stop:step]` is the common language for working
+        with any sequence (strings, lists, tuples, ranges, etc.).
+      - Once you “see” how indexes map to characters, reversing and
+        sub‑selecting pieces of text becomes automatic.
+    """
+    _header(3, "STRINGS & SLICING")
     text = "Hello, Python"
 
-    #* ── SLICING: [start:stop:step] ──
-    #  Think of indices as pointing BETWEEN characters:
-    #   H | e | l | l | o | , |   | P | y | t | h  | o  | n
-    #   0   1   2   3   4   5   6   7   8   9   10   11   12
-    #  -13 -12 -11 -10  -9  -8  -7  -6  -5  -4  -3   -2   -1
+    print("text =", repr(text))
 
-    print(f"text[0:5]   → '{text[0:5]}'")       # Hello
-    print(f"text[7:]    → '{text[7:]}'")         # Python
-    print(f"text[-6:]   → '{text[-6:]}'")        # Python
-    print(f"text[::-1]  → '{text[::-1]}'")       # Reverse
-    print(f"text[::2]   → '{text[::2]}'")        # Every other char
+    # Indexing and simple slices.
+    print("\ntext[0]   =", text[0],   " # first character")
+    print("text[-1]  =", text[-1],  " # last character")
+    print("text[0:5] =", text[0:5], " # 'Hello' (0–4)")
+    print("text[7:]  =", text[7:],  " # 'Python' from index 7")
 
-    #* ── ESSENTIAL METHODS ──
-    print(f"\n.upper()    → '{text.upper()}'")
-    print(f".lower()    → '{text.lower()}'")
-    print(f".title()    → '{text.title()}'")
-    print(f".strip()    → '{'  spaces  '.strip()}'")
-    print(f".replace()  → '{text.replace('Python', 'World')}'")
-    print(f".split(',') → {text.split(',')}")
-    print(f".find('Py') → {text.find('Py')}")    # returns index, -1 if not found
-    print(f".count('l') → {text.count('l')}")
-
-    #* ── CHECKING METHODS (return bool) ──
-    print(f"\n'abc'.isalpha()  → {'abc'.isalpha()}")
-    print(f"'123'.isdigit()  → {'123'.isdigit()}")
-    print(f"'abc'.isalnum()  → {'abc'.isalnum()}")
-    print(f"'ABC'.isupper()  → {'ABC'.isupper()}")
-    print(f"'hello'.startswith('hel') → {'hello'.startswith('hel')}")
-    print(f"'hello'.endswith('llo')   → {'hello'.endswith('llo')}")
-
-    #* ── f-STRINGS (Python 3.6+): The only formatting you need ──
-    name, age = "Stewart", 49
-    pi = 3.14159
-    print(f"\n{name} is {age}")                   # basic
-    print(f"{pi:.2f}")                             # 2 decimal places
-    print(f"{1000000:,}")                          # comma separator
-    print(f"{42:08d}")                             # zero-padded
-    print(f"{'left':<15}|")                        # left align
-    print(f"{'center':^15}|")                      # center align
-    print(f"{'right':>15}|")                       # right align
-
-    #* POWER USER: f-string expressions (Python 3.8+ with = for debug)
-    x = 42
-    print(f"\n{x = }")                             # prints "x = 42"
-    print(f"{len('hello') = }")                    # prints "len('hello') = 5"
-
-    #* ── JOIN: The inverse of split ──
-    words = ["Python", "is", "awesome"]
-    print(f"\n' '.join(words) → '{' '.join(words)}'")
-    print(f"', '.join(words) → '{', '.join(words)}'")
-
-    #* ── MULTILINE STRINGS ──
-    sql = """
-        SELECT name, age
-        FROM users
-        WHERE age > 30
-    """.strip()
-    print(f"\nMultiline:\n{sql}")
+    # Negative indices and steps.
+    print("\ntext[-6:]  =", text[-6:],  " # last 6 characters → 'Python'")
+    print("text[::-1] =", text[::-1], " # reversed")
+    print("text[::2]  =", text[::2],  " # every second character")
 
 
 # %% 04 — Booleans & None
 def demo_booleans():
-    """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  04 — BOOLEANS & NONE                                              │
-    │                                                                     │
-    │  Einstein says: "Everything should be as simple as possible,       │
-    │  but not simpler." Know what Python considers True and False —     │
-    │  this is foundational to writing clean conditionals.               │
-    └─────────────────────────────────────────────────────────────────────┘
+    """04 — Booleans & None: truthiness and 'None' done right.
+
+    Big picture:
+      - Python treats a small set of values as *falsy* (False, 0, 0.0, "", [], {}, set(), None, 0j);
+        everything else is *truthy*.
+      - `None` is a singleton object meaning “no value”; you check it with `is` / `is not`,
+        not `==`, because equality can be overloaded.
+      - `and` / `or` short-circuit and return one of their operands, which lets you write
+        compact defaulting and guard patterns.
+
+    04 — BOOLEANS & NONE
+
+    HOW IT WORKS:
+      • In `if` and `while`, Python doesn’t just use True/False literals — it
+        treats certain values as *falsy* (False, 0, 0.0, "", [], {}, set(), None, 0j).
+      • Everything else is *truthy* (non‑empty, non‑zero values).
+      • `None` is a singleton object used to mean “no value”; you test it with
+        `is` and `is not`, not `==`.
+      • `and` and `or` return one of their operands, not just True/False
+        (short‑circuit evaluation).
+
+    WHY IT MATTERS:
+      • Lets you write Pythonic checks like `if not items:` instead of
+        `if len(items) == 0:`.
+      • Prevents subtle bugs when comparing against None with `==` instead
+        of `is`.
+      • Helps you reason about chained conditions that use `and` / `or`.
+
+    EXAMPLES (code → result):
+
+      bool([])        → False
+      bool([0])       → True
+      bool("")        → False
+      bool(" ")       → True
+      bool(0)         → False
+      bool(-1)        → True
+
+      items = []
+      if not items:   # empty list
+          ...         # branch runs
+
+      x = None
+      x is None       → True
+      x == None       → True  (works, but prefer `is`)
+
+      "" or "default" → "default"
+      "hi" or "default" → "hi"
+      0 or 42         → 42
+      "a" and "b"     → "b"
     """
     _header(4, "BOOLEANS & NONE")
 
@@ -1956,19 +2119,41 @@ def demo_booleans():
 # %% 05 — Lists
 def demo_lists():
     """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  05 — LISTS                                                        │
-    │                                                                     │
-    │  Feynman says: A list is like a train — ordered cars you can add,  │
-    │  remove, or rearrange. It's the workhorse of Python. When in       │
-    │  doubt, start with a list.                                         │
-    │                                                                     │
-    │  COMPLEXITY CHEAT SHEET:                                           │
-    │    append()       O(1)    │  insert(i, x)  O(n)                   │
-    │    pop()          O(1)    │  pop(i)        O(n)                   │
-    │    x in list      O(n)    │  list[i]       O(1)                   │
-    │    sort()         O(n log n)                                       │
-    └─────────────────────────────────────────────────────────────────────┘
+    05 — LISTS
+
+    HOW IT WORKS:
+      • Lists are ordered, mutable sequences — you can add, remove, and
+        reorder elements in place.
+      • Index lookup (`lst[i]`) is O(1); inserting/removing in the middle
+        is O(n) because everything after the index must shift.
+      • `append()` and `pop()` at the end are O(1) on average and are the
+        building blocks for stacks and simple queues.
+
+    WHY IT MATTERS:
+      • Lists are the default data structure in Python — you’ll use them
+        more than anything else.
+      • Understanding the cost of insert vs append helps you avoid
+        accidental O(n²) behavior.
+
+    EXAMPLES (code → result):
+
+      nums = [1, 2, 3, 4, 5]
+      nums.append(6)          → [1, 2, 3, 4, 5, 6]
+      nums.insert(0, 0)       → [0, 1, 2, 3, 4, 5, 6]
+      nums.remove(0)          → [1, 2, 3, 4, 5, 6]
+
+      nums[1:4]               → [2, 3, 4]
+      nums[::2]               → elements at even indices
+      nums[::-1]              → reversed copy
+
+      numbers = [3, 1, 4, 1, 5]
+      sorted(numbers)         → [1, 1, 3, 4, 5]        # new list
+      list(reversed(numbers)) → [5, 1, 4, 1, 3]
+
+      original = [[1, 2], [3, 4]]
+      shallow = original.copy()
+      shallow[0].append(99)
+      original                   → [[1, 2, 99], [3, 4]]   # inner list shared
     """
     _header(5, "LISTS")
 
@@ -2021,15 +2206,35 @@ def demo_lists():
 # %% 06 — Tuples
 def demo_tuples():
     """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  06 — TUPLES                                                       │
-    │                                                                     │
-    │  Einstein says: A tuple is a list that made a promise never to     │
-    │  change. Because it can't change, Python trusts it more — you     │
-    │  can use tuples as dictionary keys and set members.               │
-    │                                                                     │
-    │  TL;DR: Use tuples for fixed collections. Use lists for dynamic.  │
-    └─────────────────────────────────────────────────────────────────────┘
+    06 — TUPLES
+
+    HOW IT WORKS:
+      • Tuples are immutable sequences — once created, their contents
+        never change.
+      • Because they’re immutable and hashable (if elements are hashable),
+        tuples can be used as dictionary keys and set members.
+      • Multiple assignment and unpacking (`a, b = point`) are powered
+        by tuples.
+
+    WHY IT MATTERS:
+      • Use tuples for fixed collections of values (coordinates, RGB,
+        database rows, etc.).
+      • Immutability lets you safely share tuples without worrying that
+        some other part of the code will modify them.
+
+    EXAMPLES (code → result):
+
+      point = (3, 4)
+      single = (42,)
+      type(single).__name__        → "tuple"
+      type((42)).__name__          → "int"
+
+      x, y = point                 → x = 3, y = 4
+      a, b = 1, 2
+      a, b = b, a                  → a = 2, b = 1
+
+      (40.7128, -74.0060) as dict key:
+        {(40.7128, -74.0060): "New York"}
     """
     _header(6, "TUPLES")
 
@@ -2074,16 +2279,41 @@ def demo_tuples():
 # %% 07 — Dictionaries
 def demo_dicts():
     """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  07 — DICTIONARIES                                                 │
-    │                                                                     │
-    │  Feynman says: A dict is a lookup table. You give it a key, it    │
-    │  gives you a value — in O(1) time. It uses hash tables under the  │
-    │  hood. Every key gets hashed to a memory address, so Python can   │
-    │  jump directly to the value without scanning.                     │
-    │                                                                     │
-    │  This is probably the most important data structure in Python.     │
-    └─────────────────────────────────────────────────────────────────────┘
+    07 — DICTIONARIES
+
+    HOW IT WORKS:
+      • Dicts map keys to values using a hash table — lookups, inserts,
+        and deletes are O(1) on average.
+      • Keys must be hashable (immutable types like str, int, tuple of
+        immutables); values can be anything.
+      • `.get()` and `.setdefault()` are your friends for “maybe present”
+        keys.
+
+    WHY IT MATTERS:
+      • Dicts are the most important data structure in Python — configs,
+        JSON, records, indexes, caches, and more.
+      • Understanding dict patterns (counting, grouping, merging) makes
+        real‑world code much simpler.
+
+    EXAMPLES (code → result):
+
+      person = {"name": "Stewart", "age": 49}
+      person["name"]                 → "Stewart"
+      person.get("email")            → None
+      person.get("email", "N/A")     → "N/A"
+
+      # Updating:
+      person["email"] = "stew@example.com"
+      person.update({"age": 50})
+
+      # Counting words:
+      counts = {}
+      for w in "the cat sat on the mat the cat".split():
+          counts[w] = counts.get(w, 0) + 1
+      counts                         → {"the": 3, "cat": 2, "sat": 1, ...}
+
+      # Grouping by first letter:
+      by_letter.setdefault("A", []).append("Alice")
     """
     _header(7, "DICTIONARIES")
 
@@ -2143,14 +2373,35 @@ def demo_dicts():
 # %% 08 — Sets
 def demo_sets():
     """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  08 — SETS                                                         │
-    │                                                                     │
-    │  Einstein says: Sets are collections with one rule — no repeats.  │
-    │  Think Venn diagrams from math class. Membership testing is O(1)  │
-    │  vs O(n) for lists. When you need to ask "is X in here?" fast,   │
-    │  use a set.                                                        │
-    └─────────────────────────────────────────────────────────────────────┘
+    08 — SETS
+
+    HOW IT WORKS:
+      • Sets are unordered collections of unique elements — duplicates
+        are automatically removed.
+      • Membership checks (`x in my_set`) are O(1) on average, compared
+        to O(n) for lists.
+      • Support set operations: union (`|`), intersection (`&`), difference
+        (`-`), and symmetric difference (`^`).
+
+    WHY IT MATTERS:
+      • Great for “does this exist?” checks, deduping, and comparing
+        collections (e.g., required vs. current skills).
+      • Set math makes many logic problems much simpler and more readable.
+
+    EXAMPLES (code → result):
+
+      set([1, 2, 2, 3, 3, 3])   → {1, 2, 3}
+
+      a = {1, 2, 3, 4, 5}
+      b = {4, 5, 6, 7, 8}
+      a | b                     → {1, 2, 3, 4, 5, 6, 7, 8}
+      a & b                     → {4, 5}
+      a - b                     → {1, 2, 3}
+      a ^ b                     → {1, 2, 3, 6, 7, 8}
+
+      required = {"python", "sql", "git", "docker"}
+      have = {"python", "git", "linux"}
+      required - have           → {"sql", "docker"}
     """
     _header(8, "SETS")
 
@@ -5522,7 +5773,7 @@ def run_self_tests():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 DEMO_REGISTRY: Mapping[str, Callable[[], None]] = {
-    # Part 1 — Foundations
+    # Part 1 — Foundations (each demo_* is a self-contained example)
     "variables":      demo_variables,
     "numbers":        demo_numbers,
     "strings":        demo_strings,
