@@ -157,6 +157,12 @@ def _header(num: int, title: str) -> None:
 
 _TUI_VERSION = "3.0"
 
+# When True, the TUI viewer shows both the teaching docstring and a cleaned
+# version of the underlying source code for each demo function. The cleaner
+# strips leading docstrings and de-noises print-based plumbing so the viewer
+# focuses on the *examples* rather than the formatting wrappers.
+_TUI_SHOW_SOURCE = True
+
 # Section metadata: maps each section to its part, number, and display title.
 # This is built from the table of contents and used by both TUI and CLI.
 SECTION_META = [
@@ -642,6 +648,33 @@ def _strip_leading_docstring(src: str) -> str:
     return "\n".join(new_lines)
 
 
+def _tui_pretty_source_line(line: str) -> str:
+    """Transform noisy demo lines into cleaner examples for the TUI viewer.
+
+    Keeps assignments and expressions as-is, but:
+      - For common print-based demo lines like:
+            print(f"2 + 3   = {2 + 3}")
+        show just the inner expression:
+            2 + 3
+      - For other print() calls that don't follow this pattern, leave the
+        line unchanged so advanced demos still show their real code.
+    """
+    stripped = line.lstrip()
+
+    # Only touch obvious print(...) demo lines
+    if not stripped.startswith("print("):
+        return line
+
+    # Heuristic: extract the first {...} expression from an f-string print
+    m = re.match(r'print\(\s*f["\'].*\{(.+?)\}["\']\s*\)', stripped)
+    if not m:
+        return line
+
+    expr = m.group(1).strip()
+    indent = line[: len(line) - len(stripped)]
+    return indent + expr
+
+
 
 class PowerUserTUI:
     """Minimal, elegant interactive TUI for Python Power User.
@@ -1020,21 +1053,23 @@ class PowerUserTUI:
             )
             self.viewer_lines.append(_safe_tokenize(""))
 
-        # Source code
-        try:
-            src = inspect.getsource(func)
-            src = textwrap.dedent(src)
-            src = _strip_leading_docstring(src)
-            for line in src.split("\n"):
-                self.viewer_lines.append(_safe_tokenize(line))
-        except (OSError, TypeError):
-            self.viewer_lines.append(
-                [("(Source not available -- running from .pyc or frozen)", "comment")]
-            )
-        except Exception:
-            self.viewer_lines.append(
-                [("(Could not read source code)", "comment")]
-            )
+        # Source code (optional in TUI viewer)
+        if _TUI_SHOW_SOURCE:
+            try:
+                src = inspect.getsource(func)
+                src = textwrap.dedent(src)
+                src = _strip_leading_docstring(src)
+                for line in src.split("\n"):
+                    pretty = _tui_pretty_source_line(line)
+                    self.viewer_lines.append(_safe_tokenize(pretty))
+            except (OSError, TypeError):
+                self.viewer_lines.append(
+                    [("(Source not available -- running from .pyc or frozen)", "comment")]
+                )
+            except Exception:
+                self.viewer_lines.append(
+                    [("(Could not read source code)", "comment")]
+                )
 
     def _draw_viewer(self):
         """Draw the section source viewer with syntax highlighting."""
@@ -1697,16 +1732,31 @@ def demo_variables():
 # %% 02 — Numbers & Math
 def demo_numbers():
     """
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  02 — NUMBERS & MATH                                               │
-    │                                                                     │
-    │  Einstein says: "As far as the laws of mathematics refer to        │
-    │  reality, they are not certain; as far as they are certain, they   │
-    │  do not refer to reality."                                         │
-    │                                                                     │
-    │  Python's integers have unlimited precision. Floats don't. Know    │
-    │  where the dragons live.                                           │
-    └─────────────────────────────────────────────────────────────────────┘
+    02 — NUMBERS & MATH
+
+    HOW IT WORKS:
+      • Python integers have *unlimited precision* — they grow as large as
+        needed with no overflow.
+      • Floats are IEEE‑754 double‑precision values; many decimals (like 0.1)
+        cannot be represented exactly.
+      • `/` always returns a float; `//` does floor division and returns an int.
+      • `divmod(a, b)` returns `(quotient, remainder)` in one call.
+
+    WHY IT MATTERS:
+      • Use ints when possible, and `decimal.Decimal` for money or exact
+        base‑10 arithmetic.
+      • Don’t compare floats with `==`; use `math.isclose()` instead.
+      • Knowing the difference between `/` and `//` prevents subtle bugs.
+
+    EXAMPLES (conceptual code, not printed literally):
+      2 + 3        → 5
+      2 ** 10      → 1024
+      17 / 5       → 3.4        # true division → float
+      17 // 5      → 3          # floor division → int
+      17 % 5       → 2          # remainder
+      0.1 + 0.2    → 0.30000000000000004
+      math.isclose(0.1 + 0.2, 0.3) → True
+      Decimal("0.1") + Decimal("0.2") == Decimal("0.3")  → True
     """
     _header(2, "NUMBERS & MATH")
 
