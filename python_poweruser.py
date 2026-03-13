@@ -26,6 +26,12 @@
 #    • Look up: use Ctrl+F or the TUI search when you need a specific pattern
 #    • Self-check: run  python python_poweruser.py test  after Part 2 or 3
 #
+#  A 15‑minute session looks like this:
+#    1. Pick a section from  python python_poweruser.py -l  (or open the TUI and choose one).
+#    2. Read the Goal (Beginner) or Goal (Power User) for that section at the top.
+#    3. Predict answers to each #? and run the Try this or Speed run cells.
+#    4. Every few sessions, run  -t  (quiz) and revisit the sections it suggests.
+#
 #  VS CODE SETUP (do these once, thank me forever):
 #    1. Install "Python" extension (ms-python.python) — enables Run Cell,
 #       IntelliSense, linting, and the # %% cell markers used throughout
@@ -6303,9 +6309,10 @@ def run_self_tests():
                         break
                 sections_to_review.append((sec_key, title))
 
-        print("\n  Sections worth revisiting:")
+        print("\n  Next step: revisit these sections and re‑run the quiz tomorrow.")
+        print("  Sections worth revisiting:")
         for sec_key, title in sections_to_review:
-            print(f"    → {title}  (python python_poweruser.py -s {sec_key})")
+            print(f"    → {title}  (run: python python_poweruser.py -s {sec_key})")
 
     print(f"\n{'─' * 70}")
     return passed, total
