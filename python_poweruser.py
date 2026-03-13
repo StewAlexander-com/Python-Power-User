@@ -6312,7 +6312,7 @@ def run_self_tests():
         print("\n  Next step: revisit these sections and re‑run the quiz tomorrow.")
         print("  Sections worth revisiting:")
         for sec_key, title in sections_to_review:
-            print(f"    → {title}  (run: python python_poweruser.py -s {sec_key})")
+            print(f"    → {title}  (python python_poweruser.py -s {sec_key})")
 
     print(f"\n{'─' * 70}")
     return passed, total

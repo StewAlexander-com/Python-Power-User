@@ -98,10 +98,20 @@ Get it right and you'll learn something extra you didn't know. Get it wrong and 
 At the end, it tells you exactly which sections to revisit and gives you the command to get there:
 
 ```
+  Next step: revisit these sections and re-run the quiz tomorrow.
   Sections worth revisiting:
     → 04 Booleans & None  (python python_poweruser.py -s booleans)
     → 07 Dictionaries  (python python_poweruser.py -s dicts)
 ```
+
+**A 15-minute session looks like this:** (1) Pick a section from `python python_poweruser.py -l` (or the TUI). (2) Read the **Goal (Beginner)** or **Goal (Power User)** line at the top. (3) Answer each **#?** in your head, then run the **Try this** or **Speed run** cells. (4) Every few sessions, run `-t` and revisit the sections it suggests.
+
+---
+
+## How to use this (two paths)
+
+- **If you're new to Python:** Start at Part 1. Follow the **Goal (Beginner)** line in each section, run every **Try this (Beginner)** cell, and run the quiz every few sessions to see what to revisit.
+- **If you already know Python:** Skim the **TL;DR** at the start of each Part and the **#! Power tip** comments. Jump with `-s` and `-f`, run **Speed run (Power User)** cells, and use the quiz to find weak spots.
 
 ---
 
@@ -109,21 +119,21 @@ At the end, it tells you exactly which sections to revisit and gives you the com
 
 | Part | Topic | Sections |
 |------|-------|----------|
-| 1 | Foundations | Variables & Types, Numbers, Strings, Booleans |
-| 2 | Data Structures | Lists, Tuples, Dicts, Sets, Advanced Structures |
-| 3 | Control Flow | Conditionals, Loops, Comprehensions |
-| 4 | Functions | Basics, Scope & Closures, Lambda, Decorators, Functools |
-| 5 | OOP | Classes, Inheritance, Dunders, Properties, ABCs |
-| 6 | Error Handling | Exceptions, Context Managers, Custom Exceptions |
-| 7 | Iterators & Generators | Iterators, Generators, itertools |
-| 8 | File I/O | File Ops, JSON & CSV, Pathlib |
-| 9 | Text Mastery | Regex, String Formatting, Datetime |
-| 10 | Stdlib Tools | Collections, OS & Subprocess, Typing |
-| 11 | The Edge | Idioms, Performance, Gotchas |
-| 12 | Reference Tables | Operator Precedence, Built-ins, Exception Hierarchy |
-| 13 | Env & Tooling | Virtual Environments, Debugging & Profiling |
-| 14 | Recipes | One-Liner Recipes |
-| A | Appendix | Cheat Sheet |
+| 1 | Foundations — types that don't surprise you | Variables & Types, Numbers, Strings, Booleans |
+| 2 | Data Structures — pick the right container fast | Lists, Tuples, Dicts, Sets, Advanced Structures |
+| 3 | Control Flow — branch and loop the Pythonic way | Conditionals, Loops, Comprehensions |
+| 4 | Functions — reuse, decorators, functools | Basics, Scope & Closures, Lambda, Decorators, Functools |
+| 5 | OOP — classes, dunders, protocols | Classes, Inheritance, Dunders, Properties, ABCs |
+| 6 | Error Handling — exceptions and context managers | Exceptions, Context Managers, Custom Exceptions |
+| 7 | Iterators & Generators — lazy pipelines | Iterators, Generators, itertools |
+| 8 | File I/O — read, write, pathlib | File Ops, JSON & CSV, Pathlib |
+| 9 | Text Mastery — regex, formatting, datetime | Regex, String Formatting, Datetime |
+| 10 | Stdlib Tools — collections, subprocess, typing | Collections, OS & Subprocess, Typing |
+| 11 | The Edge — idioms, performance, gotchas that senior devs use | Idioms, Performance, Gotchas |
+| 12 | Reference Tables — precedence, built-ins, exception tree | Operator Precedence, Built-ins, Exception Hierarchy |
+| 13 | Env & Tooling — venvs, debugging, profiling | Virtual Environments, Debugging & Profiling |
+| 14 | Recipes — copy-paste one-liners | One-Liner Recipes |
+| A | Appendix — cheat sheet at a glance | Cheat Sheet |
 
 Every section has Einstein/Feynman-style explanations that make hard concepts click fast. Comments are written to teach, not to document.
 
@@ -138,6 +148,17 @@ Three extensions, one-time install:
 3. **Indent Rainbow** — makes nesting depth visually obvious
 
 Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Each `# %%` marker is a runnable cell.
+
+**Comment markers used here**
+
+| Marker | Meaning |
+|--------|---------|
+| `#* Goal (Beginner)` | What a new user should get from the section. |
+| `#* Goal (Power User)` | What an experienced dev sharpens or unlearns. |
+| `#* Big idea:` | One-line mental model. |
+| `#! Power tip:` | Idiom, gotcha, or performance angle. |
+| `#?` | Prediction question (answer in your head, then run). |
+| `#* Try this (Beginner)` / `#* Speed run (Power User)` | Hands-on practice. |
 
 ---
 
