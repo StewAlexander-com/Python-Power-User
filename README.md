@@ -33,7 +33,8 @@ python python_poweruser.py -s decorators   # Jump straight to a section
 python python_poweruser.py -f lambda        # Search across all 47 sections
 python python_poweruser.py -l               # See everything at a glance
 python python_poweruser.py -r               # Run all demos back to back
-python python_poweruser.py -t               # Take the interactive quiz
+python python_poweruser.py -t               # Take the interactive quiz (saves progress)
+python python_poweruser.py -t --no-save    # Quiz without saving (CI / shared machines)
 ```
 
 Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fix it. Piped to `head`? No crash. No curses? Falls back gracefully. It handles the weird stuff so you don't have to.
@@ -81,27 +82,42 @@ This keeps the script in one file but makes it feel like a normal CLI tool.
 
 Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
 
+**30 questions** across beginner, intermediate, and advanced — with an optional difficulty filter so you can focus on one level. Progress is saved to `~/.python_poweruser_progress.json`: weak sections and previously missed questions appear first next time (spaced repetition), and a streak counter encourages consistency (70%+ to maintain it).
+
 ```
-  [6/20] What does this evaluate to?
+  Last session: 17/30 on 2025-01-15.  Weak areas: gotchas, dicts.
+  Tip: Questions from those sections will appear first today.
+  🔥 3-session streak — keep the momentum!
+
+  Difficulty filter? [A]ll / [B]eginner / [I]ntermediate / [Adv]anced (default: All): a
+
+  [6/30] What does this evaluate to?
          bool([0])
 
     > False
     Not quite — the answer is True
+      (Right type (bool), wrong value — good instinct!)
     Python asks "is the container empty?" not "are the contents truthy?"
-    [0] has one element, so the list is not empty → True. Same idea in
-    the code: see 04 Booleans & None.
+    [0] has one element, so the list is not empty → True.
 ```
 
-Get it right and you'll learn something extra you didn't know. Get it wrong and the explanation actually teaches you why — no shame, no "WRONG", just "here's what's happening under the hood."
+Get it right and you'll learn something extra. Get it wrong and the explanation teaches you why — with hints when you're close (right type, wrong value) or when the value is correct but the repr differs (e.g. `1` for `True`). Skipped questions show the full explanation. Answers accept aliases (`yes`/`no`, `True`/`False`), int/float cross-type (e.g. `3.0` for `3`), and fuzzy matching for longer answers.
 
-At the end, it tells you exactly which sections to revisit and gives you the command to get there:
+At the end you get a score, a visual bar, and targeted study suggestions:
 
 ```
+  Score: 24/30  (2 skipped)
+
+  Answered: 28  ✓ Correct: 24  ✗ Wrong: 4  — Skipped: 2
+  [████████████████████████░░░░░░] 85%
+
   Next step: revisit these sections and re-run the quiz tomorrow.
   Sections worth revisiting:
     → 04 Booleans & None  (python python_poweruser.py -s booleans)
     → 07 Dictionaries  (python python_poweruser.py -s dicts)
 ```
+
+- **CI / read-only home:** run without saving progress: `python python_poweruser.py -t --no-save`
 
 **A 15-minute session looks like this:**  
 1. Pick a section from `python python_poweruser.py -l` (or the TUI).  

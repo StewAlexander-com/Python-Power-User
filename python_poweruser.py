@@ -741,6 +741,7 @@ def _build_parser() -> "_FaultTolerantParser":
       python python_poweruser.py -s regex       Run the regex section
       python python_poweruser.py -f decorator   Find sections about decorators
       python python_poweruser.py -t             Take the self-test quiz
+      python python_poweruser.py -t --no-save   Run quiz without saving results
       python python_poweruser.py strings        Run a section by name (shorthand)
     """)
 
@@ -6048,7 +6049,7 @@ _SAFE_EVAL_GLOBALS: dict[str, Any] = {
     "None": None,
 }
 
-PROGRESS_SCHEMA_VERSION = 1
+PROGRESS_SCHEMA_VERSION = 2
 
 
 def _normalize(text: str) -> str:
@@ -6082,6 +6083,14 @@ def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
         user_val = eval(user_input.strip(), _SAFE_EVAL_GLOBALS, {})
         if type(user_val) == type(expected) and user_val != expected:
             return f"  (Right type ({type(expected).__name__}), wrong value — good instinct!)"
+    except Exception:
+        pass
+    # Tier: value-correct but repr differs (e.g. user typed 1 for True)
+    try:
+        user_val = eval(user_input.strip(), _SAFE_EVAL_GLOBALS, {})
+        if user_val == expected and repr(user_val) != repr(expected):
+            return (f" (Technically equal to {expected!r} but Python displays it as "
+                    f"{repr(expected)} — type matters here.)")
     except Exception:
         pass
     return None
@@ -6340,6 +6349,96 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             "         Fix: use 'def f(x=None): x = x or []'.",
             "advanced",
         ),
+        (
+            "Set dedup",
+            "len(set([1, 2, 2, 3, 3, 3]))",
+            len(set([1, 2, 2, 3, 3, 3])),
+            "sets",
+            "Correct — set() drops duplicates instantly. len({1,2,3}) = 3.",
+            "set() removes duplicates; {1,2,2,3,3,3} → {1,2,3} → length 3.",
+            "beginner",
+        ),
+        (
+            "Join strings",
+            "'-'.join(['a','b','c'])",
+            '-'.join(['a','b','c']),
+            "strings",
+            "Exactly. str.join() is the Pythonic way — far faster than += in a loop.",
+            "The separator goes on the LEFT of .join(). 'a','b','c' joined with '-' = 'a-b-c'.",
+            "beginner",
+        ),
+        (
+            "Dict keys type",
+            "type({}.keys()).__name__",
+            type({}.keys()).__name__,
+            "dicts",
+            "Right — .keys() returns a view object, not a list. Views reflect live changes.",
+            ".keys() returns a dict_keys view, not a list. Wrap with list() if you need indexing.",
+            "intermediate",
+        ),
+        (
+            "Enumerate start",
+            "list(enumerate(['a','b'], start=1))",
+            list(enumerate(['a','b'], start=1)),
+            "loops",
+            "Yes — enumerate(start=1) shifts the counter. Great for 1-based displays.",
+            "enumerate() takes an optional start= kwarg. enumerate(['a','b'], start=1) → [(1,'a'),(2,'b')].",
+            "intermediate",
+        ),
+        (
+            "Generator type",
+            "type(x for x in []).__name__",
+            type(x for x in []).__name__,
+            "generators",
+            "Right — parentheses give a generator object. Lazy, one-pass, memory-friendly.",
+            "(x for x in []) is a generator expression. type().__name__ = 'generator'.",
+            "intermediate",
+        ),
+        (
+            "Walrus in while",
+            "# Given: data = [1,2,3]\n# while chunk := data[:2]: data = data[2:]\n# How many loop iterations?",
+            2,
+            "conditionals",
+            "Exactly — [1,2] then [3] then [] (falsy, stops). 2 iterations.",
+            "First iter: chunk=[1,2], data=[3]. Second iter: chunk=[3], data=[]. Third: chunk=[] → falsy, stops. 2 iterations.",
+            "advanced",
+        ),
+        (
+            "Mutable default counter",
+            "def f(x=[]):\n    x.append(1)\n    return len(x)\nf(); f(); f()",
+            3,
+            "gotchas",
+            "You know the gotcha! Same list accumulates across calls. len grows to 3.",
+            "Default list [] is created once. Each call appends to it: [1], [1,1], [1,1,1]. len=3.",
+            "advanced",
+        ),
+        (
+            "Sorted key",
+            "sorted(['banana','apple','cherry'], key=len)[0]",
+            sorted(['banana','apple','cherry'], key=len)[0],
+            "lambda",
+            "Yes — key=len sorts by length. 'apple' (5) < 'banana' (6) < 'cherry' (6).",
+            "key=len measures each string's length. Shortest is 'apple' (5 chars) → index 0.",
+            "beginner",
+        ),
+        (
+            "Exception hierarchy",
+            "issubclass(FileNotFoundError, OSError)",
+            issubclass(FileNotFoundError, OSError),
+            "exceptions_ref",
+            "Correct — FileNotFoundError IS an OSError. Catching OSError catches file-not-found too.",
+            "FileNotFoundError inherits from OSError. issubclass checks the inheritance chain → True.",
+            "intermediate",
+        ),
+        (
+            "Zip shortest",
+            "list(zip([1,2,3], ['a','b']))",
+            list(zip([1,2,3], ['a','b'])),
+            "loops",
+            "Right — zip stops at the shortest iterable. Use itertools.zip_longest to pad.",
+            "zip() stops when the shortest input runs out. [1,2,3] vs ['a','b'] → [(1,'a'),(2,'b')].",
+            "beginner",
+        ),
     ]
 
     def _check_answer(user_input: str, expected: Any) -> bool:
@@ -6387,15 +6486,15 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             if _tokens_match(raw, exp_str):
                 return True
 
-        # 6. Float tolerance
-        if isinstance(expected, float):
+        # 6. Numeric tolerance — handle int/float cross-type and whitespace
+        if isinstance(expected, (int, float)):
             try:
-                return math.isclose(float(norm), expected, rel_tol=1e-6, abs_tol=1e-6)
-            except (ValueError, TypeError):
-                pass
-        if isinstance(expected, int):
-            try:
-                return int(norm) == expected
+                user_num = float(norm)
+                if isinstance(expected, int) and user_num == int(user_num):
+                    if int(user_num) == expected:
+                        return True
+                if isinstance(expected, float):
+                    return math.isclose(user_num, expected, rel_tol=1e-6, abs_tol=1e-6)
             except (ValueError, TypeError):
                 pass
 
@@ -6414,7 +6513,11 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
         if progress_path.exists():
             data = json.loads(progress_path.read_text(encoding="utf-8"))
             if data.get("schema_version", 0) != PROGRESS_SCHEMA_VERSION:
-                data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+                if data.get("schema_version", 0) == 1:
+                    data["schema_version"] = 2
+                    data.setdefault("question_stats", {})
+                else:
+                    data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
             sessions = data.get("sessions", [])
             if sessions:
                 last = sessions[-1]
@@ -6428,10 +6531,25 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
                     print("  Tip: Questions from those sections will appear first today.")
                 else:
                     print()
-                # Sort full list so weak sections and previously missed questions come first
+                streak = data.get("current_streak", 0)
+                if streak >= 3:
+                    try:
+                        print(f"  \U0001f525 {streak}-session streak — keep the momentum!")
+                    except UnicodeEncodeError:
+                        print(f"  ** {streak}-session streak — keep the momentum!")
+                elif streak == 2:
+                    try:
+                        print(f"  ✓ 2 sessions in a row — you're building a habit.")
+                    except UnicodeEncodeError:
+                        print(f"  2 sessions in a row — you're building a habit.")
+                q_stats = data.get("question_stats", {})
                 tests = sorted(
                     tests,
-                    key=lambda t: (t[3] in prev_weak, t[0] in prev_missed_questions),
+                    key=lambda t: (
+                        t[3] in prev_weak,
+                        t[0] in prev_missed_questions,
+                        q_stats.get(t[0], {}).get("missed", 0),
+                    ),
                     reverse=True,
                 )
     except Exception:
@@ -6479,7 +6597,8 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
         if not user.strip():
             skipped += 1
             print(f"    Skipped.  Answer: {answer!r}")
-            print(f"    {teach_wrong.split(chr(10))[0]}")
+            for line in teach_wrong.split("\n"):
+                print(f"    {line}")
             print()
             weak_areas.append((section, name))
             continue
@@ -6507,6 +6626,20 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
     if skipped:
         print(f"  ({skipped} skipped)", end="")
     print("\n")
+
+    if answered > 0:
+        try:
+            print(f"  Answered: {answered}  ✓ Correct: {passed}  ✗ Wrong: {wrong}  — Skipped: {skipped}")
+        except UnicodeEncodeError:
+            print(f"  Answered: {answered}  Correct: {passed}  Wrong: {wrong}  — Skipped: {skipped}")
+        pct = int(100 * passed / max(answered, 1))
+        bar_len = 30
+        filled = int(bar_len * passed / max(answered, 1))
+        try:
+            bar = "█" * filled + "░" * (bar_len - filled)
+        except UnicodeEncodeError:
+            bar = "#" * filled + "-" * (bar_len - filled)
+        print(f"  [{bar}] {pct}%")
 
     if passed == total:
         print("  You know your Python.  Go build something.")
@@ -6558,8 +6691,35 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             if progress_path.exists():
                 data = json.loads(progress_path.read_text(encoding="utf-8"))
                 if data.get("schema_version", 0) != PROGRESS_SCHEMA_VERSION:
-                    data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+                    if data.get("schema_version", 0) == 1:
+                        data["schema_version"] = 2
+                        data.setdefault("question_stats", {})
+                    else:
+                        data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+            # --- Streak logic ---
+            prev_sessions = data.get("sessions", [])
+            passing_threshold = 0.7
+            if prev_sessions:
+                last_passed = (prev_sessions[-1].get("score", 0) /
+                               max(prev_sessions[-1].get("total", 1), 1)) >= passing_threshold
+            else:
+                last_passed = False
+            current_score_pct = passed / max(total, 1)
+            prev_streak = data.get("current_streak", 0)
+            if current_score_pct >= passing_threshold:
+                new_streak = (prev_streak + 1) if last_passed else 1
+            else:
+                new_streak = 0
+            data["current_streak"] = new_streak
+            session["streak_at_save"] = new_streak
             data.setdefault("sessions", []).append(session)
+            q_stats = data.setdefault("question_stats", {})
+            for _, q_name in weak_areas:
+                entry = q_stats.setdefault(q_name, {"seen": 0, "missed": 0})
+                entry["missed"] += 1
+            for name, *_ in tests:
+                entry = q_stats.setdefault(name, {"seen": 0, "missed": 0})
+                entry["seen"] += 1
             progress_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception:
             pass
