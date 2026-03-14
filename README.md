@@ -82,16 +82,16 @@ This keeps the script in one file but makes it feel like a normal CLI tool.
 
 Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
 
-**30 questions** across beginner, intermediate, and advanced — with an optional difficulty filter so you can focus on one level. Progress is saved to `~/.python_poweruser_progress.json`: weak sections and previously missed questions appear first next time (spaced repetition), and a streak counter encourages consistency (70%+ to maintain it).
+**50 questions** across beginner, intermediate, and advanced — with an optional difficulty filter so you can focus on one level. Progress is saved to `~/.python_poweruser_progress.json`: weak sections and previously missed questions appear first next time (spaced repetition), and a streak counter encourages consistency (70%+ to maintain it).
 
 ```
-  Last session: 17/30 on 2025-01-15.  Weak areas: gotchas, dicts.
+  Last session: 24/50 on 2025-01-15.  Weak areas: gotchas, dicts.
   Tip: Questions from those sections will appear first today.
   🔥 3-session streak — keep the momentum!
 
   Difficulty filter? [A]ll / [B]eginner / [I]ntermediate / [Adv]anced (default: All): a
 
-  [6/30] What does this evaluate to?
+  [6/50] What does this evaluate to?
          bool([0])
 
     > False
@@ -106,10 +106,10 @@ Get it right and you'll learn something extra. Get it wrong and the explanation 
 At the end you get a score, a visual bar, and targeted study suggestions:
 
 ```
-  Score: 24/30  (2 skipped)
+  Score: 42/50  (2 skipped)
 
-  Answered: 28  ✓ Correct: 24  ✗ Wrong: 4  — Skipped: 2
-  [████████████████████████░░░░░░] 85%
+  Answered: 48  ✓ Correct: 42  ✗ Wrong: 6  — Skipped: 2
+  [████████████████████████████░░] 87%
 
   Next step: revisit these sections and re-run the quiz tomorrow.
   Sections worth revisiting:

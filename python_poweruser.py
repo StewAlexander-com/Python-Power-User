@@ -6021,24 +6021,49 @@ def demo_recipes():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # NLP-enhanced answer matching
+# ── NLP-enhanced answer matching ─────────────────────────────────────────────
 _ANSWER_ALIASES: dict[str, str] = {
-    "true": "True", "false": "False", "yes": "True", "no": "False",
+    # Boolean aliases
+    "true": "True", "false": "False",
+    "yes": "True", "no": "False",
     "1": "True", "0": "False",
-    "none": "None", "null": "None", "nil": "None",
-    "integer": "int", "string": "str", "boolean": "bool",
-    "dictionary": "dict", "list": "list", "tuple": "tuple",
-    "3.0": "3.0", "5.0": "5.0",
+    "correct": "True", "incorrect": "False",
+    "right": "True", "wrong": "False",
+    # None aliases
+    "none": "None", "null": "None", "nil": "None", "nothing": "None",
+    "undefined": "None", "n/a": "None",
+    # Type name aliases
+    "integer": "int", "whole number": "int", "an int": "int",
+    "string": "str", "text": "str", "a string": "str",
+    "boolean": "bool", "a boolean": "bool", "a bool": "bool",
+    "dictionary": "dict", "a dictionary": "dict", "a dict": "dict",
+    "a list": "list", "array": "list",
+    "a tuple": "tuple",
+    "a set": "set",
+    "a float": "float", "floating point": "float", "decimal": "float",
+    # Number aliases
+    "3.0": "3.0", "5.0": "5.0", "0.0": "0.0", "1.0": "1.0",
+    "zero": "0", "one": "1", "two": "2", "three": "3",
+    "four": "4", "five": "5", "six": "6",
+    # Common phrase answers
+    "empty": "[]", "empty list": "[]", "empty dict": "{}",
+    "empty set": "set()", "empty string": "''",
 }
 
 _TYPE_PHRASINGS: dict[str, str] = {
-    "float": "float", "int": "int", "str": "str", "tuple": "tuple",
-    "list": "list", "dict": "dict", "bool": "bool", "set": "set",
-    "a float": "float", "floating point": "float", "decimal": "float",
-    "an integer": "int", "whole number": "int",
-    "a string": "str", "text": "str",
-    "a tuple": "tuple", "a list": "list",
-    "a dict": "dict", "a dictionary": "dict",
-    "a bool": "bool", "a boolean": "bool",
+    "float": "float", "a float": "float",
+    "floating point": "float", "decimal": "float",
+    "int": "int", "integer": "int", "an integer": "int",
+    "whole number": "int",
+    "str": "str", "string": "str", "a string": "str", "text": "str",
+    "tuple": "tuple", "a tuple": "tuple",
+    "list": "list", "a list": "list",
+    "dict": "dict", "a dict": "dict", "a dictionary": "dict",
+    "bool": "bool", "a bool": "bool", "a boolean": "bool",
+    "set": "set", "a set": "set",
+    "generator": "generator", "a generator": "generator",
+    "dict_keys": "dict_keys",
+    "NoneType": "NoneType",
 }
 
 # So eval() can resolve True/False/None inside user answers (e.g. (1, [2,3,4], 5) with None)
@@ -6053,11 +6078,43 @@ PROGRESS_SCHEMA_VERSION = 2
 
 
 def _normalize(text: str) -> str:
-    """Strip whitespace, quotes, and normalize Python literals for comparison."""
+    """Strip whitespace, quotes, and normalize Python literals for comparison.
+    Also normalises common spacing around brackets/commas to catch
+    answers like '{1, 2}' vs '{1,2}' or '[ 1, 2 ]' vs '[1, 2]'.
+    """
     t = text.strip()
+    # Remove outer matching quotes
     if len(t) >= 2 and t[0] == t[-1] and t[0] in ('"', "'"):
         t = t[1:-1]
+    # Normalise spaces around punctuation for containers
+    t = re.sub(r'\s*,\s*', ', ', t)
+    t = re.sub(r'\s*:\s*', ': ', t)
+    t = re.sub(r'\[\s+', '[', t)
+    t = re.sub(r'\s+\]', ']', t)
+    t = re.sub(r'\(\s+', '(', t)
+    t = re.sub(r'\s+\)', ')', t)
+    t = re.sub(r'\{\s+', '{', t)
+    t = re.sub(r'\s+\}', '}', t)
     return t
+
+
+def _synonym_expand(user_input: str) -> list[str]:
+    """Return a list of plausible re-phrasings to try when direct match fails.
+    Covers common NLP-style variations a learner might type.
+    """
+    variants = [user_input]
+    s = user_input.strip().lower()
+    # 'a list', 'list of ...', etc.
+    for phrase, canonical in _ANSWER_ALIASES.items():
+        if s == phrase:
+            variants.append(canonical)
+    # Handle "it returns X" / "the answer is X" / "it's X"
+    for prefix in ("it returns ", "it's ", "its ", "the answer is ",
+                   "returns ", "evaluates to ", "result is ", "result: ",
+                   "answer: ", "= "):
+        if s.startswith(prefix):
+            variants.append(user_input.strip()[len(prefix):].strip())
+    return list(dict.fromkeys(variants))  # preserve order, no dupes
 
 
 def _tokens_match(user_str: str, expected_repr: str) -> bool:
@@ -6073,26 +6130,54 @@ def _tokens_match(user_str: str, expected_repr: str) -> bool:
 
 
 def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
-    """Return a short hint if the answer was close or right type; else None."""
+    """Return a contextual hint if the answer was close or right-type-wrong-value.
+    Returns None when no useful hint can be inferred.
+    Enhanced NLP version checks more patterns.
+    """
     norm = _normalize(user_input)
     exp_norm = _normalize(repr(expected))
+
+    # Exact match via difflib similarity
     ratio = SequenceMatcher(None, norm, exp_norm).ratio()
-    if ratio >= 0.60:
-        return "  (Almost! You were close — check the exact syntax.)"
+    if ratio >= 0.70:
+        return " (Almost! You were very close — check the exact syntax.)"
+    if ratio >= 0.55:
+        return " (Close — you had the right idea, check the details.)"
+
+    # Right type, wrong value
     try:
         user_val = eval(user_input.strip(), _SAFE_EVAL_GLOBALS, {})
         if type(user_val) == type(expected) and user_val != expected:
-            return f"  (Right type ({type(expected).__name__}), wrong value — good instinct!)"
+            return (f" (Right type ({type(expected).__name__}), "
+                    f"wrong value — good instinct!)")
     except Exception:
         pass
-    # Tier: value-correct but repr differs (e.g. user typed 1 for True)
+
+    # Value-correct but repr differs (e.g. user typed 1 for True)
     try:
         user_val = eval(user_input.strip(), _SAFE_EVAL_GLOBALS, {})
         if user_val == expected and repr(user_val) != repr(expected):
-            return (f" (Technically equal to {expected!r} but Python displays it as "
-                    f"{repr(expected)} — type matters here.)")
+            return (f" (Technically equal to {expected!r} but Python "
+                    f"displays it as {repr(expected)} — type matters here.)")
     except Exception:
         pass
+
+    # Check for off-by-one (common with slices/ranges)
+    if isinstance(expected, (int, float)):
+        try:
+            user_num = float(norm)
+            diff = abs(user_num - float(expected))
+            if diff == 1:
+                return " (Off by one! Double-check index/range boundaries.)"
+            if 0 < diff <= 2:
+                return " (Very close numerically — re-check your arithmetic.)"
+        except (ValueError, TypeError):
+            pass
+
+    # String expected, user typed without quotes
+    if isinstance(expected, str) and norm == expected:
+        return " (Correct value! Remember strings display with quotes in Python.)"
+
     return None
 
 
@@ -6439,6 +6524,180 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             "zip() stops when the shortest input runs out. [1,2,3] vs ['a','b'] → [(1,'a'),(2,'b')].",
             "beginner",
         ),
+        (
+            "Range exclusive stop",
+            "list(range(3, 8, 2))",
+            list(range(3, 8, 2)),
+            "loops",
+            "Right — range(start, stop, step): starts at 3, steps by 2, stops before 8.",
+            "range(start, stop, step) starts at 3, adds 2 each time, stops BEFORE 8.\n"
+            " 3 → 5 → 7 → (9 >= 8, stop). Result: [3, 5, 7].",
+            "beginner",
+        ),
+        (
+            "List multiply shared ref",
+            "a = [[]] * 3\na[0].append(1)\nWhat is a?",
+            [[1], [1], [1]],
+            "gotchas",
+            "Classic! [[]] * 3 creates 3 references to the SAME inner list.",
+            "[[]] * 3 copies the reference, not the object.\n"
+            " All three slots point to the same inner list.\n"
+            " a[0].append(1) changes ALL of them → [[1],[1],[1]].\n"
+            " Fix: a = [[] for _ in range(3)]",
+            "advanced",
+        ),
+        (
+            "Dict comprehension invert",
+            "{v: k for k, v in {'a':1,'b':2}.items()}",
+            {v: k for k, v in {'a': 1, 'b': 2}.items()},
+            "dicts",
+            "Exactly — dict comprehension swapping keys and values. Essential pattern.",
+            "Iterate .items() to get (key, value) pairs, then swap them.\n"
+            " {'a':1,'b':2} → {1:'a', 2:'b'}.",
+            "intermediate",
+        ),
+        (
+            "any() short circuit",
+            "any([False, False, True, False])",
+            any([False, False, True, False]),
+            "comprehensions",
+            "Right — any() returns True as soon as it finds one truthy value.",
+            "any() returns True if at least one element is truthy.\n"
+            " It short-circuits: stops as soon as it hits True.",
+            "beginner",
+        ),
+        (
+            "f-string expression",
+            "f'{2 ** 8}'",
+            f'{2 ** 8}',
+            "formatting",
+            "Yes — f-strings evaluate full expressions inside {}.",
+            "f-strings can contain any Python expression inside {}.\n"
+            " 2 ** 8 = 256, so f'{2**8}' → '256' (a string).",
+            "beginner",
+        ),
+        (
+            "Unpacking swap",
+            "a, b = 'xy'\nWhat is (a, b)?",
+            ('x', 'y'),
+            "variables",
+            "Yes — Python unpacks any iterable. Strings are sequences of chars.",
+            "Strings are iterable, so 'xy' unpacks into two characters.\n"
+            " a='x', b='y'.",
+            "intermediate",
+        ),
+        (
+            "None identity",
+            "None is None",
+            None is None,
+            "booleans",
+            "Correct — None is a singleton; 'is' checks identity, not equality.",
+            "None is a singleton object. 'is' checks if two names point to\n"
+            " the SAME object in memory. There's only one None → True.",
+            "beginner",
+        ),
+        (
+            "String immutability",
+            "s = 'hello'\ns[0] = 'H'\nWhat happens?",
+            "TypeError",
+            "strings",
+            "Right — strings are immutable. You can't change a character in place.",
+            "Strings in Python cannot be changed after creation (immutable).\n"
+            " s[0] = 'H' raises: TypeError: 'str' object does not support item assignment.\n"
+            " To 'change' a string, create a new one: s = 'H' + s[1:]",
+            "beginner",
+        ),
+        (
+            "Lambda identity",
+            "(lambda x: x)(42)",
+            (lambda x: x)(42),
+            "lambda",
+            "Yes — identity lambda returns its argument unchanged.",
+            "lambda x: x is the identity function. Called with 42, returns 42.",
+            "beginner",
+        ),
+        (
+            "Chained method",
+            "'  hello  '.strip().upper()",
+            '  hello  '.strip().upper(),
+            "strings",
+            "Yes — method chaining: strip() removes whitespace, upper() capitalises.",
+            ".strip() removes leading/trailing whitespace → 'hello'.\n"
+            " .upper() converts to uppercase → 'HELLO'.",
+            "beginner",
+        ),
+        (
+            "Set union operator",
+            "{1, 2} | {2, 3}",
+            {1, 2} | {2, 3},
+            "sets",
+            "Right — | is set union: all elements from both sets, duplicates removed.",
+            "| (pipe) performs set union. {1,2} ∪ {2,3} = {1,2,3}.\n"
+            " Sets never contain duplicates, so 2 appears only once.",
+            "beginner",
+        ),
+        (
+            "Dict fromkeys",
+            "dict.fromkeys(['a','b','c'], 0)",
+            dict.fromkeys(['a', 'b', 'c'], 0),
+            "dicts",
+            "Exactly — fromkeys builds a dict with a default value for each key.",
+            "dict.fromkeys(iterable, value) creates {key: value} for every key.\n"
+            " Result: {'a': 0, 'b': 0, 'c': 0}.",
+            "intermediate",
+        ),
+        (
+            "Truthy string",
+            "bool('False')",
+            bool('False'),
+            "booleans",
+            "Yes! Non-empty strings are truthy — even the string 'False'.",
+            "Truthiness checks if the container/value is empty or zero.\n"
+            " 'False' is a non-empty string → truthy → bool('False') is True.\n"
+            " Only the empty string '' is falsy.",
+            "intermediate",
+        ),
+        (
+            "Nested function scope",
+            "x = 1\ndef f():\n    x = 2\nf()\nWhat is x?",
+            1,
+            "scope",
+            "Yes — the x inside f() is LOCAL to f. The global x is untouched.",
+            "Assigning x = 2 inside f() creates a LOCAL variable.\n"
+            " The global x remains 1. To modify global x, you'd need 'global x'.",
+            "intermediate",
+        ),
+        (
+            "Modulo negative",
+            "-7 % 3",
+            -7 % 3,
+            "numbers",
+            "Python's % always returns a non-negative result when divisor is positive.",
+            "Python's modulo follows the floor division rule:\n"
+            " -7 = 3 × (-3) + 2, so -7 % 3 = 2.\n"
+            " (Not -1 as in C/Java.) Sign follows the divisor.",
+            "advanced",
+        ),
+        (
+            "List is copy",
+            "a = [1,2,3]\nb = a[:]\na.append(4)\nWhat is b?",
+            [1, 2, 3],
+            "lists",
+            "Right — [:] creates a SHALLOW copy. b is a separate list.",
+            "a[:] (full slice) creates a new list with the same elements.\n"
+            " Appending to a doesn't affect b → b stays [1, 2, 3].",
+            "intermediate",
+        ),
+        (
+            "String split default",
+            "'hello   world'.split()",
+            'hello   world'.split(),
+            "strings",
+            "Yes — split() with no args splits on ANY whitespace and ignores extras.",
+            "str.split() with no argument splits on whitespace (spaces, tabs, newlines)\n"
+            " and collapses multiple spaces. Result: ['hello', 'world'].",
+            "beginner",
+        ),
     ]
 
     def _check_answer(user_input: str, expected: Any) -> bool:
@@ -6455,23 +6714,27 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
         exp_str = repr(expected)
         exp_norm = _normalize(exp_str)
 
-        # 1. Alias normalization (restrict yes/no and 1/0 to bool-expected only)
+        # 1. Alias normalization (restrict bool-like aliases to bool-expected only)
         norm_lower = norm.lower()
-        if norm_lower in ("yes", "no") and not isinstance(expected, bool):
+        bool_only_aliases = ("yes", "no", "1", "0", "correct", "incorrect", "right", "wrong")
+        if norm_lower in bool_only_aliases and not isinstance(expected, bool):
             pass
         elif norm_lower in _ANSWER_ALIASES:
-            if norm_lower in ("1", "0") and not isinstance(expected, bool):
-                pass
-            else:
-                norm = _ANSWER_ALIASES[norm_lower]
+            norm = _ANSWER_ALIASES[norm_lower]
 
         # 2. Type-name phrasing (when expected is a type name string)
-        if isinstance(expected, str) and expected in {"float", "int", "str", "tuple", "list", "dict", "bool", "set"}:
+        type_names = {"float", "int", "str", "tuple", "list", "dict", "bool", "set",
+                      "generator", "dict_keys", "NoneType"}
+        if isinstance(expected, str) and expected in type_names:
             norm = _TYPE_PHRASINGS.get(norm.lower(), norm)
 
         # 3. Direct match against repr
         if norm == exp_norm:
             return True
+        # 3b. Synonym expansion: try rephrasings (e.g. "the answer is 3" → "3")
+        for variant in _synonym_expand(raw):
+            if variant != raw and _normalize(variant) == exp_norm:
+                return True
 
         # 4. eval()-based match (safe globals so True/False/None resolve in tuples, etc.)
         try:
