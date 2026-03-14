@@ -1269,7 +1269,7 @@ class PowerUserTUI:
         self._fill_line(y, attr)
         if not text:
             if self.screen == "menu":
-                text = " j/k:Nav  Enter:Open  /:Search  t:Test  ?:Help  q:Quit"
+                text = " j/k:Nav  Enter:Open  /:Search  t:Quiz  T:Tests  ?:Help  q:Quit"
             elif self.screen == "viewer":
                 text = " j/k:Scroll  PgUp/PgDn  r:Run  Esc:Back"
             elif self.screen == "search":
@@ -1636,7 +1636,8 @@ class PowerUserTUI:
             "",
             "  /                 Search",
             "  r                 Run demo",
-            "  t                 Self-test",
+            "  t                 Self-test quiz",
+            "  T                 Run test suite",
             "  q                 Quit",
             "",
             "  PgUp/PgDn         Scroll",
@@ -1841,8 +1842,8 @@ class PowerUserTUI:
             self.search_sel = 0
             return False
 
-        # Self-test
-        if key == ord('t') or key == ord('T'):
+        # Self-test quiz (t)
+        if key == ord('t'):
             self._suspend_curses()
             print()
             try:
@@ -1851,6 +1852,33 @@ class PowerUserTUI:
                 print("\n  [Interrupted]")
             except Exception as e:
                 print(f"\n  [ERROR]: {e}")
+            print(f"\n{'─' * 50}")
+            print("  Press Enter to return to TUI...")
+            try:
+                input()
+            except (EOFError, KeyboardInterrupt):
+                pass
+            self._restore_curses()
+            return False
+
+        # Run test suite (T) — test_quiz.py
+        if key == ord('T'):
+            self._suspend_curses()
+            print()
+            import subprocess
+            script_dir = Path(__file__).resolve().parent
+            test_script = script_dir / "test_quiz.py"
+            if not test_script.exists():
+                print("  test_quiz.py not found in script directory.")
+            else:
+                try:
+                    result = subprocess.run(
+                        [sys.executable, str(test_script), "-v"],
+                        cwd=str(script_dir),
+                    )
+                    print(f"\n  Exit code: {result.returncode}")
+                except Exception as e:
+                    print(f"\n  [ERROR]: {e}")
             print(f"\n{'─' * 50}")
             print("  Press Enter to return to TUI...")
             try:
