@@ -796,6 +796,11 @@ def _build_parser() -> "_FaultTolerantParser":
         version=f"Python Power User v{_TUI_VERSION} — "
                 f"{len(SECTION_META)} sections, {len(PARTS_LIST)} parts",
     )
+    parser.add_argument(
+        "--no-save",
+        action="store_true",
+        help="run quiz without saving progress (CI/shared machines)",
+    )
 
     # ── Positional: bare section name for backward compat ──
     parser.add_argument(
@@ -2068,7 +2073,7 @@ def _parse_args_and_run() -> None:
     elif args.run or args.no_tui:
         run_all()
     elif args.test:
-        run_self_tests()
+        run_self_tests(no_save=getattr(args, "no_save", False))
     elif args.find:
         _cli_find(args.find)
     elif args.section_name:
@@ -6035,6 +6040,16 @@ _TYPE_PHRASINGS: dict[str, str] = {
     "a bool": "bool", "a boolean": "bool",
 }
 
+# So eval() can resolve True/False/None inside user answers (e.g. (1, [2,3,4], 5) with None)
+_SAFE_EVAL_GLOBALS: dict[str, Any] = {
+    "__builtins__": {},
+    "True": True,
+    "False": False,
+    "None": None,
+}
+
+PROGRESS_SCHEMA_VERSION = 1
+
 
 def _normalize(text: str) -> str:
     """Strip whitespace, quotes, and normalize Python literals for comparison."""
@@ -6064,7 +6079,7 @@ def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
     if ratio >= 0.60:
         return "  (Almost! You were close — check the exact syntax.)"
     try:
-        user_val = eval(user_input.strip(), {"__builtins__": {}}, {})
+        user_val = eval(user_input.strip(), _SAFE_EVAL_GLOBALS, {})
         if type(user_val) == type(expected) and user_val != expected:
             return f"  (Right type ({type(expected).__name__}), wrong value — good instinct!)"
     except Exception:
@@ -6073,13 +6088,15 @@ def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
 
 
 # %% Self-Test
-def run_self_tests():
+def run_self_tests(no_save: bool = False) -> tuple[int, int]:
     """
     Interactive quiz — type your prediction, get instant feedback.
 
     Teaches through encouragement: when you miss one, the explanation
     helps you understand WHY, not just WHAT.  Designed so you walk
     away smarter every time, even on a perfect score.
+
+    If no_save is True, progress is not written to ~/.python_poweruser_progress.json (CI/shared machines).
     """
 
     # ── Quiz questions ──────────────────────────────────────────────────
@@ -6339,9 +6356,11 @@ def run_self_tests():
         exp_str = repr(expected)
         exp_norm = _normalize(exp_str)
 
-        # 1. Alias normalization (apply "1"/"0" only for bool so int 1/0 answers aren't mis-accepted)
+        # 1. Alias normalization (restrict yes/no and 1/0 to bool-expected only)
         norm_lower = norm.lower()
-        if norm_lower in _ANSWER_ALIASES:
+        if norm_lower in ("yes", "no") and not isinstance(expected, bool):
+            pass
+        elif norm_lower in _ANSWER_ALIASES:
             if norm_lower in ("1", "0") and not isinstance(expected, bool):
                 pass
             else:
@@ -6355,9 +6374,9 @@ def run_self_tests():
         if norm == exp_norm:
             return True
 
-        # 4. eval()-based match
+        # 4. eval()-based match (safe globals so True/False/None resolve in tuples, etc.)
         try:
-            user_val = eval(raw, {"__builtins__": {}}, {})
+            user_val = eval(raw, _SAFE_EVAL_GLOBALS, {})
             if user_val == expected:
                 return True
         except Exception:
@@ -6380,14 +6399,45 @@ def run_self_tests():
             except (ValueError, TypeError):
                 pass
 
-        # 7. Fuzzy difflib (last resort)
+        # 7. Fuzzy difflib (last resort; only for longer answers to avoid type-name false positives)
         ratio = SequenceMatcher(None, norm, exp_norm).ratio()
-        if ratio >= 0.82:
+        if len(exp_norm) >= 6 and ratio >= 0.80:
             return True
 
         return False
 
-    # ── Difficulty filter ─────────────────────────────────────────────
+    # ── Spaced-repetition: load progress (schema-aware), reorder full list ─────
+    progress_path = Path.home() / ".python_poweruser_progress.json"
+    prev_weak: list[str] = []
+    prev_missed_questions: list[str] = []
+    try:
+        if progress_path.exists():
+            data = json.loads(progress_path.read_text(encoding="utf-8"))
+            if data.get("schema_version", 0) != PROGRESS_SCHEMA_VERSION:
+                data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+            sessions = data.get("sessions", [])
+            if sessions:
+                last = sessions[-1]
+                score, total_prev = last.get("score", 0), last.get("total", 20)
+                date_prev = last.get("date", "?")
+                prev_weak = last.get("weak_sections", [])
+                prev_missed_questions = last.get("missed_questions", [])
+                print(f"  Last session: {score}/{total_prev} on {date_prev}.", end="")
+                if prev_weak:
+                    print(f"  Weak areas: {', '.join(prev_weak)}.")
+                    print("  Tip: Questions from those sections will appear first today.")
+                else:
+                    print()
+                # Sort full list so weak sections and previously missed questions come first
+                tests = sorted(
+                    tests,
+                    key=lambda t: (t[3] in prev_weak, t[0] in prev_missed_questions),
+                    reverse=True,
+                )
+    except Exception:
+        pass
+
+    # ── Difficulty filter (after reorder so repetition still applies) ─────────
     print("\n" + "─" * 70)
     print("  SELF-TEST QUIZ")
     print("─" * 70)
@@ -6405,28 +6455,6 @@ def run_self_tests():
     if not filtered_tests:
         filtered_tests = tests
     tests = filtered_tests
-
-    # ── Spaced-repetition: load progress and reorder ───────────────────
-    progress_path = Path.home() / ".python_poweruser_progress.json"
-    prev_weak: list[str] = []
-    try:
-        if progress_path.exists():
-            data = json.loads(progress_path.read_text(encoding="utf-8"))
-            sessions = data.get("sessions", [])
-            if sessions:
-                last = sessions[-1]
-                score, total_prev = last.get("score", 0), last.get("total", 20)
-                date_prev = last.get("date", "?")
-                prev_weak = last.get("weak_sections", [])
-                print(f"  Last session: {score}/{total_prev} on {date_prev}.", end="")
-                if prev_weak:
-                    print(f"  Weak areas: {', '.join(prev_weak)}.")
-                    print("  Tip: Questions from those sections will appear first today.")
-                else:
-                    print()
-                tests = sorted(tests, key=lambda t: t[3] in prev_weak, reverse=True)
-    except Exception:
-        pass
 
     print("  Type your answer for each expression.  No peeking at the REPL!")
     print("  Press Enter with no answer to skip.  Ctrl+C to quit early.\n")
@@ -6515,23 +6543,26 @@ def run_self_tests():
         for sec_key, title in sections_to_review:
             print(f"    → {title}  (python python_poweruser.py -s {sec_key})")
 
-    # ── Append session to progress JSON ─────────────────────────────────
-    try:
-        from datetime import date as date_module
-        session = {
-            "date": date_module.today().isoformat(),
-            "score": passed,
-            "total": total,
-            "weak_sections": list(dict.fromkeys(sec for sec, _ in weak_areas)),
-            "missed_questions": [q for _, q in weak_areas],
-        }
-        data = {"sessions": []}
-        if progress_path.exists():
-            data = json.loads(progress_path.read_text(encoding="utf-8"))
-        data.setdefault("sessions", []).append(session)
-        progress_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    except Exception:
-        pass
+    # ── Append session to progress JSON (unless --no-save) ─────────────────────
+    if not no_save:
+        try:
+            from datetime import date as date_module
+            session = {
+                "date": date_module.today().isoformat(),
+                "score": passed,
+                "total": total,
+                "weak_sections": list(dict.fromkeys(sec for sec, _ in weak_areas)),
+                "missed_questions": [q for _, q in weak_areas],
+            }
+            data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+            if progress_path.exists():
+                data = json.loads(progress_path.read_text(encoding="utf-8"))
+                if data.get("schema_version", 0) != PROGRESS_SCHEMA_VERSION:
+                    data = {"schema_version": PROGRESS_SCHEMA_VERSION, "sessions": []}
+            data.setdefault("sessions", []).append(session)
+            progress_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception:
+            pass
 
     print(f"\n{'─' * 70}")
     return passed, total
