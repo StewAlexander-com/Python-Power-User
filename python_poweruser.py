@@ -144,6 +144,10 @@ import inspect
 import textwrap
 import locale
 import argparse
+import json
+import math
+from difflib import SequenceMatcher
+from pathlib import Path
 
 # ── Locale: ensure Unicode box-drawing chars render correctly everywhere ──
 try:
@@ -6010,6 +6014,64 @@ def demo_recipes():
 #  SELF-TEST QUIZ
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# NLP-enhanced answer matching
+_ANSWER_ALIASES: dict[str, str] = {
+    "true": "True", "false": "False", "yes": "True", "no": "False",
+    "1": "True", "0": "False",
+    "none": "None", "null": "None", "nil": "None",
+    "integer": "int", "string": "str", "boolean": "bool",
+    "dictionary": "dict", "list": "list", "tuple": "tuple",
+    "3.0": "3.0", "5.0": "5.0",
+}
+
+_TYPE_PHRASINGS: dict[str, str] = {
+    "float": "float", "int": "int", "str": "str", "tuple": "tuple",
+    "list": "list", "dict": "dict", "bool": "bool", "set": "set",
+    "a float": "float", "floating point": "float", "decimal": "float",
+    "an integer": "int", "whole number": "int",
+    "a string": "str", "text": "str",
+    "a tuple": "tuple", "a list": "list",
+    "a dict": "dict", "a dictionary": "dict",
+    "a bool": "bool", "a boolean": "bool",
+}
+
+
+def _normalize(text: str) -> str:
+    """Strip whitespace, quotes, and normalize Python literals for comparison."""
+    t = text.strip()
+    if len(t) >= 2 and t[0] == t[-1] and t[0] in ('"', "'"):
+        t = t[1:-1]
+    return t
+
+
+def _tokens_match(user_str: str, expected_repr: str) -> bool:
+    """Token-level unordered comparison for sets and simple dicts."""
+    def tokenize(s: str) -> list:
+        s = s.strip().strip("{}").strip()
+        return sorted(t.strip() for t in s.split(",") if t.strip())
+
+    try:
+        return tokenize(user_str) == tokenize(expected_repr)
+    except Exception:
+        return False
+
+
+def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
+    """Return a short hint if the answer was close or right type; else None."""
+    norm = _normalize(user_input)
+    exp_norm = _normalize(repr(expected))
+    ratio = SequenceMatcher(None, norm, exp_norm).ratio()
+    if ratio >= 0.60:
+        return "  (Almost! You were close — check the exact syntax.)"
+    try:
+        user_val = eval(user_input.strip(), {"__builtins__": {}}, {})
+        if type(user_val) == type(expected) and user_val != expected:
+            return f"  (Right type ({type(expected).__name__}), wrong value — good instinct!)"
+    except Exception:
+        pass
+    return None
+
+
 # %% Self-Test
 def run_self_tests():
     """
@@ -6021,13 +6083,8 @@ def run_self_tests():
     """
 
     # ── Quiz questions ──────────────────────────────────────────────────
-    # (name, code_shown, answer, section, teach_right, teach_wrong)
-    #
-    #  code_shown:   the expression displayed to the user
-    #  answer:       the actual Python result (evaluated at definition time)
-    #  section:      which section covers this topic (for cross-reference)
-    #  teach_right:  short congrats + deeper insight (shown on correct answer)
-    #  teach_wrong:  encouraging explanation (shown on wrong answer)
+    # (name, code_shown, answer, section, teach_right, teach_wrong, difficulty)
+    #  difficulty: "beginner" | "intermediate" | "advanced"
     # ───────────────────────────────────────────────────────────────────
     tests = [
         (
@@ -6041,7 +6098,8 @@ def run_self_tests():
             "Almost! Slicing uses [start:stop) — the stop index is exclusive.\n"
             "         So 'hello'[1:4] grabs indices 1, 2, 3 → 'ell'.\n"
             "         Think of it like a fence: start is the first post,\n"
-            "         stop is where you STOP (not where you include)."
+            "         stop is where you STOP (not where you include).",
+            "beginner",
         ),
         (
             "Negative index",
@@ -6051,7 +6109,8 @@ def run_self_tests():
             "Exactly. Negative indices count from the end: -1 is last, -2 is second-last.",
             "Close — negative indices count backward from the end.\n"
             "         -1 is the last element (40), -2 is second-to-last (30).\n"
-            "         Think of it as len(list) + index: 4 + (-2) = index 2."
+            "         Think of it as len(list) + index: 4 + (-2) = index 2.",
+            "beginner",
         ),
         (
             "Nested length",
@@ -6061,7 +6120,8 @@ def run_self_tests():
             "Right — [2, 3] is ONE element.  len() counts top-level items, not contents.",
             "Good instinct, but [2, 3] counts as a single element.\n"
             "         The outer list has three items: 1, [2,3], and 4.\n"
-            "         len() only counts the top level — it doesn't peek inside."
+            "         len() only counts the top level — it doesn't peek inside.",
+            "beginner",
         ),
         (
             "Dict .get()",
@@ -6073,7 +6133,8 @@ def run_self_tests():
             "Think of .get(key, default) as 'try this key, but if it's\n"
             "         not there, give me this instead.'  'b' isn't in the dict,\n"
             "         so it returns the default: 0.  This is safer than dict['b']\n"
-            "         which would raise a KeyError."
+            "         which would raise a KeyError.",
+            "beginner",
         ),
         (
             "Bool of empty",
@@ -6084,7 +6145,8 @@ def run_self_tests():
             "This is Python's 'truthiness' system: empty containers are falsy.\n"
             "         [], {}, set(), '', 0, and None all evaluate to False.\n"
             "         Anything with content is truthy.  This is why you can write\n"
-            "         'if my_list:' instead of 'if len(my_list) > 0:'."
+            "         'if my_list:' instead of 'if len(my_list) > 0:'.",
+            "beginner",
         ),
         (
             "Bool of [0]",
@@ -6093,7 +6155,8 @@ def run_self_tests():
             "booleans",
             "Nice catch — the list isn't empty, so it's truthy. The 0 inside doesn't matter.",
             "Python asks 'is the container empty?' not 'are the contents truthy?'\n"
-            "         [0] has one element, so the list is not empty → True."
+            "         [0] has one element, so the list is not empty → True.",
+            "intermediate",
         ),
         (
             "Division type",
@@ -6103,7 +6166,8 @@ def run_self_tests():
             "Got it — / ALWAYS returns float in Python 3, even for 10/2.  Use // for int.",
             "Careful — in Python 3, / always gives you a float.\n"
             "         Even 10 / 2 = 5.0, not 5.  This changed from Python 2.\n"
-            "         If you want integer division, use //: 10 // 2 = 5."
+            "         If you want integer division, use //: 10 // 2 = 5.",
+            "beginner",
         ),
         (
             "Floor division",
@@ -6114,7 +6178,8 @@ def run_self_tests():
             "// is floor division — it rounds DOWN to the nearest integer.\n"
             "         17 / 5 = 3.4, and floor(3.4) = 3.\n"
             "         Watch out with negatives: -17 // 5 = -4 (not -3),\n"
-            "         because floor() goes toward negative infinity."
+            "         because floor() goes toward negative infinity.",
+            "beginner",
         ),
         (
             "Ternary",
@@ -6124,7 +6189,8 @@ def run_self_tests():
             "Exactly — empty string is falsy, so the else branch fires.",
             "Remember Python's truthiness: empty string '' is falsy.\n"
             "         The ternary pattern is: VALUE_IF_TRUE if CONDITION else VALUE_IF_FALSE.\n"
-            "         Since '' is falsy, the condition fails → 'no'."
+            "         Since '' is falsy, the condition fails → 'no'.",
+            "beginner",
         ),
         (
             "Tuple trap",
@@ -6135,7 +6201,8 @@ def run_self_tests():
             "Here's the thing — the comma makes the tuple, not the parentheses.\n"
             "         (42,) has a trailing comma → it's a tuple.\n"
             "         (42) has no comma → it's just grouping, same as plain 42.\n"
-            "         Once you see it, you never forget it."
+            "         Once you see it, you never forget it.",
+            "intermediate",
         ),
         (
             "Not a tuple",
@@ -6145,7 +6212,8 @@ def run_self_tests():
             "Exactly — no comma, no tuple.  (42) is just 42 in parentheses.",
             "This is the flip side of the comma rule: without a trailing comma,\n"
             "         parentheses are just grouping.  (42) == 42, which is an int.\n"
-            "         To make a single-element tuple: (42,) — note the comma."
+            "         To make a single-element tuple: (42,) — note the comma.",
+            "intermediate",
         ),
         (
             "Comprehension",
@@ -6156,7 +6224,8 @@ def run_self_tests():
             "range(4) produces 0, 1, 2, 3 (four numbers, starting at 0).\n"
             "         Each gets doubled: 0*2=0, 1*2=2, 2*2=4, 3*2=6.\n"
             "         Result: [0, 2, 4, 6].  Remember: range(n) gives you\n"
-            "         n numbers starting from 0."
+            "         n numbers starting from 0.",
+            "beginner",
         ),
         (
             "Chained compare",
@@ -6166,7 +6235,8 @@ def run_self_tests():
             "Yes — Python chains comparisons naturally.  It means (1<2) and (2<3).",
             "Python lets you chain comparisons like math notation.\n"
             "         1 < 2 < 3 means (1 < 2) AND (2 < 3) — both True → True.\n"
-            "         This works with any comparisons: a <= b < c == d."
+            "         This works with any comparisons: a <= b < c == d.",
+            "beginner",
         ),
         (
             "String repeat",
@@ -6177,7 +6247,8 @@ def run_self_tests():
             "The * operator repeats sequences.  'ha' * 3 = 'hahaha'.\n"
             "         Works on lists too: [0] * 3 = [0, 0, 0].\n"
             "         But be careful when the repeated item is a list or dict:\n"
-            "         [[]] * 3 creates three references to the SAME inner list."
+            "         [[]] * 3 creates three references to the SAME inner list.",
+            "beginner",
         ),
         (
             "Substring",
@@ -6187,7 +6258,8 @@ def run_self_tests():
             "Yes — 'in' checks for substring containment in strings.",
             "The 'in' operator checks for substrings in strings.\n"
             "         'py' appears at the start of 'python' → True.\n"
-            "         For lists, 'in' checks for element membership instead."
+            "         For lists, 'in' checks for element membership instead.",
+            "beginner",
         ),
         (
             "Dict merge",
@@ -6198,7 +6270,8 @@ def run_self_tests():
             "The | operator merges two dicts (Python 3.9+).\n"
             "         When both have the same key (2), the right side wins.\n"
             "         So key 2 gets 'c' (from the right dict), not 'b'.\n"
-            "         Result: {1: 'a', 2: 'c'}."
+            "         Result: {1: 'a', 2: 'c'}.",
+            "intermediate",
         ),
         (
             "Walrus",
@@ -6209,7 +6282,8 @@ def run_self_tests():
             "The walrus operator := assigns a value AND returns it.\n"
             "         (n := 10) assigns 10 to n, then the expression becomes 10 > 5.\n"
             "         10 > 5 is True.  This is useful in while-loops and if-conditions\n"
-            "         where you need the value AND the test."
+            "         where you need the value AND the test.",
+            "intermediate",
         ),
         (
             "Set intersection",
@@ -6219,7 +6293,8 @@ def run_self_tests():
             "Right — & gives you elements in BOTH sets.  Set math is underrated.",
             "& is set intersection — elements that appear in BOTH sets.\n"
             "         {1,2,3} and {2,3,4} share 2 and 3 → {2, 3}.\n"
-            "         Other set ops: | (union), - (difference), ^ (symmetric diff)."
+            "         Other set ops: | (union), - (difference), ^ (symmetric diff).",
+            "beginner",
         ),
         (
             "Star unpacking",
@@ -6231,7 +6306,8 @@ def run_self_tests():
             "         a gets the first element: 1\n"
             "         c gets the last element: 5\n"
             "         *b gets everything in between: [2, 3, 4]\n"
-            "         Works anywhere: first, *rest = [1,2,3] → rest = [2,3]."
+            "         Works anywhere: first, *rest = [1,2,3] → rest = [2,3].",
+            "intermediate",
         ),
         (
             "Default list/dict shared",
@@ -6244,24 +6320,16 @@ def run_self_tests():
             "         evaluated ONCE when the function is defined, not on each call.\n"
             "         So every call to f() appends to the SAME list object.\n"
             "         After three calls: [1, 1, 1].\n"
-            "         Fix: use 'def f(x=None): x = x or []'."
+            "         Fix: use 'def f(x=None): x = x or []'.",
+            "advanced",
         ),
     ]
 
-    # ── Normalize an answer for flexible comparison ────────────────────
-    def _normalize(text):
-        """Strip whitespace, quotes, and normalize Python literals for comparison."""
-        t = text.strip()
-        # Strip matching outer quotes: 'ell' or "ell" → ell
-        if len(t) >= 2 and t[0] == t[-1] and t[0] in ('"', "'"):
-            t = t[1:-1]
-        return t
-
-    def _check_answer(user_input, expected):
+    def _check_answer(user_input: str, expected: Any) -> bool:
         """Compare user's text answer against the expected Python value.
 
-        Flexible: accepts 'ell', "ell", ell for string answers;
-        True/true/TRUE for booleans; {2, 3} or {3, 2} for sets; etc.
+        Order: alias norm → type phrasings → direct repr → eval → token (set/dict)
+        → float tolerance → fuzzy difflib.
         """
         raw = user_input.strip()
         if not raw:
@@ -6271,11 +6339,23 @@ def run_self_tests():
         exp_str = repr(expected)
         exp_norm = _normalize(exp_str)
 
-        # Direct match against repr
+        # 1. Alias normalization (apply "1"/"0" only for bool so int 1/0 answers aren't mis-accepted)
+        norm_lower = norm.lower()
+        if norm_lower in _ANSWER_ALIASES:
+            if norm_lower in ("1", "0") and not isinstance(expected, bool):
+                pass
+            else:
+                norm = _ANSWER_ALIASES[norm_lower]
+
+        # 2. Type-name phrasing (when expected is a type name string)
+        if isinstance(expected, str) and expected in {"float", "int", "str", "tuple", "list", "dict", "bool", "set"}:
+            norm = _TYPE_PHRASINGS.get(norm.lower(), norm)
+
+        # 3. Direct match against repr
         if norm == exp_norm:
             return True
 
-        # Try evaluating the user's input as a Python literal
+        # 4. eval()-based match
         try:
             user_val = eval(raw, {"__builtins__": {}}, {})
             if user_val == expected:
@@ -6283,24 +6363,71 @@ def run_self_tests():
         except Exception:
             pass
 
-        # Case-insensitive match for simple types (True/False/None, strings)
-        if isinstance(expected, bool):
-            return norm.lower() in ("true", "false") and \
-                   (norm.lower() == "true") == expected
-        if isinstance(expected, str):
-            return norm == expected
-        if isinstance(expected, (int, float)):
+        # 5. Token-order-insensitive (sets/dicts) when earlier checks failed
+        if isinstance(expected, (set, dict)) and "{" in exp_str:
+            if _tokens_match(raw, exp_str):
+                return True
+
+        # 6. Float tolerance
+        if isinstance(expected, float):
             try:
-                return float(norm) == float(expected)
+                return math.isclose(float(norm), expected, rel_tol=1e-6, abs_tol=1e-6)
             except (ValueError, TypeError):
-                return False
+                pass
+        if isinstance(expected, int):
+            try:
+                return int(norm) == expected
+            except (ValueError, TypeError):
+                pass
+
+        # 7. Fuzzy difflib (last resort)
+        ratio = SequenceMatcher(None, norm, exp_norm).ratio()
+        if ratio >= 0.82:
+            return True
 
         return False
 
-    # ── Run the quiz ──────────────────────────────────────────────────
+    # ── Difficulty filter ─────────────────────────────────────────────
     print("\n" + "─" * 70)
     print("  SELF-TEST QUIZ")
     print("─" * 70)
+    try:
+        diff_in = input(
+            "  Difficulty filter? [A]ll / [B]eginner / [I]ntermediate / [Adv]anced (default: All): "
+        ).strip().lower() or "a"
+    except (EOFError, KeyboardInterrupt):
+        diff_in = "a"
+    diff_map = {"a": None, "all": None, "b": "beginner", "beginner": "beginner",
+                "i": "intermediate", "intermediate": "intermediate",
+                "adv": "advanced", "advanced": "advanced"}
+    diff_filter = diff_map.get(diff_in, None)
+    filtered_tests = [t for t in tests if t[6] == diff_filter] if diff_filter else tests
+    if not filtered_tests:
+        filtered_tests = tests
+    tests = filtered_tests
+
+    # ── Spaced-repetition: load progress and reorder ───────────────────
+    progress_path = Path.home() / ".python_poweruser_progress.json"
+    prev_weak: list[str] = []
+    try:
+        if progress_path.exists():
+            data = json.loads(progress_path.read_text(encoding="utf-8"))
+            sessions = data.get("sessions", [])
+            if sessions:
+                last = sessions[-1]
+                score, total_prev = last.get("score", 0), last.get("total", 20)
+                date_prev = last.get("date", "?")
+                prev_weak = last.get("weak_sections", [])
+                print(f"  Last session: {score}/{total_prev} on {date_prev}.", end="")
+                if prev_weak:
+                    print(f"  Weak areas: {', '.join(prev_weak)}.")
+                    print("  Tip: Questions from those sections will appear first today.")
+                else:
+                    print()
+                tests = sorted(tests, key=lambda t: t[3] in prev_weak, reverse=True)
+    except Exception:
+        pass
+
     print("  Type your answer for each expression.  No peeking at the REPL!")
     print("  Press Enter with no answer to skip.  Ctrl+C to quit early.\n")
 
@@ -6310,7 +6437,7 @@ def run_self_tests():
     weak_areas = []  # (section_key, question_name) for missed questions
     total = len(tests)
 
-    for i, (name, code, answer, section, teach_right, teach_wrong) in enumerate(tests, 1):
+    for i, (name, code, answer, section, teach_right, teach_wrong, _diff) in enumerate(tests, 1):
         print(f"  [{i}/{total}] What does this evaluate to?")
         print(f"         {code}")
         print()
@@ -6336,7 +6463,9 @@ def run_self_tests():
         else:
             wrong += 1
             print(f"    Not quite — the answer is {answer!r}")
-            # Print the full encouraging explanation, indented
+            hint = _hint_tier(user, answer)
+            if hint:
+                print(hint)
             for line in teach_wrong.split("\n"):
                 print(f"    {line}")
             weak_areas.append((section, name))
@@ -6385,6 +6514,24 @@ def run_self_tests():
         print("  Sections worth revisiting:")
         for sec_key, title in sections_to_review:
             print(f"    → {title}  (python python_poweruser.py -s {sec_key})")
+
+    # ── Append session to progress JSON ─────────────────────────────────
+    try:
+        from datetime import date as date_module
+        session = {
+            "date": date_module.today().isoformat(),
+            "score": passed,
+            "total": total,
+            "weak_sections": list(dict.fromkeys(sec for sec, _ in weak_areas)),
+            "missed_questions": [q for _, q in weak_areas],
+        }
+        data = {"sessions": []}
+        if progress_path.exists():
+            data = json.loads(progress_path.read_text(encoding="utf-8"))
+        data.setdefault("sessions", []).append(session)
+        progress_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception:
+        pass
 
     print(f"\n{'─' * 70}")
     return passed, total
