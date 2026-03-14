@@ -6181,6 +6181,75 @@ def _hint_tier(user_input: str, expected: Any) -> Optional[str]:
     return None
 
 
+def _check_answer(user_input: str, expected: Any) -> bool:
+    """Compare user's text answer against the expected Python value.
+
+    Order: alias norm → type phrasings → direct repr → synonym expand → eval
+    → token (set/dict) → numeric tolerance → fuzzy difflib.
+    """
+    raw = user_input.strip()
+    if not raw:
+        return False
+
+    norm = _normalize(raw)
+    exp_str = repr(expected)
+    exp_norm = _normalize(exp_str)
+
+    # 1. Alias normalization (restrict bool-like aliases to bool-expected only)
+    norm_lower = norm.lower()
+    bool_only_aliases = ("yes", "no", "1", "0", "correct", "incorrect", "right", "wrong")
+    if norm_lower in bool_only_aliases and not isinstance(expected, bool):
+        pass
+    elif norm_lower in _ANSWER_ALIASES:
+        norm = _ANSWER_ALIASES[norm_lower]
+
+    # 2. Type-name phrasing (when expected is a type name string)
+    type_names = {"float", "int", "str", "tuple", "list", "dict", "bool", "set",
+                  "generator", "dict_keys", "NoneType"}
+    if isinstance(expected, str) and expected in type_names:
+        norm = _TYPE_PHRASINGS.get(norm.lower(), norm)
+
+    # 3. Direct match against repr
+    if norm == exp_norm:
+        return True
+    # 3b. Synonym expansion: try rephrasings (e.g. "the answer is 3" → "3")
+    for variant in _synonym_expand(raw):
+        if variant != raw and _normalize(variant) == exp_norm:
+            return True
+
+    # 4. eval()-based match (safe globals so True/False/None resolve in tuples, etc.)
+    try:
+        user_val = eval(raw, _SAFE_EVAL_GLOBALS, {})
+        if user_val == expected:
+            return True
+    except Exception:
+        pass
+
+    # 5. Token-order-insensitive (sets/dicts) when earlier checks failed
+    if isinstance(expected, (set, dict)) and "{" in exp_str:
+        if _tokens_match(raw, exp_str):
+            return True
+
+    # 6. Numeric tolerance — handle int/float cross-type and whitespace
+    if isinstance(expected, (int, float)):
+        try:
+            user_num = float(norm)
+            if isinstance(expected, int) and user_num == int(user_num):
+                if int(user_num) == expected:
+                    return True
+            if isinstance(expected, float):
+                return math.isclose(user_num, expected, rel_tol=1e-6, abs_tol=1e-6)
+        except (ValueError, TypeError):
+            pass
+
+    # 7. Fuzzy difflib (last resort; only for longer answers to avoid type-name false positives)
+    ratio = SequenceMatcher(None, norm, exp_norm).ratio()
+    if len(exp_norm) >= 6 and ratio >= 0.80:
+        return True
+
+    return False
+
+
 # %% Self-Test
 def run_self_tests(no_save: bool = False) -> tuple[int, int]:
     """
@@ -6699,74 +6768,6 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             "beginner",
         ),
     ]
-
-    def _check_answer(user_input: str, expected: Any) -> bool:
-        """Compare user's text answer against the expected Python value.
-
-        Order: alias norm → type phrasings → direct repr → eval → token (set/dict)
-        → float tolerance → fuzzy difflib.
-        """
-        raw = user_input.strip()
-        if not raw:
-            return False
-
-        norm = _normalize(raw)
-        exp_str = repr(expected)
-        exp_norm = _normalize(exp_str)
-
-        # 1. Alias normalization (restrict bool-like aliases to bool-expected only)
-        norm_lower = norm.lower()
-        bool_only_aliases = ("yes", "no", "1", "0", "correct", "incorrect", "right", "wrong")
-        if norm_lower in bool_only_aliases and not isinstance(expected, bool):
-            pass
-        elif norm_lower in _ANSWER_ALIASES:
-            norm = _ANSWER_ALIASES[norm_lower]
-
-        # 2. Type-name phrasing (when expected is a type name string)
-        type_names = {"float", "int", "str", "tuple", "list", "dict", "bool", "set",
-                      "generator", "dict_keys", "NoneType"}
-        if isinstance(expected, str) and expected in type_names:
-            norm = _TYPE_PHRASINGS.get(norm.lower(), norm)
-
-        # 3. Direct match against repr
-        if norm == exp_norm:
-            return True
-        # 3b. Synonym expansion: try rephrasings (e.g. "the answer is 3" → "3")
-        for variant in _synonym_expand(raw):
-            if variant != raw and _normalize(variant) == exp_norm:
-                return True
-
-        # 4. eval()-based match (safe globals so True/False/None resolve in tuples, etc.)
-        try:
-            user_val = eval(raw, _SAFE_EVAL_GLOBALS, {})
-            if user_val == expected:
-                return True
-        except Exception:
-            pass
-
-        # 5. Token-order-insensitive (sets/dicts) when earlier checks failed
-        if isinstance(expected, (set, dict)) and "{" in exp_str:
-            if _tokens_match(raw, exp_str):
-                return True
-
-        # 6. Numeric tolerance — handle int/float cross-type and whitespace
-        if isinstance(expected, (int, float)):
-            try:
-                user_num = float(norm)
-                if isinstance(expected, int) and user_num == int(user_num):
-                    if int(user_num) == expected:
-                        return True
-                if isinstance(expected, float):
-                    return math.isclose(user_num, expected, rel_tol=1e-6, abs_tol=1e-6)
-            except (ValueError, TypeError):
-                pass
-
-        # 7. Fuzzy difflib (last resort; only for longer answers to avoid type-name false positives)
-        ratio = SequenceMatcher(None, norm, exp_norm).ratio()
-        if len(exp_norm) >= 6 and ratio >= 0.80:
-            return True
-
-        return False
 
     # ── Spaced-repetition: load progress (schema-aware), reorder full list ─────
     progress_path = Path.home() / ".python_poweruser_progress.json"

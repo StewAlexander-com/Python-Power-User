@@ -183,6 +183,28 @@ Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Ea
 
 ---
 
+## Test platform
+
+A separate test script exercises the quiz and NLP answer-matching logic so changes can be validated without running the full TUI.
+
+```bash
+python test_quiz.py
+python test_quiz.py -v    # verbose
+```
+
+**What it tests (stdlib `unittest` only, no pytest):**
+
+- **`_normalize`** — quote stripping, spacing around commas/brackets/colons
+- **`_synonym_expand`** — alias canonicals and prefix stripping ("the answer is 3", "returns True", etc.)
+- **`_tokens_match`** — order-insensitive set/dict comparison
+- **`_hint_tier`** — contextual hints (right type/wrong value, off-by-one, similarity)
+- **`_check_answer`** — full pipeline: aliases, repr, synonym expansion, eval, numeric tolerance, fuzzy match; bool-only aliases rejected for non-bool
+- **Integration** — `run_self_tests(no_save=True)` with mocked input completes and prints a score
+
+Run from the repo root (same directory as `python_poweruser.py`). Exit code 0 if all tests pass.
+
+---
+
 ## Requirements
 
 - Python 3.10+ (uses `match/case`)
