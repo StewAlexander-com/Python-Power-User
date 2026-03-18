@@ -869,6 +869,89 @@ def _cli_find(term: str) -> None:
 #  TUI: Curses-based interactive terminal interface
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _run_simple_console_ui(registry: Mapping[str, Callable[[], None]]) -> None:
+    """Minimal interactive console UI for Windows when curses is unavailable.
+
+    Uses msvcrt.getch() for key input and os.system('cls') for screen clears.
+    One-screen menu: arrow keys / j,k to move, Enter to run a section, q to quit.
+    """
+    if sys.platform != "win32":
+        return
+
+    try:
+        import msvcrt  # type: ignore[import]
+    except Exception:
+        return
+
+    # Only attempt if we have a real console
+    try:
+        if not sys.stdin.isatty() or not sys.stdout.isatty():
+            return
+    except Exception:
+        return
+
+    sections = [(key, num, title) for (key, num, title, _pidx, _pname) in SECTION_META]
+    if not sections:
+        return
+    idx = 0
+
+    def _draw() -> None:
+        os.system("cls")
+        print("PYTHON POWER USER — Simple Console UI (no curses)\n")
+        print("Use ↑/↓ or j/k to move, Enter to run, q to quit.\n")
+        print("Sections:\n")
+        max_visible = 20
+        start = max(0, min(idx - max_visible // 2, len(sections) - max_visible))
+        start = max(0, start)
+        end = min(len(sections), start + max_visible)
+        for i in range(start, end):
+            key, num, title = sections[i]
+            prefix = "→" if i == idx else " "
+            print(f" {prefix} {num:02d}  {title:<30s} [{key}]")
+        print("\nPress q to exit this view.")
+
+    while True:
+        _draw()
+        ch = msvcrt.getch()
+        # Extended keys: arrow keys come as two-byte sequences
+        if ch in (b"\x00", b"\xe0"):
+            ch2 = msvcrt.getch()
+            if ch2 == b"H":  # Up arrow
+                idx = (idx - 1) % len(sections)
+            elif ch2 == b"P":  # Down arrow
+                idx = (idx + 1) % len(sections)
+            continue
+
+        if ch in (b"q", b"Q"):
+            os.system("cls")
+            return
+        if ch in (b"j",):
+            idx = (idx + 1) % len(sections)
+            continue
+        if ch in (b"k",):
+            idx = (idx - 1) % len(sections)
+            continue
+        if ch in (b"\r", b"\n"):
+            key, num, title = sections[idx]
+            os.system("cls")
+            print(f"{'─' * 70}")
+            print(f"  {num:02d} │ {title}  [{key}]")
+            print(f"{'─' * 70}\n")
+            func = registry.get(key)
+            if func is None:
+                print("  No demo registered for this section.")
+            else:
+                try:
+                    func()
+                except KeyboardInterrupt:
+                    print("\n  [Interrupted]")
+                except Exception as e:
+                    print(f"\n  [ERROR] {type(e).__name__}: {e}")
+            print(f"\n{'─' * 70}")
+            print("  Press any key to return to the menu...")
+            msvcrt.getch()
+
+
 def _can_use_curses() -> bool:
     """Check if we can use the curses TUI.
 
@@ -896,20 +979,41 @@ def _can_use_curses() -> bool:
     except ImportError:
         pass
 
-    # Gate 4: Windows — attempt one-shot install of windows-curses
+    # Gate 4: Windows — offer to install windows-curses, or degrade gracefully
     if sys.platform == "win32":
+        # If we're non-interactive (e.g. piped), we can't safely prompt;
+        # just report that curses is unavailable.
         try:
-            import subprocess
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "--user",
-                 "--quiet", "windows-curses"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=30,  # Don't hang on corporate proxies
-            )
-            import curses  # noqa: F811
-            return True
+            if not sys.stdin.isatty():
+                return False
         except Exception:
+            return False
+
+        try:
+            answer = input(
+                "\n  Curses-based TUI is not available on this Windows Python.\n"
+                "  It requires the 'windows-curses' package.\n\n"
+                "  Install 'windows-curses' now using pip? [Y/n]: "
+            ).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            return False
+
+        if answer in ("", "y", "yes"):
+            try:
+                import subprocess
+                print("  Installing windows-curses ...")
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", "--user", "windows-curses"],
+                    timeout=120,
+                )
+                import curses  # noqa: F811
+                return True
+            except Exception as e:
+                print(f"  windows-curses install failed ({type(e).__name__}: {e}).")
+                print("  Continuing without the interactive TUI.")
+                return False
+        else:
+            print("  Skipping windows-curses install — continuing without the interactive TUI.")
             return False
 
     return False

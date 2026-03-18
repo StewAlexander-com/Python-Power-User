@@ -12,6 +12,8 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 Not a wall of text. A real terminal interface with two-pane navigation, syntax highlighting, and vim keys.
 
+On Windows, the app now falls back gracefully: full curses TUI when available, a lightweight console menu when curses isn't, and plain CLI when output is piped or non-interactive.
+
 ![Main Menu](screenshots/tui-main-menu.png)
 
 Browse any section's source with Monokai-themed syntax highlighting, line numbers, and scroll.
