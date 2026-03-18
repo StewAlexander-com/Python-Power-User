@@ -8,7 +8,21 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 ---
 
-## The TUI
+## Table of Contents
+
+- [The TUI](#the-tui)
+- [Quick Start](#quick-start)
+- [Download & Run](#download--run)
+- [The Quiz](#the-quiz)
+- [How to use this](#how-to-use-this-two-paths)
+- [What's Inside](#whats-inside)
+- [VS Code Setup](#vs-code-setup)
+- [Test platform](#test-platform)
+- [Requirements](#requirements)
+
+---
+
+## The TUI  ([back to TOC](#table-of-contents))
 
 Not a wall of text. A real terminal interface with two-pane navigation, syntax highlighting, and vim keys.
 
@@ -43,7 +57,7 @@ Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fi
 
 ---
 
-## Download & Run
+## Download & Run  ([back to TOC](#table-of-contents))
 
 You can use Python Power User in two ways: **directly from the script** or **installed as a CLI tool**.
 
@@ -80,7 +94,7 @@ python-power-user -t
 
 This keeps the script in one file but makes it feel like a normal CLI tool.
 
-## The Quiz
+## The Quiz  ([back to TOC](#table-of-contents))
 
 Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
 
@@ -129,14 +143,14 @@ At the end you get a score, a visual bar, and targeted study suggestions:
 
 ---
 
-## How to use this (two paths)
+## How to use this (two paths)  ([back to TOC](#table-of-contents))
 
 - **If you're new to Python:** Start at Part 1 and always run the **Try this (Beginner)** cells. Follow the **Goal (Beginner)** line in each section; run the quiz every few sessions and revisit the sections it lists.
 - **If you already know Python:** Skim each Part's **TL;DR** and **#! Power tip** comments. Jump with `-s` and `-f`; run **Speed run (Power User)** cells and use the quiz to find weak spots.
 
 ---
 
-## What's Inside
+## What's Inside  ([back to TOC](#table-of-contents))
 
 | Part | Topic | Sections |
 |------|-------|----------|
@@ -160,7 +174,7 @@ Every section has Einstein/Feynman-style explanations that make hard concepts cl
 
 ---
 
-## VS Code Setup
+## VS Code Setup  ([back to TOC](#table-of-contents))
 
 Three extensions, one-time install:
 
@@ -185,7 +199,7 @@ Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Ea
 
 ---
 
-## Test platform
+## Test platform  ([back to TOC](#table-of-contents))
 
 A separate test script exercises the quiz and NLP answer-matching logic so changes can be validated without running the full TUI.
 
@@ -207,7 +221,7 @@ Run from the repo root (same directory as `python_poweruser.py`). Exit code 0 if
 
 ---
 
-## Requirements
+## Requirements  ([back to TOC](#table-of-contents))
 
 - Python 3.10+ (uses `match/case`)
 - A terminal with at least 80×22 for the TUI
