@@ -22,7 +22,9 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 ---
 
-## The TUI  ([back to TOC](#table-of-contents))
+## The TUI
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 Not a wall of text. A real terminal interface with two-pane navigation, syntax highlighting, and vim keys.
 
@@ -57,7 +59,9 @@ Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fi
 
 ---
 
-## Download & Run  ([back to TOC](#table-of-contents))
+## Download & Run
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 You can use Python Power User in two ways: **directly from the script** or **installed as a CLI tool**.
 
@@ -94,7 +98,9 @@ python-power-user -t
 
 This keeps the script in one file but makes it feel like a normal CLI tool.
 
-## The Quiz  ([back to TOC](#table-of-contents))
+## The Quiz
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
 
@@ -143,14 +149,18 @@ At the end you get a score, a visual bar, and targeted study suggestions:
 
 ---
 
-## How to use this (two paths)  ([back to TOC](#table-of-contents))
+## How to use this (two paths)
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 - **If you're new to Python:** Start at Part 1 and always run the **Try this (Beginner)** cells. Follow the **Goal (Beginner)** line in each section; run the quiz every few sessions and revisit the sections it lists.
 - **If you already know Python:** Skim each Part's **TL;DR** and **#! Power tip** comments. Jump with `-s` and `-f`; run **Speed run (Power User)** cells and use the quiz to find weak spots.
 
 ---
 
-## What's Inside  ([back to TOC](#table-of-contents))
+## What's Inside
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 | Part | Topic | Sections |
 |------|-------|----------|
@@ -174,7 +184,9 @@ Every section has Einstein/Feynman-style explanations that make hard concepts cl
 
 ---
 
-## VS Code Setup  ([back to TOC](#table-of-contents))
+## VS Code Setup
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 Three extensions, one-time install:
 
@@ -199,7 +211,9 @@ Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Ea
 
 ---
 
-## Test platform  ([back to TOC](#table-of-contents))
+## Test platform
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 A separate test script exercises the quiz and NLP answer-matching logic so changes can be validated without running the full TUI.
 
@@ -221,7 +235,9 @@ Run from the repo root (same directory as `python_poweruser.py`). Exit code 0 if
 
 ---
 
-## Requirements  ([back to TOC](#table-of-contents))
+## Requirements
+
+<sub>[Back to TOC](#table-of-contents)</sub>
 
 - Python 3.10+ (uses `match/case`)
 - A terminal with at least 80×22 for the TUI
