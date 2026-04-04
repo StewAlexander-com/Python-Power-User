@@ -52,7 +52,7 @@
 #
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Callable, List, Mapping, Optional, Tuple
 
 #  TABLE OF CONTENTS
 #  ─────────────────
@@ -967,10 +967,8 @@ def _can_use_curses() -> bool:
 
     # Gate 2: Dumb terminals can't do curses
     term = os.environ.get("TERM", "")
-    if term in ("dumb", "unknown", ""):
-        # Empty TERM is common in CI/Docker — still try, but guard later
-        if term in ("dumb",):
-            return False
+    if term == "dumb":
+        return False
 
     # Gate 3: Try importing curses
     try:
@@ -1699,6 +1697,8 @@ class PowerUserTUI:
 
         if self.search_results:
             self.search_sel = max(0, min(self.search_sel, len(self.search_results) - 1))
+        else:
+            self.search_sel = 0
 
         # Draw results
         max_visible = self.h - 6
@@ -6948,8 +6948,10 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
                     ),
                     reverse=True,
                 )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+        print(f"  (Note: progress file was unreadable — starting fresh. {type(e).__name__})")
     except Exception:
-        pass
+        pass  # Truly unexpected — don't crash the quiz
 
     # ── Difficulty filter (after reorder so repetition still applies) ─────────
     print("\n" + "─" * 70)
@@ -7116,9 +7118,23 @@ def run_self_tests(no_save: bool = False) -> tuple[int, int]:
             for name, *_ in tests:
                 entry = q_stats.setdefault(name, {"seen": 0, "missed": 0})
                 entry["seen"] += 1
-            progress_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        except Exception:
-            pass
+            import tempfile
+            tmp_fd, tmp_path = tempfile.mkstemp(
+                dir=str(progress_path.parent), suffix=".tmp"
+            )
+            try:
+                os.write(tmp_fd, json.dumps(data, indent=2).encode("utf-8"))
+                os.close(tmp_fd)
+                os.replace(tmp_path, str(progress_path))
+            except Exception:
+                os.close(tmp_fd)
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+                raise
+        except Exception as exc:
+            print(f"  (Could not save progress: {type(exc).__name__})")
 
     print(f"\n{'─' * 70}")
     return passed, total
