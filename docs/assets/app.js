@@ -379,6 +379,19 @@ function renderTeachingsList(items, section) {
   `;
 }
 
+function whatToNotice(section, teachings, track) {
+  const items = Array.isArray(teachings) ? teachings : [];
+  const firstBullet = items.find((x) => x && x.kind === "bullet" && String(x.text || "").trim());
+  if (firstBullet) return String(firstBullet.text).trim();
+
+  // Fallback to goals if we didn't extract bullets for a section.
+  const goal = track === "power" ? (section?.goal_power || "") : (section?.goal_beginner || "");
+  const g = String(goal || "").trim();
+  if (g) return g;
+
+  return `Focus on the key ideas and run the examples for “${section?.title || "this section"}”.`;
+}
+
 function whatItsDoingSnippet(section) {
   const src = section?.demo_source || "";
   if (!src) return "";
@@ -774,11 +787,11 @@ function renderPracticeFlowCard(state) {
         <div class="flowPromptText">${
           practiceEnabled
             ? escapeHtml(curPrompt || "Pick a practice problem next.")
-            : escapeHtml("Watch how names (variables) point to values, and how assignment changes what a name refers to.")
+            : escapeHtml(whatToNotice(s, teachings, track))
         }</div>
       </div>
       ${ctx ? `<div class="flowPromptContext">
-        <div class="flowPromptContextTitle">Context (what variables mean here)</div>
+        <div class="flowPromptContextTitle">Context</div>
         ${renderCodeBlock(ctx)}
       </div>` : ``}
       <div class="flowActions">
