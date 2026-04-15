@@ -55,22 +55,19 @@ function renderSection(section) {
   const gb = section.goal_beginner || "—";
   const gp = section.goal_power || "—";
 
-  const firstPrompt = (section.prompts || [])[0] || "";
-  const firstContext = firstPrompt ? contextSnippet(section, firstPrompt) : "";
-  const promptRow = firstPrompt
-    ? `<div class="practiceRow">
-        <div class="practiceLabel">Practice</div>
-        <div class="practicePrompt">
-          <div class="practicePromptTitle">Practice question</div>
-          <div class="practicePromptText">${escapeHtml(firstPrompt)}</div>
-          ${firstContext ? `<div class="practicePromptContext">
-            <div class="practicePromptContextTitle">Context</div>
-            <pre class="code" style="margin:8px 0 0;"><code>${escapeHtml(firstContext)}</code></pre>
-          </div>` : ``}
+  const learnRow = `
+    <div class="learnRow">
+      <div class="learnLabel">Teachings</div>
+      <div class="learnBody">
+        <div class="learnTitle">Choose your track</div>
+        <div class="muted" style="margin-top:4px;">Start with Teachings and “What it’s doing”. Practice problems are optional.</div>
+        <div class="learnActions">
+          <button class="primary" type="button" data-inline-action="learn-beginner">Beginner</button>
+          <button class="ghost" type="button" data-inline-action="learn-power">Power user</button>
         </div>
-        <button class="ghost practiceCTA" type="button" data-inline-action="practice-start" data-prompt="${escapeHtml(firstPrompt)}">Start</button>
-      </div>`
-    : `<div class="muted">No practice prompt captured for this section.</div>`;
+      </div>
+    </div>
+  `;
 
   return `
     <section class="card" data-section="${escapeHtml(key)}">
@@ -94,8 +91,8 @@ function renderSection(section) {
       </div>
 
       <div style="margin-top:12px;">
-        ${promptRow}
-        <div class="muted" style="margin-top:10px;">This launches <span class="kbd">Practice</span> and shows the relevant code immediately.</div>
+        ${learnRow}
+        <div class="muted" style="margin-top:10px;">Tip: you can also use the bottom <span class="kbd">Learn</span> button once a section is selected.</div>
       </div>
     </section>
   `;
@@ -323,6 +320,7 @@ function renderPracticeFlowCard(state) {
 
   const step = pf.step || 1;
   const practiceEnabled = pf.practiceEnabled === true;
+  const track = pf.track === "power" ? "power" : "beginner";
   const runCmd = `python python_poweruser.py -s ${s.key}`;
   const prompts = pf.prompts || [];
   const curPrompt = prompts[pf.idx] || "";
@@ -346,16 +344,16 @@ function renderPracticeFlowCard(state) {
       <div class="flowHeadline">Here are the teachings</div>
       <div class="flowTeachings">
         <div class="flowTeach">
-          <div class="flowTeachTitle">Beginner goal</div>
+          <div class="flowTeachTitle">${track === "power" ? "Beginner goal (supporting)" : "Beginner goal"}</div>
           <div class="flowTeachBody">${escapeHtml(s.goal_beginner || "—")}</div>
         </div>
         <div class="flowTeach">
-          <div class="flowTeachTitle">Power goal</div>
+          <div class="flowTeachTitle">${track === "power" ? "Power goal" : "Power goal (next level)"}</div>
           <div class="flowTeachBody">${escapeHtml(s.goal_power || "—")}</div>
         </div>
       </div>
       <div class="muted" style="margin-top:10px;">
-        When you’re ready, continue to see what the teaching is doing in code.
+        You’re in <span class="kbd">${track === "power" ? "Power user" : "Beginner"}</span> mode. Next we’ll show what the code is doing.
       </div>
     </div>
   `;
@@ -587,9 +585,14 @@ function handleDockAction(action, state) {
     return;
   }
 
-  if (action === "practice") {
+  if (action === "learn") {
     setFlowMode(state, "practice");
     ensurePracticeFlow(state, s);
+    // Start at Teachings (1) and keep practice disabled by default.
+    if (state.practiceFlow) {
+      state.practiceFlow.step = 1;
+      state.practiceFlow.practiceEnabled = false;
+    }
     const card = renderPracticeFlowCard(state);
     upsertDockCard({ id: card.id, title: card.title, body: card.body });
     scrollToTopMain();
@@ -697,18 +700,16 @@ function attachDockHandlers(state) {
     const btn = e.target.closest("button[data-inline-action]");
     if (!btn) return;
     const action = btn.getAttribute("data-inline-action");
-    if (action === "practice-start") {
-      const prompt = btn.getAttribute("data-prompt") || "";
-      // Start practice flow anchored to this prompt.
+    if (action === "learn-beginner" || action === "learn-power") {
       const s = state.activeSection;
       if (!s) return;
+      setFlowMode(state, "practice");
       ensurePracticeFlow(state, s);
       if (state.practiceFlow) {
-        const found = (state.practiceFlow.prompts || []).indexOf(prompt);
-        const idx = found >= 0 ? found : 0;
-        state.practiceFlow.idx = idx;
-        state.practiceFlow.step = 2;
+        state.practiceFlow.step = 1;
+        state.practiceFlow.practiceEnabled = false;
         state.practiceFlow.showCode = false;
+        state.practiceFlow.track = action === "learn-power" ? "power" : "beginner";
       }
       const card = renderPracticeFlowCard(state);
       upsertDockCard({ id: card.id, title: card.title, body: card.body });

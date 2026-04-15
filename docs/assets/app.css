@@ -342,6 +342,39 @@ a{ color: inherit; text-decoration: none; }
   box-shadow: 0 0 0 6px rgba(56,189,248,.10), 0 0 30px rgba(124,92,255,.14);
 }
 
+/* Teachings entry row (hide practice by default on section card) */
+.learnRow{
+  display:flex;
+  align-items:flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+}
+.learnLabel{
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(56,189,248,.22);
+  background: rgba(56,189,248,.08);
+  color: rgba(180, 230, 255, .92);
+  flex: 0 0 auto;
+}
+.learnBody{ flex: 1 1 auto; min-width: 0; }
+.learnTitle{
+  color: rgba(255,255,255,.92);
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+.learnActions{
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+
 .practiceFlow{
   display:flex;
   flex-wrap:wrap;
