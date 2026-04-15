@@ -53,13 +53,13 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
   if (!src) return [];
   const lines = src.split("\n");
 
-  const bullets = [];
-  const pushBullet = (t) => {
-    const s = String(t || "").trim();
+  /** @type {{kind:'heading'|'bullet', text:string}[]} */
+  const items = [];
+  const pushItem = (kind, text) => {
+    const s = String(text || "").replace(/\s+/g, " ").trim();
     if (!s) return;
-    // Avoid duplicates.
-    if (bullets.some((b) => b.toLowerCase() === s.toLowerCase())) return;
-    bullets.push(s);
+    if (items.some((x) => x.kind === kind && x.text.toLowerCase() === s.toLowerCase())) return;
+    items.push({ kind, text: s });
   };
 
   // 0) Pull bullet points from the initial docstring (common in early sections).
@@ -85,7 +85,7 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
         }
         if (/^big picture:/i.test(t)) {
           flush();
-          pushBullet("Big picture:");
+          pushItem("heading", "Big picture");
           continue;
         }
         if (t.startsWith("- ")) {
@@ -112,7 +112,7 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
     if (!inner) continue;
     if (/^\d+\s+—\s+/.test(inner)) continue;
     if (/^TIP:/i.test(inner) || /says:/i.test(inner) || /TL;DR/i.test(inner) || /MNEMONICS/i.test(inner)) {
-      pushBullet(inner.replace(/^TIP:\s*/i, "Tip: "));
+      pushItem("bullet", inner.replace(/^TIP:\s*/i, "Tip: "));
     }
   }
 
@@ -124,46 +124,51 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
     if (trimmed.startsWith("# ═")) continue;
     if (trimmed.startsWith("# █")) continue;
     if (trimmed.startsWith("#!")) {
-      pushBullet(trimmed.replace(/^#!\s*/, "Safety: ").trim());
+      pushItem("bullet", trimmed.replace(/^#!\s*/, "Safety: ").trim());
       continue;
     }
     if (trimmed.startsWith("#?")) {
-      pushBullet(trimmed.replace(/^#\?\s*/, "").trim());
+      pushItem("bullet", trimmed.replace(/^#\?\s*/, "").trim());
       continue;
     }
     if (trimmed.startsWith("#*")) {
-      pushBullet(trimmed.replace(/^#\*\s*/, "").trim());
+      pushItem("bullet", trimmed.replace(/^#\*\s*/, "").trim());
       continue;
     }
     // Plain comment lines with guidance phrasing.
     if (/says:|rule:|tip:|mnemonic|never|always|prefer|avoid/i.test(trimmed)) {
-      pushBullet(trimmed.replace(/^#\s*/, "").trim());
+      pushItem("bullet", trimmed.replace(/^#\s*/, "").trim());
     }
   }
 
   // Track-specific ordering: beginner prefers simpler bullets first.
   // Remove anything that looks like a practice prompt/question.
-  const cleaned = bullets
-    .map((b) => b.replace(/\s+/g, " ").trim())
-    .filter((b) => b.length > 0)
-    .filter((b) => !/^what do you think/i.test(b));
-
-  // Drop super-short headings unless we have room (e.g. "Big picture:").
-  const ordered = cleaned
-    .filter((b) => b.length >= 18 || /big picture:/i.test(b))
-    .slice(0, maxItems);
-
-  if (track === "power") return ordered;
-  return ordered;
+  const filtered = items.filter((x) => !/^what do you think/i.test(x.text));
+  const bullets = filtered.filter((x) => x.kind === "bullet" && x.text.length >= 18).slice(0, maxItems);
+  const headings = filtered.filter((x) => x.kind === "heading");
+  return [...headings, ...bullets];
 }
 
-function snippetAround(section, needle, before = 3, after = 6) {
+function _docstringRange(lines) {
+  const start = lines.findIndex((l) => l.includes('"""'));
+  if (start < 0) return null;
+  const end = lines.findIndex((l, i) => i > start && l.includes('"""'));
+  if (end <= start) return null;
+  return { start, end };
+}
+
+function snippetAround(section, needle, before = 3, after = 6, preferCode = true) {
   const src = section?.demo_source || "";
   if (!src) return "";
   const lines = src.split("\n");
   const n = String(needle || "").trim().toLowerCase();
   let idx = -1;
-  if (n) idx = lines.findIndex((l) => l.toLowerCase().includes(n));
+  let startAt = 0;
+  if (preferCode) {
+    const r = _docstringRange(lines);
+    if (r) startAt = r.end + 1;
+  }
+  if (n) idx = lines.findIndex((l, i) => i >= startAt && l.toLowerCase().includes(n));
   if (idx < 0) return "";
   const start = Math.max(0, idx - before);
   const end = Math.min(lines.length, idx + after + 1);
@@ -173,19 +178,21 @@ function snippetAround(section, needle, before = 3, after = 6) {
 function exampleForTeaching(section, teaching) {
   const t = String(teaching || "").toLowerCase();
   if (!t) return "";
+  // Don’t show examples for headings like "Big picture".
+  if (t.endsWith(":") || t === "big picture" || t === "big picture:") return "";
 
   // Heuristics for common core concepts (variables section and beyond).
   if (t.includes("variable") || t.includes("name pointing") || t.includes("sticky note")) {
-    return snippetAround(section, "name =", 2, 6) || snippetAround(section, "type(", 2, 6);
+    return snippetAround(section, "name =", 2, 6, true) || snippetAround(section, "type(", 2, 6, true);
   }
   if (t.includes("shared reference") || t.includes("two names") || t.includes("same value")) {
-    return snippetAround(section, "b = a", 3, 8) || snippetAround(section, "append", 3, 8);
+    return snippetAround(section, "b = a", 3, 8, true) || snippetAround(section, "append", 3, 8, true);
   }
   if (t.includes("copy") || t.includes("never copies") || t.includes("assignment")) {
-    return snippetAround(section, "copy", 2, 8) || snippetAround(section, "=", 2, 8);
+    return snippetAround(section, "copy", 2, 8, true);
   }
   if (t.includes("list") || t.includes("dict")) {
-    return snippetAround(section, "list", 2, 8) || snippetAround(section, "[", 2, 6);
+    return snippetAround(section, "list", 2, 8, true) || snippetAround(section, "[", 2, 6, true);
   }
 
   // Fallback: try using a few keywords from the teaching sentence.
@@ -196,7 +203,7 @@ function exampleForTeaching(section, teaching) {
     .filter((w) => w.length >= 5)
     .slice(0, 3);
   for (const w of words) {
-    const snip = snippetAround(section, w, 2, 6);
+    const snip = snippetAround(section, w, 2, 6, true);
     if (snip) return snip;
   }
   return "";
@@ -210,9 +217,12 @@ function renderTeachingsList(items, section) {
     <ul class="teachList">
       ${items
         .map((t) => {
-          const ex = section ? exampleForTeaching(section, t) : "";
+          if (t.kind === "heading") {
+            return `<li class="teachHeading">${escapeHtml(t.text)}</li>`;
+          }
+          const ex = section ? exampleForTeaching(section, t.text) : "";
           return `<li class="teachItem">
-            <div class="teachText">${escapeHtml(t)}</div>
+            <div class="teachText">${escapeHtml(t.text)}</div>
             ${ex ? `<div class="teachExample">${renderCodeBlock(ex)}</div>` : ``}
           </li>`;
         })
