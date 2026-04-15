@@ -32,13 +32,14 @@ function renderSection(section) {
   const gb = section.goal_beginner || "—";
   const gp = section.goal_power || "—";
 
-  const prompts = (section.prompts || []).slice(0, 8);
-  const promptList =
-    prompts.length === 0
-      ? `<div class="muted">No prompts captured for this section.</div>`
-      : `<ul class="muted" style="margin:10px 0 0; padding-left:18px;">
-          ${prompts.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}
-        </ul>`;
+  const firstPrompt = (section.prompts || [])[0] || "";
+  const promptRow = firstPrompt
+    ? `<div class="practiceRow">
+        <div class="practiceLabel">Practice</div>
+        <div class="practicePrompt">${escapeHtml(firstPrompt)}</div>
+        <button class="ghost practiceCTA" type="button" data-inline-action="practice-start" data-prompt="${escapeHtml(firstPrompt)}">Start</button>
+      </div>`
+    : `<div class="muted">No practice prompt captured for this section.</div>`;
 
   return `
     <section class="card" data-section="${escapeHtml(key)}">
@@ -62,8 +63,8 @@ function renderSection(section) {
       </div>
 
       <div style="margin-top:12px;">
-        <div class="cardTitle" style="margin-bottom:6px;">Practice prompts</div>
-        ${promptList}
+        ${promptRow}
+        <div class="muted" style="margin-top:10px;">This launches <span class="kbd">Practice</span> and shows the relevant code immediately.</div>
       </div>
     </section>
   `;
@@ -104,13 +105,11 @@ async function loadSections() {
 function setHeroChips(sections) {
   const chips = $("#heroChips");
   const total = sections.length;
-  const keys = ["Foundations", "Data", "Control", "Functions", "OOP", "Iterators", "Text", "Stdlib"];
   chips.innerHTML = [
     `<div class="chip"><strong>${total}</strong> sections indexed</div>`,
     `<div class="chip">Mobile-friendly dock</div>`,
     `<div class="chip">Fast search</div>`,
     `<div class="chip">Built from <span style="font-family:var(--mono)">python_poweruser.py</span></div>`,
-    ...keys.slice(0, 4).map((k) => `<div class="chip">${k}</div>`),
   ].join("");
 }
 
@@ -377,6 +376,12 @@ function attachDockHandlers(state) {
     const action = btn.getAttribute("data-inline-action");
     if (action === "practice-toggle-demo") {
       state.practiceShowFullDemo = !state.practiceShowFullDemo;
+      handleDockAction("practice", state);
+    }
+    if (action === "practice-start") {
+      const prompt = btn.getAttribute("data-prompt") || "";
+      state.practicePrompt = prompt || null;
+      state.practiceShowFullDemo = false;
       handleDockAction("practice", state);
     }
   });
