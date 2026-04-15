@@ -279,6 +279,7 @@ function ensurePracticeFlow(state, section) {
   state.practiceFlow = {
     sectionKey: section.key,
     step: 1, // 1..6
+    practiceEnabled: false, // steps 3-6 only when user opts in
     prompts,
     idx,
     showCode: false,
@@ -289,27 +290,15 @@ function ensurePracticeFlow(state, section) {
 }
 
 function practiceFlowTitle(section, step) {
-  const steps = [
-    "Teachings",
-    "What it’s doing",
-    "Practice problems",
-    "Your answers",
-    "Evaluate",
-    "Feedback",
-  ];
+  const steps = ["Teachings", "What it’s doing", "Practice problems", "Your answers", "Evaluate", "Feedback"];
   const label = steps[Math.max(0, Math.min(steps.length - 1, (step || 1) - 1))];
-  return `Practice · ${section.title} · ${label}`;
+  return `Learn · ${section.title} · ${label}`;
 }
 
-function renderStepPills(step) {
-  const steps = [
-    "Teachings",
-    "What it’s doing",
-    "Practice",
-    "Answer",
-    "Evaluate",
-    "Feedback",
-  ];
+function renderStepPills(step, practiceEnabled) {
+  const steps = practiceEnabled
+    ? ["Teachings", "What it’s doing", "Practice", "Answer", "Evaluate", "Feedback"]
+    : ["Teachings", "What it’s doing"];
   return `
     <div class="flowSteps" role="list">
       ${steps
@@ -333,6 +322,7 @@ function renderPracticeFlowCard(state) {
   if (!s || !pf) return "";
 
   const step = pf.step || 1;
+  const practiceEnabled = pf.practiceEnabled === true;
   const runCmd = `python python_poweruser.py -s ${s.key}`;
   const prompts = pf.prompts || [];
   const curPrompt = prompts[pf.idx] || "";
@@ -345,7 +335,9 @@ function renderPracticeFlowCard(state) {
     <div class="flowNav">
       <button class="ghost" type="button" data-inline-action="lf-back" ${step <= 1 ? "disabled" : ""}>Back</button>
       <div class="spacer"></div>
-      <button class="primary" type="button" data-inline-action="lf-next">${step >= 6 ? "Done" : "Next"}</button>
+      <button class="primary" type="button" data-inline-action="lf-next">
+        ${practiceEnabled ? (step >= 6 ? "Done" : "Next") : (step >= 2 ? "Close" : "Next")}
+      </button>
     </div>
   `;
 
@@ -384,8 +376,15 @@ function renderPracticeFlowCard(state) {
           ${pf.showCode ? "Hide code" : "Show code"}
         </button>
         <button class="ghost" type="button" data-inline-action="lf-copy-cmd" data-cmd="${escapeHtml(runCmd)}">Copy run command</button>
+        <div class="spacer"></div>
+        <button class="primary" type="button" data-inline-action="lf-start-practice">
+          Start practice problems
+        </button>
       </div>
       ${pf.showCode ? renderCodeBlock(snippet || fullDemo) : `<div class="muted">Code is hidden to reduce clutter. Use “Show code” if you need it.</div>`}
+      <div class="muted" style="margin-top:10px;">
+        Practice is optional. If you only want the teaching + explanation, you can close now.
+      </div>
     </div>
   `;
 
@@ -506,13 +505,13 @@ function renderPracticeFlowCard(state) {
   `;
 
   const body = `
-    ${renderStepPills(step)}
+    ${renderStepPills(step, practiceEnabled)}
     ${step === 1 ? step1 : ""}
     ${step === 2 ? step2 : ""}
-    ${step === 3 ? step3 : ""}
-    ${step === 4 ? step4 : ""}
-    ${step === 5 ? step5 : ""}
-    ${step === 6 ? step6 : ""}
+    ${practiceEnabled && step === 3 ? step3 : ""}
+    ${practiceEnabled && step === 4 ? step4 : ""}
+    ${practiceEnabled && step === 5 ? step5 : ""}
+    ${practiceEnabled && step === 6 ? step6 : ""}
     ${nav}
   `;
 
@@ -718,7 +717,7 @@ function attachDockHandlers(state) {
     }
 
     // Learning flow (new progressive UI)
-    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" ||
+    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" || action === "lf-start-practice" ||
         action === "lf-pick-problem" || action === "lf-save-answer" || action === "lf-clear-answer" ||
         action === "lf-grade" || action === "lf-copy-cmd" || action === "lf-copy-code" ||
         action === "lf-restart" || action === "lf-go-speedrun") {
@@ -733,9 +732,22 @@ function attachDockHandlers(state) {
       }
 
       if (action === "lf-next") {
+        const practiceEnabled = pf.practiceEnabled === true;
+        if (!practiceEnabled) {
+          // In non-practice mode we only have steps 1-2; step 2 "Close".
+          if ((pf.step || 1) >= 2) return;
+          pf.step = 2;
+          return;
+        }
+
         pf.step = Math.min(6, (pf.step || 1) + 1);
         // Auto-focus answer box on step 4.
         if (pf.step === 4) window.setTimeout(() => $("#practiceAnswer")?.focus(), 30);
+      }
+
+      if (action === "lf-start-practice") {
+        pf.practiceEnabled = true;
+        pf.step = 3;
       }
 
       if (action === "lf-toggle-code") {
