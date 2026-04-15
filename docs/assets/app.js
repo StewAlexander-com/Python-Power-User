@@ -62,6 +62,21 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
     bullets.push(s);
   };
 
+  // 0) Pull bullet points from the initial docstring (common in early sections).
+  // We specifically look for a "Big picture:" block and "-" bullets.
+  const docStart = lines.findIndex((l) => l.includes('"""'));
+  if (docStart >= 0) {
+    const docEnd = lines.findIndex((l, i) => i > docStart && l.includes('"""'));
+    if (docEnd > docStart) {
+      const doc = lines.slice(docStart + 1, docEnd);
+      for (const l of doc) {
+        const t = l.trim();
+        if (t.startsWith("- ")) pushBullet(t.replace(/^-+\s*/, ""));
+        if (/^big picture:/i.test(t)) pushBullet("Big picture:");
+      }
+    }
+  }
+
   // 1) Pull “Feynman says / Einstein says / TL;DR” lines from the docstring box.
   // Those appear as: "│  ... │"
   for (const l of lines) {
@@ -101,7 +116,9 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
   }
 
   // Track-specific ordering: beginner prefers simpler bullets first.
-  const ordered = bullets.slice(0, maxItems);
+  // Remove anything that looks like a practice prompt/question.
+  const cleaned = bullets.filter((b) => !/\?$/.test(b) && !/^what do you think/i.test(b));
+  const ordered = cleaned.slice(0, maxItems);
   if (track === "power") return ordered;
   return ordered;
 }
@@ -115,6 +132,16 @@ function renderTeachingsList(items) {
       ${items.map((t) => `<li class="teachItem">${escapeHtml(t)}</li>`).join("")}
     </ul>
   `;
+}
+
+function whatItsDoingSnippet(section) {
+  const src = section?.demo_source || "";
+  if (!src) return "";
+  const lines = src.split("\n");
+  const headerIdx = lines.findIndex((l) => l.includes("_header("));
+  const start = headerIdx >= 0 ? headerIdx + 1 : 0;
+  const cleaned = lines.slice(start, start + 28).filter((l) => l.trim() !== "");
+  return cleaned.join("\n");
 }
 
 function renderSection(section) {
@@ -187,6 +214,12 @@ function upsertDockCard({ id, title, body, code }) {
       ${code ? renderCodeBlock(code) : ""}
     </section>
   `;
+
+  // When the Learn flow is active, replace the content area to reduce card clutter.
+  if (id === "dockPracticeCard") {
+    content.innerHTML = html;
+    return;
+  }
 
   if (existing) existing.outerHTML = html;
   else content.insertAdjacentHTML("afterbegin", html);
@@ -395,9 +428,9 @@ function renderPracticeFlowCard(state) {
   const prompts = pf.prompts || [];
   const curPrompt = prompts[pf.idx] || "";
   const answer = (pf.answers && pf.answers[pf.idx]) ? pf.answers[pf.idx] : loadPracticeAnswer(s.key, curPrompt);
-  const snippet = practiceSnippet(s, curPrompt);
+  const snippet = practiceEnabled ? practiceSnippet(s, curPrompt) : whatItsDoingSnippet(s);
   const fullDemo = s.demo_source || "";
-  const ctx = contextSnippet(s, curPrompt);
+  const ctx = practiceEnabled ? contextSnippet(s, curPrompt) : contextSnippet(s, "variable");
 
   const nav = `
     <div class="flowNav">
@@ -433,8 +466,12 @@ function renderPracticeFlowCard(state) {
     <div class="flowPanel">
       <div class="flowHeadline">Here is what the teaching is doing</div>
       <div class="flowPromptBig">
-        <div class="flowPromptLabel">Focus question</div>
-        <div class="flowPromptText">${escapeHtml(curPrompt || "Pick a practice problem next.")}</div>
+        <div class="flowPromptLabel">${practiceEnabled ? "Focus question" : "What to notice"}</div>
+        <div class="flowPromptText">${
+          practiceEnabled
+            ? escapeHtml(curPrompt || "Pick a practice problem next.")
+            : escapeHtml("Watch how names (variables) point to values, and how assignment changes what a name refers to.")
+        }</div>
       </div>
       ${ctx ? `<div class="flowPromptContext">
         <div class="flowPromptContextTitle">Context (what variables mean here)</div>
