@@ -8,6 +8,18 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 ---
 
+## Web GUI (GitHub Pages)
+
+A professional, mobile-friendly learning cockpit lives in `docs/` and can be hosted with GitHub Pages.
+
+- **Open locally**: open `docs/index.html` in your browser
+- **Publish**: in GitHub → Settings → Pages → “Deploy from a branch” → select `main` and `/docs`
+- **Update content** after editing `python_poweruser.py`:
+
+```bash
+python tools/build_web_content.py
+```
+
 ## Table of Contents
 
 - [The TUI](#the-tui)

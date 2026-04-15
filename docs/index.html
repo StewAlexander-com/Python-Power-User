@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Python Power User — interactive learning interface for the one-file Python reference." />
+    <title>Python Power User</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./assets/app.css" />
+  </head>
+  <body>
+    <div class="app" id="appRoot">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brandMark" aria-hidden="true">PPU</div>
+          <div class="brandText">
+            <div class="brandTitle">Python Power User</div>
+            <div class="brandSubtitle">Learn & practice from the one-file reference</div>
+          </div>
+        </div>
+
+        <div class="topActions">
+          <button class="ghost" id="btnToggleNav" type="button" aria-label="Toggle navigation">Sections</button>
+          <a class="ghost" href="https://github.com/stewalexander/Python-Power-User" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+      </header>
+
+      <div class="shell">
+        <aside class="nav" id="nav">
+          <div class="navHeader">
+            <div class="navTitle">Sections</div>
+            <div class="navSearchWrap">
+              <input id="sectionSearch" class="navSearch" type="search" placeholder="Search sections…" autocomplete="off" />
+            </div>
+          </div>
+          <div class="navList" id="navList" role="list"></div>
+        </aside>
+
+        <main class="main" id="main">
+          <div class="hero" id="hero">
+            <div class="heroKicker">GUI / HMI</div>
+            <h1 class="heroTitle">A professional learning cockpit for Python</h1>
+            <p class="heroBody">
+              Pick a section. Read the goals. Run practice prompts. Use the interaction dock below to search, quiz yourself,
+              and keep a clean learning loop on desktop or mobile.
+            </p>
+            <div class="heroChips" id="heroChips"></div>
+          </div>
+
+          <article class="content" id="content" aria-live="polite">
+            <section class="card">
+              <div class="cardTitle">Getting started</div>
+              <div class="cardBody">
+                <div class="callouts">
+                  <div class="callout">
+                    <div class="calloutTitle">Run locally (full TUI)</div>
+                    <pre class="code"><code>python python_poweruser.py</code></pre>
+                  </div>
+                  <div class="callout">
+                    <div class="calloutTitle">Jump to a section</div>
+                    <pre class="code"><code>python python_poweruser.py -s dicts</code></pre>
+                  </div>
+                </div>
+                <div class="muted">
+                  This page is static and client-side. It doesn’t execute Python; it helps you navigate the learning and practice
+                  loop in a clean interface.
+                </div>
+              </div>
+            </section>
+          </article>
+        </main>
+      </div>
+
+      <section class="dock" id="dock" aria-label="Interaction dock">
+        <div class="dockInner">
+          <div class="dockPills" id="dockPills" role="list">
+            <button class="pill" type="button" data-action="practice">Practice</button>
+            <button class="pill" type="button" data-action="explain">Explain</button>
+            <button class="pill" type="button" data-action="show-demo">Show demo</button>
+            <button class="pill" type="button" data-action="show-try-this">Try this</button>
+            <button class="pill" type="button" data-action="show-speed-run">Speed run</button>
+          </div>
+
+          <form class="dockRow" id="dockForm">
+            <label class="srOnly" for="dockInput">Ask or search</label>
+            <input
+              id="dockInput"
+              class="dockInput"
+              type="text"
+              placeholder="Ask a question, or type a topic (e.g. 'truthiness', 'dict merge', 'decorators')…"
+              autocomplete="off"
+            />
+            <button class="primary" type="submit">Send</button>
+          </form>
+          <div class="dockHint" id="dockHint">Tip: type <span class="kbd">/</span> to focus search. Use the pills for a clean loop.</div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./assets/app.js"></script>
+  </body>
+</html>
+
