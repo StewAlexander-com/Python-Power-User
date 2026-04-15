@@ -72,7 +72,7 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
       let current = null;
       const flush = () => {
         if (!current) return;
-        pushBullet(current.replace(/\s+/g, " ").trim());
+        pushItem("bullet", current.replace(/\s+/g, " ").trim());
         current = null;
       };
 
