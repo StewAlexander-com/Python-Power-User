@@ -907,9 +907,19 @@ function attachDockHandlers(state) {
         const practiceEnabled = pf.practiceEnabled === true;
         if (!practiceEnabled) {
           // In non-practice mode we only have steps 1-2; step 2 "Close".
-          if ((pf.step || 1) >= 2) return;
+          if ((pf.step || 1) >= 2) {
+            // "Close" -> advance to next teaching if possible.
+            const idx = state.sections.findIndex((x) => x.key === state.activeKey);
+            const next = idx >= 0 ? state.sections[idx + 1] : null;
+            if (next) {
+              selectSectionByKey(state, next.key);
+              // keep Learn open for the next section
+              handleDockAction("learn", state);
+            }
+            return;
+          }
           pf.step = 2;
-          return;
+          // fall through to re-render below
         }
 
         pf.step = Math.min(6, (pf.step || 1) + 1);
