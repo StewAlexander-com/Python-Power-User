@@ -259,8 +259,12 @@ function handleDockAction(action, state) {
   }
 
   if (action === "practice") {
-    const prompt = pickPracticePrompt(s) || "No prompts available for this section.";
-    const snippet = practiceSnippet(s, prompt);
+    const prompt = state.practicePrompt || pickPracticePrompt(s) || "No prompts available for this section.";
+    state.practicePrompt = prompt;
+    state.practiceShowFullDemo = state.practiceShowFullDemo === true;
+
+    const snippet = state.practiceShowFullDemo ? (s.demo_source || "") : practiceSnippet(s, prompt);
+    const toggleLabel = state.practiceShowFullDemo ? "Show relevant snippet" : "Show full demo source";
     upsertDockCard({
       id: "dockPracticeCard",
       title: `Practice · ${s.title}`,
@@ -268,6 +272,9 @@ function handleDockAction(action, state) {
         <div>Answer the prompt using the code below. Then verify by running the section locally.</div>
         <div style="margin-top:10px;"><strong>Prompt:</strong> ${escapeHtml(prompt)}</div>
         <div class="muted" style="margin-top:10px;">Tip: the prompt line is marked with <span class="kbd">⇢</span>.</div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="ghost" type="button" data-inline-action="practice-toggle-demo">${escapeHtml(toggleLabel)}</button>
+        </div>
       `,
       code: snippet,
     });
@@ -282,17 +289,6 @@ function handleDockAction(action, state) {
       body: `Use the goals to guide what “done” looks like. Then run the <span class="kbd">Try this</span> or <span class="kbd">Speed run</span> cells in VS Code.<br/><br/>
       <div class="muted">Beginner goal: ${escapeHtml(s.goal_beginner || "—")}</div>
       <div class="muted">Power goal: ${escapeHtml(s.goal_power || "—")}</div>`,
-    });
-    scrollToTopMain();
-    return;
-  }
-
-  if (action === "show-demo") {
-    upsertDockCard({
-      id: "dockDemoCard",
-      title: `Demo source · demo_${s.key}()`,
-      body: `Copy this into your editor context, or jump to it in <span class="kbd">python_poweruser.py</span>.`,
-      code: s.demo_source || "",
     });
     scrollToTopMain();
     return;
@@ -373,6 +369,16 @@ function attachDockHandlers(state) {
     if (!btn) return;
     const action = btn.getAttribute("data-action");
     handleDockAction(action, state);
+  });
+
+  $("#content").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-inline-action]");
+    if (!btn) return;
+    const action = btn.getAttribute("data-inline-action");
+    if (action === "practice-toggle-demo") {
+      state.practiceShowFullDemo = !state.practiceShowFullDemo;
+      handleDockAction("practice", state);
+    }
   });
 
   $("#dockForm").addEventListener("submit", (e) => {
