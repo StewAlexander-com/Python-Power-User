@@ -162,6 +162,7 @@ function _pulse(el, className, ms = 1400) {
 function nudgePickSection(state, reason = "") {
   const nav = $("#nav");
   const search = $("#sectionSearch");
+  const navList = $("#navList");
 
   // Poka‑yoke: open the section picker and focus it.
   nav?.setAttribute("data-open", "true");
@@ -170,11 +171,19 @@ function nudgePickSection(state, reason = "") {
   // Visual guidance: glow the nav panel + the search input.
   _pulse(nav, "navNudgePulse", 1600);
   _pulse(search, "inputNudgePulse", 1600);
+  _pulse(navList, "listNudgePulse", 1600);
 
   // Only show ONE nudge card (update it if it already exists).
   const content = $("#content");
   const existing = $("#nudgePickSectionCard");
-  const body = `Select a section in the left navigation, then use the dock actions.${reason ? `<br/><br/><span class="muted">${escapeHtml(reason)}</span>` : ""}`;
+  const body = `
+    <div>Select a section in the left navigation, then use the dock actions.</div>
+    <div class="nudgeSteps">
+      <div class="nudgeStep"><span class="nudgeStepNum">1</span> Click any section on the left</div>
+      <div class="nudgeStep"><span class="nudgeStepNum">2</span> Use <span class="kbd">Practice</span> to start</div>
+    </div>
+    ${reason ? `<div class="muted nudgeHint">${reason}</div>` : ""}
+  `.trim();
 
   const html = `
     <section class="card nudgeCardPulse" id="nudgePickSectionCard">
@@ -364,16 +373,32 @@ function attachDockHandlers(state) {
     scrollToTopMain();
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "/") {
-      e.preventDefault();
-      $("#sectionSearch").focus();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-      e.preventDefault();
-      focusDockInput();
-    }
-  });
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      // Don't hijack typing inside inputs/contenteditable.
+      const ae = document.activeElement;
+      const tag = ae?.tagName?.toLowerCase?.() || "";
+      const isTypingTarget =
+        tag === "input" || tag === "textarea" || ae?.isContentEditable === true;
+
+      const isSlash =
+        e.key === "/" || e.code === "Slash" || (e.shiftKey && e.key === "?");
+
+      if (isSlash && !isTypingTarget) {
+        e.preventDefault();
+        nudgePickSection(state, `Tip: press <span class="kbd">Ctrl</span><span class="kbd">K</span> to focus the bottom dock.`);
+        return;
+      }
+
+      // Keep the original “focus dock” shortcut.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        focusDockInput();
+      }
+    },
+    { capture: true },
+  );
 }
 
 async function main() {
