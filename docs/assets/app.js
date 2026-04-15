@@ -79,6 +79,21 @@ function renderDockResponse({ title, body, code }) {
   `;
 }
 
+function upsertDockCard({ id, title, body, code }) {
+  const content = $("#content");
+  const existing = id ? document.getElementById(id) : null;
+  const html = `
+    <section class="card" ${id ? `id="${escapeHtml(id)}"` : ""}>
+      <div class="cardTitle">${escapeHtml(title)}</div>
+      <div class="cardBody">${body}</div>
+      ${code ? renderCodeBlock(code) : ""}
+    </section>
+  `;
+
+  if (existing) existing.outerHTML = html;
+  else content.insertAdjacentHTML("afterbegin", html);
+}
+
 async function loadSections() {
   const res = await fetch("./content/sections.json", { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load sections.json: ${res.status}`);
@@ -149,6 +164,41 @@ function pickPracticePrompt(section) {
   return prompts[idx];
 }
 
+function practiceSnippet(section, prompt) {
+  const src = section?.demo_source || "";
+  if (!src) return "";
+
+  const lines = src.split("\n");
+  const needle = (prompt || "").trim().toLowerCase();
+
+  let idx = -1;
+  if (needle) {
+    idx = lines.findIndex((l) => l.toLowerCase().includes(needle));
+  }
+  if (idx < 0) {
+    idx = lines.findIndex((l) => l.trim().startsWith("#?"));
+  }
+  if (idx < 0) {
+    return src;
+  }
+
+  const before = 10;
+  const after = 14;
+  const start = Math.max(0, idx - before);
+  const end = Math.min(lines.length, idx + after + 1);
+
+  const snippet = lines.slice(start, end).map((l, i) => {
+    const isPromptLine = start + i === idx;
+    if (!isPromptLine) return l;
+    // Mark the prompt line so it stands out even in a plain <pre>.
+    return l.replace("#?", "#? ⇢");
+  });
+
+  const prefix = start > 0 ? ["# …"] : [];
+  const suffix = end < lines.length ? ["# …"] : [];
+  return [...prefix, ...snippet, ...suffix].join("\n");
+}
+
 function _pulse(el, className, ms = 1400) {
   if (!el) return;
   el.classList.remove(className);
@@ -210,66 +260,62 @@ function handleDockAction(action, state) {
 
   if (action === "practice") {
     const prompt = pickPracticePrompt(s) || "No prompts available for this section.";
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: `Practice · ${s.title}`,
-        body: `Predict what Python does, then verify by running the section locally.<br/><br/><strong>Prompt:</strong> ${escapeHtml(prompt)}`,
-      }),
-    );
+    const snippet = practiceSnippet(s, prompt);
+    upsertDockCard({
+      id: "dockPracticeCard",
+      title: `Practice · ${s.title}`,
+      body: `
+        <div>Answer the prompt using the code below. Then verify by running the section locally.</div>
+        <div style="margin-top:10px;"><strong>Prompt:</strong> ${escapeHtml(prompt)}</div>
+        <div class="muted" style="margin-top:10px;">Tip: the prompt line is marked with <span class="kbd">⇢</span>.</div>
+      `,
+      code: snippet,
+    });
     scrollToTopMain();
     return;
   }
 
   if (action === "explain") {
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: `Explain · ${s.title}`,
-        body: `Use the goals to guide what “done” looks like. Then run the <span class="kbd">Try this</span> or <span class="kbd">Speed run</span> cells in VS Code.<br/><br/>
-        <div class="muted">Beginner goal: ${escapeHtml(s.goal_beginner || "—")}</div>
-        <div class="muted">Power goal: ${escapeHtml(s.goal_power || "—")}</div>`,
-      }),
-    );
+    upsertDockCard({
+      id: "dockExplainCard",
+      title: `Explain · ${s.title}`,
+      body: `Use the goals to guide what “done” looks like. Then run the <span class="kbd">Try this</span> or <span class="kbd">Speed run</span> cells in VS Code.<br/><br/>
+      <div class="muted">Beginner goal: ${escapeHtml(s.goal_beginner || "—")}</div>
+      <div class="muted">Power goal: ${escapeHtml(s.goal_power || "—")}</div>`,
+    });
     scrollToTopMain();
     return;
   }
 
   if (action === "show-demo") {
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: `Demo source · demo_${s.key}()`,
-        body: `Copy this into your editor context, or jump to it in <span class="kbd">python_poweruser.py</span>.`,
-        code: s.demo_source || "",
-      }),
-    );
+    upsertDockCard({
+      id: "dockDemoCard",
+      title: `Demo source · demo_${s.key}()`,
+      body: `Copy this into your editor context, or jump to it in <span class="kbd">python_poweruser.py</span>.`,
+      code: s.demo_source || "",
+    });
     scrollToTopMain();
     return;
   }
 
   if (action === "show-try-this") {
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: `Try this (Beginner) · ${s.title}`,
-        body: `These are the runnable “Try this” cells captured from the section.`,
-        code: s.try_this_source || "",
-      }),
-    );
+    upsertDockCard({
+      id: "dockTryThisCard",
+      title: `Try this (Beginner) · ${s.title}`,
+      body: `These are the runnable “Try this” cells captured from the section.`,
+      code: s.try_this_source || "",
+    });
     scrollToTopMain();
     return;
   }
 
   if (action === "show-speed-run") {
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: `Speed run (Power User) · ${s.title}`,
-        body: `These are the runnable “Speed run” cells captured from the section.`,
-        code: s.speed_run_source || "",
-      }),
-    );
+    upsertDockCard({
+      id: "dockSpeedRunCard",
+      title: `Speed run (Power User) · ${s.title}`,
+      body: `These are the runnable “Speed run” cells captured from the section.`,
+      code: s.speed_run_source || "",
+    });
     scrollToTopMain();
     return;
   }
