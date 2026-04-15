@@ -618,6 +618,32 @@ a{ color: inherit; text-decoration: none; }
   font-size: 12px;
 }
 
+/* Teachings list */
+.teachList{
+  margin: 10px 0 12px;
+  padding: 0;
+  list-style: none;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.teachItem{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(255,255,255,.86);
+  line-height: 1.45;
+}
+.teachItem::before{
+  content: "•";
+  display:inline-block;
+  width: 14px;
+  margin-right: 6px;
+  color: rgba(56,189,248,.85);
+  font-weight: 900;
+}
+
 @media (max-width: 980px){
   .flowTeachings{ grid-template-columns: 1fr; }
 }

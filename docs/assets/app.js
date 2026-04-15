@@ -48,6 +48,75 @@ function contextSnippet(section, prompt) {
   return [...prefix, ...clipped].join("\n");
 }
 
+function extractTeachings(section, track = "beginner", maxItems = 6) {
+  const src = section?.demo_source || "";
+  if (!src) return [];
+  const lines = src.split("\n");
+
+  const bullets = [];
+  const pushBullet = (t) => {
+    const s = String(t || "").trim();
+    if (!s) return;
+    // Avoid duplicates.
+    if (bullets.some((b) => b.toLowerCase() === s.toLowerCase())) return;
+    bullets.push(s);
+  };
+
+  // 1) Pull “Feynman says / Einstein says / TL;DR” lines from the docstring box.
+  // Those appear as: "│  ... │"
+  for (const l of lines) {
+    const m = l.match(/^\s*│\s{0,2}(.+?)\s*│\s*$/);
+    if (!m) continue;
+    const inner = m[1].replace(/\s+/g, " ").trim();
+    if (!inner) continue;
+    if (/^\d+\s+—\s+/.test(inner)) continue;
+    if (/^TIP:/i.test(inner) || /says:/i.test(inner) || /TL;DR/i.test(inner) || /MNEMONICS/i.test(inner)) {
+      pushBullet(inner.replace(/^TIP:\s*/i, "Tip: "));
+    }
+  }
+
+  // 2) Pull key idea comment lines.
+  for (const l of lines) {
+    const trimmed = l.trim();
+    if (!trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("#* ──")) continue; // section headings
+    if (trimmed.startsWith("# ═")) continue;
+    if (trimmed.startsWith("# █")) continue;
+    if (trimmed.startsWith("#!")) {
+      pushBullet(trimmed.replace(/^#!\s*/, "Safety: ").trim());
+      continue;
+    }
+    if (trimmed.startsWith("#?")) {
+      pushBullet(trimmed.replace(/^#\?\s*/, "").trim());
+      continue;
+    }
+    if (trimmed.startsWith("#*")) {
+      pushBullet(trimmed.replace(/^#\*\s*/, "").trim());
+      continue;
+    }
+    // Plain comment lines with guidance phrasing.
+    if (/says:|rule:|tip:|mnemonic|never|always|prefer|avoid/i.test(trimmed)) {
+      pushBullet(trimmed.replace(/^#\s*/, "").trim());
+    }
+  }
+
+  // Track-specific ordering: beginner prefers simpler bullets first.
+  const ordered = bullets.slice(0, maxItems);
+  if (track === "power") return ordered;
+  return ordered;
+}
+
+function renderTeachingsList(items) {
+  if (!items || items.length === 0) {
+    return `<div class="muted">No teaching notes were extracted for this section yet.</div>`;
+  }
+  return `
+    <ul class="teachList">
+      ${items.map((t) => `<li class="teachItem">${escapeHtml(t)}</li>`).join("")}
+    </ul>
+  `;
+}
+
 function renderSection(section) {
   const key = section.key;
   const num = String(section.number).padStart(2, "0");
@@ -321,6 +390,7 @@ function renderPracticeFlowCard(state) {
   const step = pf.step || 1;
   const practiceEnabled = pf.practiceEnabled === true;
   const track = pf.track === "power" ? "power" : "beginner";
+  const teachings = extractTeachings(s, track, 6);
   const runCmd = `python python_poweruser.py -s ${s.key}`;
   const prompts = pf.prompts || [];
   const curPrompt = prompts[pf.idx] || "";
@@ -342,6 +412,7 @@ function renderPracticeFlowCard(state) {
   const step1 = `
     <div class="flowPanel">
       <div class="flowHeadline">Here are the teachings</div>
+      ${renderTeachingsList(teachings)}
       <div class="flowTeachings">
         <div class="flowTeach">
           <div class="flowTeachTitle">${track === "power" ? "Beginner goal (supporting)" : "Beginner goal"}</div>
