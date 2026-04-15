@@ -12,6 +12,13 @@ Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
 
 A professional, mobile-friendly learning cockpit lives in `docs/` and can be hosted with GitHub Pages.
 
+- **Live site**: [Python Power User (GitHub Pages)](https://stewalexander-com.github.io/Python-Power-User/)
+- **Screenshots**
+
+  ![Web GUI — home](docs/assets/screenshots/web-home.png)
+
+  ![Web GUI — lesson flow](docs/assets/screenshots/web-lesson.png)
+
 - **Open locally**: open `docs/index.html` in your browser
 - **Publish**: in GitHub → Settings → Pages → “Deploy from a branch” → select `main` and `/docs`
 - **Update content** after editing `python_poweruser.py`:
