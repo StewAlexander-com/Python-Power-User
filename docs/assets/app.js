@@ -25,6 +25,29 @@ function renderCodeBlock(src) {
   return `<pre class="code"><code>${escapeHtml(src)}</code></pre>`;
 }
 
+function contextSnippet(section, prompt) {
+  const src = section?.demo_source || "";
+  if (!src) return "";
+  const lines = src.split("\n");
+  const needle = (prompt || "").trim().toLowerCase();
+
+  // Find the most relevant anchor line.
+  let idx = -1;
+  if (needle) idx = lines.findIndex((l) => l.toLowerCase().includes(needle));
+  if (idx < 0) idx = lines.findIndex((l) => l.trim().startsWith("#?"));
+  if (idx < 0) idx = Math.min(12, Math.max(0, lines.length - 1));
+
+  // Show a small chunk that likely defines variables before the anchor.
+  const maxLines = 8;
+  const start = Math.max(0, idx - maxLines);
+  const end = Math.min(lines.length, idx + 1);
+
+  const snippet = lines.slice(start, end).filter((l) => l.trim() !== "");
+  const clipped = snippet.slice(-maxLines);
+  const prefix = start > 0 ? ["# …"] : [];
+  return [...prefix, ...clipped].join("\n");
+}
+
 function renderSection(section) {
   const key = section.key;
   const num = String(section.number).padStart(2, "0");
@@ -33,10 +56,18 @@ function renderSection(section) {
   const gp = section.goal_power || "—";
 
   const firstPrompt = (section.prompts || [])[0] || "";
+  const firstContext = firstPrompt ? contextSnippet(section, firstPrompt) : "";
   const promptRow = firstPrompt
     ? `<div class="practiceRow">
         <div class="practiceLabel">Practice</div>
-        <div class="practicePrompt">${escapeHtml(firstPrompt)}</div>
+        <div class="practicePrompt">
+          <div class="practicePromptTitle">Practice question</div>
+          <div class="practicePromptText">${escapeHtml(firstPrompt)}</div>
+          ${firstContext ? `<div class="practicePromptContext">
+            <div class="practicePromptContextTitle">Context</div>
+            <pre class="code" style="margin:8px 0 0;"><code>${escapeHtml(firstContext)}</code></pre>
+          </div>` : ``}
+        </div>
         <button class="ghost practiceCTA" type="button" data-inline-action="practice-start" data-prompt="${escapeHtml(firstPrompt)}">Start</button>
       </div>`
     : `<div class="muted">No practice prompt captured for this section.</div>`;
@@ -239,11 +270,14 @@ function practiceSnippet(section, prompt) {
 
 function ensurePracticeFlow(state, section) {
   if (!section) return;
+  // Don’t clobber an in-progress flow for the same section.
+  if (state.practiceFlow && state.practiceFlow.sectionKey === section.key) return;
   const prompts = pickPracticePrompts(section, 3);
   const idx = 0;
   const prompt = prompts[idx] || "";
   const saved = prompt ? loadPracticeAnswer(section.key, prompt) : "";
   state.practiceFlow = {
+    sectionKey: section.key,
     step: 1, // 1..6
     prompts,
     idx,
@@ -305,6 +339,7 @@ function renderPracticeFlowCard(state) {
   const answer = (pf.answers && pf.answers[pf.idx]) ? pf.answers[pf.idx] : loadPracticeAnswer(s.key, curPrompt);
   const snippet = practiceSnippet(s, curPrompt);
   const fullDemo = s.demo_source || "";
+  const ctx = contextSnippet(s, curPrompt);
 
   const nav = `
     <div class="flowNav">
@@ -340,6 +375,10 @@ function renderPracticeFlowCard(state) {
         <div class="flowPromptLabel">Focus question</div>
         <div class="flowPromptText">${escapeHtml(curPrompt || "Pick a practice problem next.")}</div>
       </div>
+      ${ctx ? `<div class="flowPromptContext">
+        <div class="flowPromptContextTitle">Context (what variables mean here)</div>
+        ${renderCodeBlock(ctx)}
+      </div>` : ``}
       <div class="flowActions">
         <button class="ghost" type="button" data-inline-action="lf-toggle-code">
           ${pf.showCode ? "Hide code" : "Show code"}
@@ -376,6 +415,10 @@ function renderPracticeFlowCard(state) {
         <div class="flowPromptLabel">Question ${pf.idx + 1} of ${prompts.length}</div>
         <div class="flowPromptText">${escapeHtml(curPrompt || "—")}</div>
       </div>
+      ${ctx ? `<div class="flowPromptContext">
+        <div class="flowPromptContextTitle">Context</div>
+        ${renderCodeBlock(ctx)}
+      </div>` : ``}
       <div class="answerBox" style="margin-top:12px;">
         <label class="answerLabel" for="practiceAnswer">Your answer</label>
         <textarea
@@ -662,11 +705,16 @@ function attachDockHandlers(state) {
       if (!s) return;
       ensurePracticeFlow(state, s);
       if (state.practiceFlow) {
-        const idx = Math.max(0, (state.practiceFlow.prompts || []).indexOf(prompt));
+        const found = (state.practiceFlow.prompts || []).indexOf(prompt);
+        const idx = found >= 0 ? found : 0;
         state.practiceFlow.idx = idx;
         state.practiceFlow.step = 2;
+        state.practiceFlow.showCode = false;
       }
-      handleDockAction("practice", state);
+      const card = renderPracticeFlowCard(state);
+      upsertDockCard({ id: card.id, title: card.title, body: card.body });
+      scrollToTopMain();
+      return;
     }
 
     // Learning flow (new progressive UI)
