@@ -29,12 +29,19 @@ function renderCodeBlock(src) {
   const commentish = nonEmpty.filter((l) => l.trim().startsWith("#")).length;
   const looksLikeTeachings = nonEmpty.length > 0 && (commentish / nonEmpty.length) >= 0.65;
   if (looksLikeTeachings) {
-    // Show both: rendered markdown-like discussion + the raw snippet.
-    return `
-      ${renderCommentMarkdown(src)}
-      <div class="mdRawLabel">Raw snippet</div>
-      <pre class="code"><code>${escapeHtml(src)}</code></pre>
-    `;
+    const allComments = nonEmpty.length > 0 && commentish === nonEmpty.length;
+    const rendered = renderCommentMarkdown(src); // may include code blocks for mixed snippets
+
+    // If there's no executable code in the snippet at all, also show the raw snippet.
+    if (allComments) {
+      return `
+        ${rendered}
+        <div class="mdRawLabel">Raw snippet</div>
+        <pre class="code"><code>${escapeHtml(src)}</code></pre>
+      `;
+    }
+
+    return rendered;
   }
 
   return `<pre class="code"><code>${escapeHtml(src)}</code></pre>`;
@@ -42,10 +49,10 @@ function renderCodeBlock(src) {
 
 function renderCommentMarkdown(src) {
   const lines = String(src).split("\n");
-  const out = [];
+  const blocks = [];
 
-  const push = (html) => {
-    if (html) out.push(html);
+  const pushBlock = (html) => {
+    if (html) blocks.push(html);
   };
 
   const flushPara = (() => {
@@ -57,7 +64,7 @@ function renderCommentMarkdown(src) {
       flush() {
         const t = buf.join(" ").replace(/\s+/g, " ").trim();
         buf = [];
-        if (t) push(`<p class="mdP">${escapeHtml(t)}</p>`);
+        if (t) pushBlock(`<p class="mdP">${escapeHtml(t)}</p>`);
       },
     };
   })();
@@ -65,71 +72,100 @@ function renderCommentMarkdown(src) {
   let inList = false;
   const closeList = () => {
     if (inList) {
-      push(`</ul>`);
+      pushBlock(`</ul>`);
       inList = false;
     }
   };
 
+  // Mixed snippets: render comment discussion as headings/bullets and keep code lines as code blocks.
+  let codeBuf = [];
+  const flushCode = () => {
+    if (codeBuf.length) {
+      pushBlock(`<pre class="code"><code>${escapeHtml(codeBuf.join("\n"))}</code></pre>`);
+      codeBuf = [];
+    }
+  };
+
+  const pushHeading = (text) => {
+    const t = String(text || "").trim();
+    if (!t) return;
+    flushPara.flush();
+    closeList();
+    flushCode();
+    pushBlock(`<div class="mdH">${escapeHtml(t)}</div>`);
+  };
+
   for (const raw of lines) {
-    const t = raw.trim();
-    if (!t) {
+    const t = raw.replace(/\s+$/g, ""); // keep leading whitespace for code formatting, trim only end
+    const trimmed = t.trim();
+
+    if (!trimmed) {
       flushPara.flush();
       closeList();
+      flushCode();
       continue;
     }
 
-    // Only interpret comment lines; fall back to raw code if we see real code.
-    if (!t.startsWith("#")) {
+    if (!trimmed.startsWith("#")) {
+      // Real code line
       flushPara.flush();
       closeList();
-      push(`<pre class="code"><code>${escapeHtml(lines.join("\n"))}</code></pre>`);
-      return out.join("");
+      codeBuf.push(t);
+      continue;
     }
 
-    const body = t.replace(/^#\s?/, "");
+    // Comment line => "markdown-like" discussion
+    flushCode();
+
+    // Ignore practice prompt markers in teachings snippets.
+    if (trimmed.startsWith("#?")) continue;
+
+    const body = trimmed.replace(/^#\s?/, "").trimEnd();
     if (!body) continue;
 
-    // Headings: "#* ── TITLE ──" or "# TITLE"
-    const h1 = body.match(/^(\*?\s*─+)\s*(.+?)\s*─+\s*$/);
-    if (h1) {
-      flushPara.flush();
-      closeList();
-      push(`<div class="mdH">${escapeHtml(h1[2])}</div>`);
+    // Divider headings: "#* ── TITLE ──"
+    const divider = body.match(/^(\*?\s*─+)\s*(.+?)\s*─+\s*$/);
+    if (divider) {
+      pushHeading(divider[2]);
+      continue;
+    }
+
+    // Treat plain "# Something" comment lines as H1-style headings.
+    // This matches the authored lessons like: "# Think of a variable as..."
+    if (!body.startsWith("* ") && !body.startsWith("? ") && !body.startsWith("! ")) {
+      pushHeading(body);
       continue;
     }
 
     if (body.startsWith("* ")) {
-      // Bullet
       flushPara.flush();
       if (!inList) {
-        push(`<ul class="mdList">`);
+        pushBlock(`<ul class="mdList">`);
         inList = true;
       }
-      push(`<li class="mdLi">${escapeHtml(body.slice(2).trim())}</li>`);
+      pushBlock(`<li class="mdLi">${escapeHtml(body.slice(2).trim())}</li>`);
       continue;
     }
 
     if (body.startsWith("? ")) {
       flushPara.flush();
       closeList();
-      push(`<div class="mdCallout">${escapeHtml(body.slice(2).trim())}</div>`);
+      pushBlock(`<div class="mdCallout">${escapeHtml(body.slice(2).trim())}</div>`);
       continue;
     }
 
     if (body.startsWith("! ")) {
       flushPara.flush();
       closeList();
-      push(`<div class="mdWarn">${escapeHtml(body.slice(2).trim())}</div>`);
+      pushBlock(`<div class="mdWarn">${escapeHtml(body.slice(2).trim())}</div>`);
       continue;
     }
-
-    // Default paragraph line
-    flushPara.add(body);
   }
 
   flushPara.flush();
   closeList();
-  return `<div class="mdBlock">${out.join("")}</div>`;
+  flushCode();
+  return `<div class="mdBlock">${blocks.join("")}</div>`;
 }
 
 function contextSnippet(section, prompt) {
