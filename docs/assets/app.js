@@ -651,10 +651,11 @@ function renderStepPills(step, practiceEnabled) {
           const n = i + 1;
           const active = n === step;
           const done = n < step;
-          return `<div class="flowStep ${active ? "active" : ""} ${done ? "done" : ""}" role="listitem">
+          return `<button class="flowStep ${active ? "active" : ""} ${done ? "done" : ""}" role="listitem"
+            type="button" data-inline-action="lf-go-step" data-step="${n}">
             <span class="flowStepNum">${n}</span>
             <span class="flowStepText">${escapeHtml(t)}</span>
-          </div>`;
+          </button>`;
         })
         .join("")}
     </div>
@@ -1047,7 +1048,7 @@ function attachDockHandlers(state) {
     }
 
     // Learning flow (new progressive UI)
-    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" || action === "lf-start-practice" || action === "lf-skip-practice" ||
+    if (action === "lf-back" || action === "lf-next" || action === "lf-go-step" || action === "lf-toggle-code" || action === "lf-start-practice" || action === "lf-skip-practice" ||
         action === "lf-pick-problem" || action === "lf-save-answer" || action === "lf-clear-answer" ||
         action === "lf-grade" || action === "lf-copy-cmd" || action === "lf-copy-code" ||
         action === "lf-restart" || action === "lf-go-speedrun") {
@@ -1056,6 +1057,14 @@ function attachDockHandlers(state) {
       ensurePracticeFlow(state, s);
       const pf = state.practiceFlow;
       if (!pf) return;
+
+      if (action === "lf-go-step") {
+        const rawStep = Number(btn.getAttribute("data-step"));
+        const maxStep = (pf.practiceEnabled === true) ? 6 : 2;
+        if (Number.isFinite(rawStep)) {
+          pf.step = Math.max(1, Math.min(maxStep, rawStep));
+        }
+      }
 
       if (action === "lf-back") {
         pf.step = Math.max(1, (pf.step || 1) - 1);
