@@ -23,11 +23,16 @@ function scoreMatch(hay, needle) {
 function renderCodeBlock(src) {
   if (!src) return "";
 
-  // If the snippet is mostly Python comments, render it as readable teaching text.
+  // If the snippet is a lesson-style chunk (often starts with '# ...' headings),
+  // render it as readable teaching text (and keep any code lines as code blocks).
   const lines = String(src).split("\n");
   const nonEmpty = lines.filter((l) => l.trim().length > 0);
   const commentish = nonEmpty.filter((l) => l.trim().startsWith("#")).length;
-  const looksLikeTeachings = nonEmpty.length > 0 && (commentish / nonEmpty.length) >= 0.65;
+  const firstNonEmpty = nonEmpty[0]?.trim() || "";
+  const startsWithHeadingComment = firstNonEmpty.startsWith("# ") && !firstNonEmpty.startsWith("#?");
+  const looksLikeTeachings =
+    nonEmpty.length > 0 &&
+    (startsWithHeadingComment || (commentish / nonEmpty.length) >= 0.65);
   if (looksLikeTeachings) {
     const allComments = nonEmpty.length > 0 && commentish === nonEmpty.length;
     const rendered = renderCommentMarkdown(src); // may include code blocks for mixed snippets
