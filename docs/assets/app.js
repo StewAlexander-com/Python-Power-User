@@ -149,17 +149,53 @@ function pickPracticePrompt(section) {
   return prompts[idx];
 }
 
+function _pulse(el, className, ms = 1400) {
+  if (!el) return;
+  el.classList.remove(className);
+  // Force reflow so repeated pulses restart reliably.
+  // eslint-disable-next-line no-unused-expressions
+  el.offsetWidth;
+  el.classList.add(className);
+  window.setTimeout(() => el.classList.remove(className), ms);
+}
+
+function nudgePickSection(state, reason = "") {
+  const nav = $("#nav");
+  const search = $("#sectionSearch");
+
+  // Poka‑yoke: open the section picker and focus it.
+  nav?.setAttribute("data-open", "true");
+  search?.focus();
+
+  // Visual guidance: glow the nav panel + the search input.
+  _pulse(nav, "navNudgePulse", 1600);
+  _pulse(search, "inputNudgePulse", 1600);
+
+  // Only show ONE nudge card (update it if it already exists).
+  const content = $("#content");
+  const existing = $("#nudgePickSectionCard");
+  const body = `Select a section in the left navigation, then use the dock actions.${reason ? `<br/><br/><span class="muted">${escapeHtml(reason)}</span>` : ""}`;
+
+  const html = `
+    <section class="card nudgeCardPulse" id="nudgePickSectionCard">
+      <div class="cardTitle">Pick a section first</div>
+      <div class="cardBody">${body}</div>
+    </section>
+  `;
+
+  if (existing) {
+    existing.outerHTML = html;
+  } else {
+    content.insertAdjacentHTML("afterbegin", html);
+  }
+
+  scrollToTopMain();
+}
+
 function handleDockAction(action, state) {
   const s = state.activeSection;
   if (!s) {
-    $("#content").insertAdjacentHTML(
-      "afterbegin",
-      renderDockResponse({
-        title: "Pick a section first",
-        body: `Select a section in the left navigation, then use the dock actions.`,
-      }),
-    );
-    scrollToTopMain();
+    nudgePickSection(state, `Tip: press <span class="kbd">/</span> to focus section search.`);
     return;
   }
 
@@ -271,6 +307,9 @@ function selectSectionByKey(state, key) {
   // Close nav on mobile
   $("#nav").setAttribute("data-open", "false");
   $("#dockHint").textContent = `Active: ${String(s.number).padStart(2, "0")} — ${s.title}. Use the dock pills to practice.`;
+
+  // Clear any "pick a section first" nudge card.
+  $("#nudgePickSectionCard")?.remove();
 }
 
 function attachDockHandlers(state) {
