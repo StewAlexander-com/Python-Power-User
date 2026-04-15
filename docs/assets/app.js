@@ -383,10 +383,66 @@ function whatItsDoingSnippet(section) {
   const src = section?.demo_source || "";
   if (!src) return "";
   const lines = src.split("\n");
+
+  const isTriple = (l) => {
+    const t = l.trim();
+    return t.startsWith('"""') || t.startsWith("'''");
+  };
+
+  // Skip the generated header and any top-level docstring so we don't show boilerplate.
+  let start = 0;
   const headerIdx = lines.findIndex((l) => l.includes("_header("));
-  const start = headerIdx >= 0 ? headerIdx + 1 : 0;
-  const cleaned = lines.slice(start, start + 28).filter((l) => l.trim() !== "");
-  return cleaned.join("\n");
+  if (headerIdx >= 0) start = headerIdx + 1;
+
+  // If there's a docstring soon after the header, jump to after it.
+  let dsOpen = -1;
+  for (let i = start; i < Math.min(lines.length, start + 20); i++) {
+    if (isTriple(lines[i])) {
+      dsOpen = i;
+      break;
+    }
+  }
+  if (dsOpen >= 0) {
+    let dsClose = -1;
+    for (let i = dsOpen + 1; i < lines.length; i++) {
+      if (isTriple(lines[i])) {
+        dsClose = i;
+        break;
+      }
+    }
+    if (dsClose >= 0) start = dsClose + 1;
+  }
+
+  const rest = lines.slice(start);
+
+  const isPracticePrompt = (t) => t.startsWith("#?");
+  const isMeta = (t) => t.startsWith("#* Goal") || t.startsWith("#* Quiz") || t.startsWith("#* See also");
+
+  // Prefer starting at the first "lesson heading" style line for this section,
+  // not a generic variable/example chunk.
+  let anchor = rest.findIndex((l) => {
+    const t = l.trim();
+    if (!t) return false;
+    if (isPracticePrompt(t)) return false;
+    if (isMeta(t)) return false;
+    return t.startsWith("# ") || t.startsWith("#* Big") || t.startsWith("#* Big idea") || t.startsWith("#* Big picture");
+  });
+  if (anchor < 0) anchor = 0;
+
+  // Collect until we hit practice prompts; keep enough lines to include the code examples.
+  const out = [];
+  for (let i = anchor; i < rest.length && out.length < 90; i++) {
+    const t = rest[i].trim();
+    if (isPracticePrompt(t)) break;
+    if (!t) {
+      // Keep paragraph separation but avoid huge gaps.
+      if (out.length && out[out.length - 1].trim() !== "") out.push("");
+      continue;
+    }
+    out.push(rest[i]);
+  }
+
+  return out.filter((l) => l.trim() !== "" || true).join("\n").trim();
 }
 
 function renderSection(section) {
@@ -677,7 +733,8 @@ function renderPracticeFlowCard(state) {
   const answer = (pf.answers && pf.answers[pf.idx]) ? pf.answers[pf.idx] : loadPracticeAnswer(s.key, curPrompt);
   const snippet = practiceEnabled ? practiceSnippet(s, curPrompt) : whatItsDoingSnippet(s);
   const fullDemo = s.demo_source || "";
-  const ctx = practiceEnabled ? contextSnippet(s, curPrompt) : contextSnippet(s, "variable");
+  const ctxNeedle = practiceEnabled ? curPrompt : (s.key || s.title || "").split(/\s+/)[0];
+  const ctx = contextSnippet(s, ctxNeedle || "");
 
   const nav = `
     <div class="flowNav">
