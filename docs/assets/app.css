@@ -383,6 +383,195 @@ a{ color: inherit; text-decoration: none; }
 .answerActions .spacer{
   flex: 1 1 auto;
 }
+
+/* Progressive learning flow (reduce clutter, emphasize the question) */
+.flowSteps{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.flowStep{
+  flex: 0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+}
+.flowStep.active{
+  border-color: rgba(56,189,248,.35);
+  background: rgba(56,189,248,.08);
+  color: rgba(255,255,255,.86);
+}
+.flowStep.done{
+  border-color: rgba(124,92,255,.22);
+  background: rgba(124,92,255,.08);
+}
+.flowStepNum{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display:grid;
+  place-items:center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(255,255,255,.92);
+  background: linear-gradient(135deg, rgba(124,92,255,1), rgba(56,189,248,1));
+}
+.flowStepText{ white-space: nowrap; }
+.flowPanel{ margin-top: 6px; }
+.flowHeadline{
+  font-weight: 850;
+  color: rgba(255,255,255,.92);
+  letter-spacing: -0.01em;
+  margin: 6px 0 10px;
+}
+.flowPromptBig{
+  border-radius: 14px;
+  border: 1px solid rgba(56,189,248,.22);
+  background: linear-gradient(180deg, rgba(56,189,248,.10), rgba(0,0,0,.14));
+  padding: 12px;
+}
+.flowPromptLabel{
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(180, 230, 255, .92);
+  margin-bottom: 6px;
+}
+.flowPromptText{
+  color: rgba(255,255,255,.92);
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 750;
+}
+.flowActions{
+  margin-top: 10px;
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.flowNav{
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.flowNav .spacer{ flex: 1 1 auto; }
+.flowTeachings{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.flowTeach{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  padding: 12px;
+}
+.flowTeachTitle{
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(56,189,248,.92);
+  margin-bottom: 6px;
+}
+.flowTeachBody{ color: var(--muted); }
+.flowList{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.flowListItem{
+  text-align:left;
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(255,255,255,.86);
+  cursor:pointer;
+}
+.flowListItem:hover{ border-color: rgba(56,189,248,.26); }
+.flowListItem.active{
+  border-color: rgba(124,92,255,.30);
+  box-shadow: 0 0 0 6px rgba(124,92,255,.10);
+}
+.flowListNum{
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display:grid;
+  place-items:center;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.86);
+}
+.flowListText{ flex: 1 1 auto; line-height: 1.35; }
+.flowAnswerInput{ font-size: 13px; }
+.flowEval{ margin-top: 12px; display:flex; flex-direction:column; gap: 10px; }
+.flowEvalRow{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  padding: 12px;
+}
+.flowEvalQ{ display:flex; gap: 10px; align-items:flex-start; }
+.flowEvalNum{
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.78);
+  flex: 0 0 auto;
+}
+.flowEvalText{ color: rgba(255,255,255,.86); line-height: 1.35; }
+.flowEvalBtns{ margin-top: 10px; display:flex; gap: 10px; flex-wrap:wrap; }
+.flowGradeBtn{
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.86);
+  cursor:pointer;
+}
+.flowGradeBtn.active{
+  border-color: rgba(56,189,248,.35);
+  background: rgba(56,189,248,.10);
+}
+.flowFeedback{ display:flex; gap: 10px; flex-wrap:wrap; margin-top: 10px; }
+.flowFeedbackStat{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(255,255,255,.86);
+  font-size: 12px;
+}
+
+@media (max-width: 980px){
+  .flowTeachings{ grid-template-columns: 1fr; }
+}
 .callout{
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,.10);

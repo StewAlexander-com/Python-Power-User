@@ -192,6 +192,16 @@ function pickPracticePrompt(section) {
   return prompts[idx];
 }
 
+function pickPracticePrompts(section, count = 3) {
+  const prompts = (section?.prompts || []).filter(Boolean);
+  if (prompts.length === 0) return [];
+  const uniq = Array.from(new Set(prompts));
+  // Deterministic-ish selection: take first N, but rotate by section number for variety.
+  const rot = Math.max(0, (section?.number || 0) % Math.max(1, uniq.length));
+  const rotated = uniq.slice(rot).concat(uniq.slice(0, rot));
+  return rotated.slice(0, Math.max(1, count));
+}
+
 function practiceSnippet(section, prompt) {
   const src = section?.demo_source || "";
   if (!src) return "";
@@ -227,6 +237,245 @@ function practiceSnippet(section, prompt) {
   return [...prefix, ...snippet, ...suffix].join("\n");
 }
 
+function ensurePracticeFlow(state, section) {
+  if (!section) return;
+  const prompts = pickPracticePrompts(section, 3);
+  const idx = 0;
+  const prompt = prompts[idx] || "";
+  const saved = prompt ? loadPracticeAnswer(section.key, prompt) : "";
+  state.practiceFlow = {
+    step: 1, // 1..6
+    prompts,
+    idx,
+    showCode: false,
+    answers: { [idx]: saved },
+    grades: {}, // idx -> 'correct'|'close'|'notyet'
+    lastSavedAt: null,
+  };
+}
+
+function practiceFlowTitle(section, step) {
+  const steps = [
+    "Teachings",
+    "What it’s doing",
+    "Practice problems",
+    "Your answers",
+    "Evaluate",
+    "Feedback",
+  ];
+  const label = steps[Math.max(0, Math.min(steps.length - 1, (step || 1) - 1))];
+  return `Practice · ${section.title} · ${label}`;
+}
+
+function renderStepPills(step) {
+  const steps = [
+    "Teachings",
+    "What it’s doing",
+    "Practice",
+    "Answer",
+    "Evaluate",
+    "Feedback",
+  ];
+  return `
+    <div class="flowSteps" role="list">
+      ${steps
+        .map((t, i) => {
+          const n = i + 1;
+          const active = n === step;
+          const done = n < step;
+          return `<div class="flowStep ${active ? "active" : ""} ${done ? "done" : ""}" role="listitem">
+            <span class="flowStepNum">${n}</span>
+            <span class="flowStepText">${escapeHtml(t)}</span>
+          </div>`;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderPracticeFlowCard(state) {
+  const s = state.activeSection;
+  const pf = state.practiceFlow;
+  if (!s || !pf) return "";
+
+  const step = pf.step || 1;
+  const runCmd = `python python_poweruser.py -s ${s.key}`;
+  const prompts = pf.prompts || [];
+  const curPrompt = prompts[pf.idx] || "";
+  const answer = (pf.answers && pf.answers[pf.idx]) ? pf.answers[pf.idx] : loadPracticeAnswer(s.key, curPrompt);
+  const snippet = practiceSnippet(s, curPrompt);
+  const fullDemo = s.demo_source || "";
+
+  const nav = `
+    <div class="flowNav">
+      <button class="ghost" type="button" data-inline-action="lf-back" ${step <= 1 ? "disabled" : ""}>Back</button>
+      <div class="spacer"></div>
+      <button class="primary" type="button" data-inline-action="lf-next">${step >= 6 ? "Done" : "Next"}</button>
+    </div>
+  `;
+
+  const step1 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Here are the teachings</div>
+      <div class="flowTeachings">
+        <div class="flowTeach">
+          <div class="flowTeachTitle">Beginner goal</div>
+          <div class="flowTeachBody">${escapeHtml(s.goal_beginner || "—")}</div>
+        </div>
+        <div class="flowTeach">
+          <div class="flowTeachTitle">Power goal</div>
+          <div class="flowTeachBody">${escapeHtml(s.goal_power || "—")}</div>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:10px;">
+        When you’re ready, continue to see what the teaching is doing in code.
+      </div>
+    </div>
+  `;
+
+  const step2 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Here is what the teaching is doing</div>
+      <div class="flowPromptBig">
+        <div class="flowPromptLabel">Focus question</div>
+        <div class="flowPromptText">${escapeHtml(curPrompt || "Pick a practice problem next.")}</div>
+      </div>
+      <div class="flowActions">
+        <button class="ghost" type="button" data-inline-action="lf-toggle-code">
+          ${pf.showCode ? "Hide code" : "Show code"}
+        </button>
+        <button class="ghost" type="button" data-inline-action="lf-copy-cmd" data-cmd="${escapeHtml(runCmd)}">Copy run command</button>
+      </div>
+      ${pf.showCode ? renderCodeBlock(snippet || fullDemo) : `<div class="muted">Code is hidden to reduce clutter. Use “Show code” if you need it.</div>`}
+    </div>
+  `;
+
+  const step3 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Here are a few practice problems</div>
+      <div class="flowList">
+        ${prompts
+          .map((p, i) => {
+            const active = i === pf.idx;
+            return `<button class="flowListItem ${active ? "active" : ""}" type="button"
+              data-inline-action="lf-pick-problem" data-idx="${i}">
+              <span class="flowListNum">${i + 1}</span>
+              <span class="flowListText">${escapeHtml(p)}</span>
+            </button>`;
+          })
+          .join("")}
+      </div>
+      <div class="muted" style="margin-top:10px;">Select a problem, then continue to answer.</div>
+    </div>
+  `;
+
+  const step4 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Let the user provide answers</div>
+      <div class="flowPromptBig">
+        <div class="flowPromptLabel">Question ${pf.idx + 1} of ${prompts.length}</div>
+        <div class="flowPromptText">${escapeHtml(curPrompt || "—")}</div>
+      </div>
+      <div class="answerBox" style="margin-top:12px;">
+        <label class="answerLabel" for="practiceAnswer">Your answer</label>
+        <textarea
+          id="practiceAnswer"
+          class="answerInput flowAnswerInput"
+          rows="4"
+          placeholder="Write your prediction clearly (what prints / what evaluates to / why)…"
+        >${escapeHtml(answer || "")}</textarea>
+        <div class="answerActions">
+          <button class="primary" type="button" data-inline-action="lf-save-answer">Save answer</button>
+          <button class="ghost" type="button" data-inline-action="lf-clear-answer">Clear</button>
+          <div class="spacer"></div>
+          <button class="ghost" type="button" data-inline-action="lf-toggle-code">${pf.showCode ? "Hide code" : "Show code"}</button>
+          <button class="ghost" type="button" data-inline-action="lf-copy-code">Copy code</button>
+        </div>
+      </div>
+      ${pf.showCode ? renderCodeBlock(snippet || fullDemo) : ""}
+      <div class="muted" style="margin-top:10px;">Next: self-evaluate after you run locally and compare.</div>
+    </div>
+  `;
+
+  const gradeFor = (i) => (pf.grades && pf.grades[i]) ? pf.grades[i] : "";
+  const gradeBtn = (i, val, label) => `
+    <button class="flowGradeBtn ${gradeFor(i) === val ? "active" : ""}" type="button"
+      data-inline-action="lf-grade" data-idx="${i}" data-grade="${val}">
+      ${escapeHtml(label)}
+    </button>
+  `;
+
+  const step5 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Evaluate the results</div>
+      <div class="muted">After running locally, grade each answer.</div>
+      <div class="flowEval">
+        ${prompts
+          .map((p, i) => `
+            <div class="flowEvalRow">
+              <div class="flowEvalQ">
+                <div class="flowEvalNum">Q${i + 1}</div>
+                <div class="flowEvalText">${escapeHtml(p)}</div>
+              </div>
+              <div class="flowEvalBtns">
+                ${gradeBtn(i, "correct", "Correct")}
+                ${gradeBtn(i, "close", "Close")}
+                ${gradeBtn(i, "notyet", "Not yet")}
+              </div>
+            </div>
+          `)
+          .join("")}
+      </div>
+      <div class="muted" style="margin-top:10px;">
+        Tip: if you’re “Not yet”, go back to Answer and tighten your reasoning.
+      </div>
+    </div>
+  `;
+
+  const counts = (() => {
+    const g = pf.grades || {};
+    const vals = Object.values(g);
+    return {
+      correct: vals.filter((x) => x === "correct").length,
+      close: vals.filter((x) => x === "close").length,
+      notyet: vals.filter((x) => x === "notyet").length,
+    };
+  })();
+
+  const step6 = `
+    <div class="flowPanel">
+      <div class="flowHeadline">Provide feedback on evaluation</div>
+      <div class="flowFeedback">
+        <div class="flowFeedbackStat"><span class="pill">Correct</span> <strong>${counts.correct}</strong></div>
+        <div class="flowFeedbackStat"><span class="pill">Close</span> <strong>${counts.close}</strong></div>
+        <div class="flowFeedbackStat"><span class="pill">Not yet</span> <strong>${counts.notyet}</strong></div>
+      </div>
+      <div style="margin-top:10px;">
+        ${counts.notyet > 0
+          ? `<div class="muted">Recommendation: redo the “Not yet” questions. Use “What it’s doing” to re-anchor your mental model, then answer again.</div>`
+          : `<div class="muted">Nice. If you want to go faster, try “Speed run” next or switch sections.</div>`}
+      </div>
+      <div class="flowActions" style="margin-top:12px;">
+        <button class="ghost" type="button" data-inline-action="lf-restart">Restart practice</button>
+        <button class="ghost" type="button" data-inline-action="lf-go-speedrun">Open Speed run</button>
+      </div>
+    </div>
+  `;
+
+  const body = `
+    ${renderStepPills(step)}
+    ${step === 1 ? step1 : ""}
+    ${step === 2 ? step2 : ""}
+    ${step === 3 ? step3 : ""}
+    ${step === 4 ? step4 : ""}
+    ${step === 5 ? step5 : ""}
+    ${step === 6 ? step6 : ""}
+    ${nav}
+  `;
+
+  return { id: "dockPracticeCard", title: practiceFlowTitle(s, step), body };
+}
+
 function _pulse(el, className, ms = 1400) {
   if (!el) return;
   el.classList.remove(className);
@@ -243,7 +492,7 @@ function nudgePickSection(state, reason = "") {
   const navList = $("#navList");
 
   // Poka‑yoke: open the section picker and focus it.
-  nav?.setAttribute("data-open", "true");
+  setNavOpen(state, true);
   search?.focus();
 
   // Visual guidance: glow the nav panel + the search input.
@@ -279,67 +528,38 @@ function nudgePickSection(state, reason = "") {
   scrollToTopMain();
 }
 
+function setNavOpen(state, open) {
+  state.navOpen = open === true;
+  $("#nav")?.setAttribute("data-open", state.navOpen ? "true" : "false");
+}
+
+function setFlowMode(state, mode) {
+  state.flowMode = mode;
+}
+
 function handleDockAction(action, state) {
   const s = state.activeSection;
   if (!s) {
+    setFlowMode(state, "no_section");
     nudgePickSection(state, `Tip: press <span class="kbd">/</span> to focus section search.`);
     return;
   }
 
   if (action === "practice") {
-    const prompt = state.practicePrompt || pickPracticePrompt(s) || "No prompts available for this section.";
-    state.practicePrompt = prompt;
-    state.practiceShowFullDemo = state.practiceShowFullDemo === true;
-
-    const snippet = state.practiceShowFullDemo ? (s.demo_source || "") : practiceSnippet(s, prompt);
-    const toggleLabel = state.practiceShowFullDemo ? "Show relevant snippet" : "Show full demo source";
-    const runCmd = `python python_poweruser.py -s ${s.key}`;
-    const saved = loadPracticeAnswer(s.key, prompt);
-    upsertDockCard({
-      id: "dockPracticeCard",
-      title: `Practice · ${s.title}`,
-      body: `
-        <div class="practiceFlow">
-          <div class="practiceStep"><span class="nudgeStepNum">1</span> Read the prompt + code</div>
-          <div class="practiceStep"><span class="nudgeStepNum">2</span> Type your prediction</div>
-          <div class="practiceStep"><span class="nudgeStepNum">3</span> Run locally and compare</div>
-        </div>
-
-        <div style="margin-top:10px;"><strong>Prompt:</strong> ${escapeHtml(prompt)}</div>
-        <div class="muted" style="margin-top:10px;">Tip: the prompt line in the code is marked with <span class="kbd">⇢</span>.</div>
-
-        <div class="answerBox" style="margin-top:12px;">
-          <label class="answerLabel" for="practiceAnswer">Your prediction</label>
-          <textarea
-            id="practiceAnswer"
-            class="answerInput"
-            rows="3"
-            placeholder="Type what you think Python prints / evaluates to…"
-          >${escapeHtml(saved)}</textarea>
-          <div class="answerActions">
-            <button class="primary" type="button" data-inline-action="practice-save">Save</button>
-            <button class="ghost" type="button" data-inline-action="practice-clear">Clear</button>
-            <div class="spacer"></div>
-            <button class="ghost" type="button" data-inline-action="practice-copy-cmd" data-cmd="${escapeHtml(runCmd)}">Copy run command</button>
-            <button class="ghost" type="button" data-inline-action="practice-copy-code">Copy code</button>
-          </div>
-          <div class="muted" style="margin-top:8px;">
-            Run: <span class="kbd">${escapeHtml(runCmd)}</span>
-          </div>
-        </div>
-
-        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="ghost" type="button" data-inline-action="practice-toggle-demo">${escapeHtml(toggleLabel)}</button>
-        </div>
-      `,
-      code: snippet,
-    });
+    setFlowMode(state, "practice");
+    ensurePracticeFlow(state, s);
+    const card = renderPracticeFlowCard(state);
+    upsertDockCard({ id: card.id, title: card.title, body: card.body });
     scrollToTopMain();
-    window.setTimeout(() => $("#practiceAnswer")?.focus(), 30);
+    window.setTimeout(() => {
+      const pf = state.practiceFlow;
+      if (pf?.step === 4) $("#practiceAnswer")?.focus();
+    }, 30);
     return;
   }
 
   if (action === "explain") {
+    setFlowMode(state, "explain");
     upsertDockCard({
       id: "dockExplainCard",
       title: `Explain · ${s.title}`,
@@ -352,6 +572,7 @@ function handleDockAction(action, state) {
   }
 
   if (action === "show-try-this") {
+    setFlowMode(state, "try_this");
     upsertDockCard({
       id: "dockTryThisCard",
       title: `Try this (Beginner) · ${s.title}`,
@@ -363,6 +584,7 @@ function handleDockAction(action, state) {
   }
 
   if (action === "show-speed-run") {
+    setFlowMode(state, "speed_run");
     upsertDockCard({
       id: "dockSpeedRunCard",
       title: `Speed run (Power User) · ${s.title}`,
@@ -378,7 +600,7 @@ function attachNavHandlers(state) {
   const nav = $("#nav");
   $("#btnToggleNav").addEventListener("click", () => {
     const open = nav.getAttribute("data-open") === "true";
-    nav.setAttribute("data-open", open ? "false" : "true");
+    setNavOpen(state, !open);
     if (!open) $("#sectionSearch").focus();
   });
 
@@ -408,12 +630,13 @@ function selectSectionByKey(state, key) {
   if (!s) return;
   state.activeKey = key;
   state.activeSection = s;
+  setFlowMode(state, "section_selected");
 
   $("#content").innerHTML = renderSection(s);
   renderNavList(state.sections, state.activeKey, state.filterText);
 
   // Close nav on mobile
-  $("#nav").setAttribute("data-open", "false");
+  setNavOpen(state, false);
   $("#dockHint").textContent = `Active: ${String(s.number).padStart(2, "0")} — ${s.title}. Use the dock pills to practice.`;
 
   // Clear any "pick a section first" nudge card.
@@ -432,40 +655,104 @@ function attachDockHandlers(state) {
     const btn = e.target.closest("button[data-inline-action]");
     if (!btn) return;
     const action = btn.getAttribute("data-inline-action");
-    if (action === "practice-toggle-demo") {
-      state.practiceShowFullDemo = !state.practiceShowFullDemo;
-      handleDockAction("practice", state);
-    }
     if (action === "practice-start") {
       const prompt = btn.getAttribute("data-prompt") || "";
-      state.practicePrompt = prompt || null;
-      state.practiceShowFullDemo = false;
-      handleDockAction("practice", state);
-    }
-    if (action === "practice-save") {
+      // Start practice flow anchored to this prompt.
       const s = state.activeSection;
       if (!s) return;
-      const prompt = state.practicePrompt || "";
-      const val = $("#practiceAnswer")?.value || "";
-      savePracticeAnswer(s.key, prompt, val);
-      _pulse($("#practiceAnswer"), "inputNudgePulse", 900);
+      ensurePracticeFlow(state, s);
+      if (state.practiceFlow) {
+        const idx = Math.max(0, (state.practiceFlow.prompts || []).indexOf(prompt));
+        state.practiceFlow.idx = idx;
+        state.practiceFlow.step = 2;
+      }
+      handleDockAction("practice", state);
     }
-    if (action === "practice-clear") {
-      const ta = $("#practiceAnswer");
-      if (!ta) return;
-      ta.value = "";
-      ta.focus();
-    }
-    if (action === "practice-copy-cmd") {
-      const cmd = btn.getAttribute("data-cmd") || "";
-      navigator.clipboard?.writeText?.(cmd);
-      _pulse(btn, "inputNudgePulse", 900);
-    }
-    if (action === "practice-copy-code") {
-      const pre = $("#dockPracticeCard pre code");
-      const txt = pre?.innerText || "";
-      navigator.clipboard?.writeText?.(txt);
-      _pulse(btn, "inputNudgePulse", 900);
+
+    // Learning flow (new progressive UI)
+    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" ||
+        action === "lf-pick-problem" || action === "lf-save-answer" || action === "lf-clear-answer" ||
+        action === "lf-grade" || action === "lf-copy-cmd" || action === "lf-copy-code" ||
+        action === "lf-restart" || action === "lf-go-speedrun") {
+      const s = state.activeSection;
+      if (!s) return;
+      ensurePracticeFlow(state, s);
+      const pf = state.practiceFlow;
+      if (!pf) return;
+
+      if (action === "lf-back") {
+        pf.step = Math.max(1, (pf.step || 1) - 1);
+      }
+
+      if (action === "lf-next") {
+        pf.step = Math.min(6, (pf.step || 1) + 1);
+        // Auto-focus answer box on step 4.
+        if (pf.step === 4) window.setTimeout(() => $("#practiceAnswer")?.focus(), 30);
+      }
+
+      if (action === "lf-toggle-code") {
+        pf.showCode = !pf.showCode;
+      }
+
+      if (action === "lf-pick-problem") {
+        const idx = Number(btn.getAttribute("data-idx"));
+        if (Number.isFinite(idx)) pf.idx = Math.max(0, Math.min((pf.prompts || []).length - 1, idx));
+      }
+
+      if (action === "lf-save-answer") {
+        const prompt = (pf.prompts || [])[pf.idx] || "";
+        const val = $("#practiceAnswer")?.value || "";
+        if (!pf.answers) pf.answers = {};
+        pf.answers[pf.idx] = val;
+        savePracticeAnswer(s.key, prompt, val);
+        pf.lastSavedAt = Date.now();
+        _pulse($("#practiceAnswer"), "inputNudgePulse", 900);
+      }
+
+      if (action === "lf-clear-answer") {
+        const ta = $("#practiceAnswer");
+        if (ta) {
+          ta.value = "";
+          ta.focus();
+        }
+        if (pf.answers) pf.answers[pf.idx] = "";
+      }
+
+      if (action === "lf-grade") {
+        const idx = Number(btn.getAttribute("data-idx"));
+        const grade = btn.getAttribute("data-grade") || "";
+        if (!pf.grades) pf.grades = {};
+        if (Number.isFinite(idx) && ["correct", "close", "notyet"].includes(grade)) {
+          pf.grades[idx] = grade;
+        }
+      }
+
+      if (action === "lf-copy-cmd") {
+        const cmd = btn.getAttribute("data-cmd") || "";
+        navigator.clipboard?.writeText?.(cmd);
+        _pulse(btn, "inputNudgePulse", 900);
+      }
+
+      if (action === "lf-copy-code") {
+        const pre = $("#dockPracticeCard pre code");
+        const txt = pre?.innerText || "";
+        navigator.clipboard?.writeText?.(txt);
+        _pulse(btn, "inputNudgePulse", 900);
+      }
+
+      if (action === "lf-restart") {
+        state.practiceFlow = null;
+        ensurePracticeFlow(state, s);
+      }
+
+      if (action === "lf-go-speedrun") {
+        handleDockAction("show-speed-run", state);
+        return;
+      }
+
+      const card = renderPracticeFlowCard(state);
+      upsertDockCard({ id: card.id, title: card.title, body: card.body });
+      return;
     }
   });
 
@@ -511,6 +798,11 @@ function attachDockHandlers(state) {
       }),
     );
     scrollToTopMain();
+
+    if (!s) {
+      setFlowMode(state, "no_section");
+      nudgePickSection(state, `Tip: press <span class="kbd">/</span> to focus section search.`);
+    }
   });
 
   document.addEventListener(
@@ -527,6 +819,7 @@ function attachDockHandlers(state) {
 
       if (isSlash && !isTypingTarget) {
         e.preventDefault();
+        setFlowMode(state, "no_section");
         nudgePickSection(state, `Tip: press <span class="kbd">Ctrl</span><span class="kbd">K</span> to focus the bottom dock.`);
         return;
       }
@@ -547,12 +840,16 @@ async function main() {
     filterText: "",
     activeKey: null,
     activeSection: null,
+    // Process flow state (UI/HMI)
+    flowMode: "boot",
+    navOpen: false,
   };
 
   try {
     state.sections = await loadSections();
     setHeroChips(state.sections);
     renderNavList(state.sections, state.activeKey, state.filterText);
+    setFlowMode(state, "no_section");
   } catch (err) {
     $("#content").innerHTML = `
       <section class="card">
