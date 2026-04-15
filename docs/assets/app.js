@@ -95,6 +95,35 @@ function upsertDockCard({ id, title, body, code }) {
   else content.insertAdjacentHTML("afterbegin", html);
 }
 
+function tinyHash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
+}
+
+function practiceStorageKey(sectionKey, prompt) {
+  return `ppu.practice.${sectionKey}.${tinyHash(prompt || "")}`;
+}
+
+function loadPracticeAnswer(sectionKey, prompt) {
+  try {
+    return localStorage.getItem(practiceStorageKey(sectionKey, prompt)) || "";
+  } catch {
+    return "";
+  }
+}
+
+function savePracticeAnswer(sectionKey, prompt, answer) {
+  try {
+    localStorage.setItem(practiceStorageKey(sectionKey, prompt), answer || "");
+  } catch {
+    // ignore storage failures (private mode etc.)
+  }
+}
+
 async function loadSections() {
   const res = await fetch("./content/sections.json", { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load sections.json: ${res.status}`);
@@ -264,20 +293,49 @@ function handleDockAction(action, state) {
 
     const snippet = state.practiceShowFullDemo ? (s.demo_source || "") : practiceSnippet(s, prompt);
     const toggleLabel = state.practiceShowFullDemo ? "Show relevant snippet" : "Show full demo source";
+    const runCmd = `python python_poweruser.py -s ${s.key}`;
+    const saved = loadPracticeAnswer(s.key, prompt);
     upsertDockCard({
       id: "dockPracticeCard",
       title: `Practice · ${s.title}`,
       body: `
-        <div>Answer the prompt using the code below. Then verify by running the section locally.</div>
+        <div class="practiceFlow">
+          <div class="practiceStep"><span class="nudgeStepNum">1</span> Read the prompt + code</div>
+          <div class="practiceStep"><span class="nudgeStepNum">2</span> Type your prediction</div>
+          <div class="practiceStep"><span class="nudgeStepNum">3</span> Run locally and compare</div>
+        </div>
+
         <div style="margin-top:10px;"><strong>Prompt:</strong> ${escapeHtml(prompt)}</div>
-        <div class="muted" style="margin-top:10px;">Tip: the prompt line is marked with <span class="kbd">⇢</span>.</div>
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="muted" style="margin-top:10px;">Tip: the prompt line in the code is marked with <span class="kbd">⇢</span>.</div>
+
+        <div class="answerBox" style="margin-top:12px;">
+          <label class="answerLabel" for="practiceAnswer">Your prediction</label>
+          <textarea
+            id="practiceAnswer"
+            class="answerInput"
+            rows="3"
+            placeholder="Type what you think Python prints / evaluates to…"
+          >${escapeHtml(saved)}</textarea>
+          <div class="answerActions">
+            <button class="primary" type="button" data-inline-action="practice-save">Save</button>
+            <button class="ghost" type="button" data-inline-action="practice-clear">Clear</button>
+            <div class="spacer"></div>
+            <button class="ghost" type="button" data-inline-action="practice-copy-cmd" data-cmd="${escapeHtml(runCmd)}">Copy run command</button>
+            <button class="ghost" type="button" data-inline-action="practice-copy-code">Copy code</button>
+          </div>
+          <div class="muted" style="margin-top:8px;">
+            Run: <span class="kbd">${escapeHtml(runCmd)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="ghost" type="button" data-inline-action="practice-toggle-demo">${escapeHtml(toggleLabel)}</button>
         </div>
       `,
       code: snippet,
     });
     scrollToTopMain();
+    window.setTimeout(() => $("#practiceAnswer")?.focus(), 30);
     return;
   }
 
@@ -383,6 +441,31 @@ function attachDockHandlers(state) {
       state.practicePrompt = prompt || null;
       state.practiceShowFullDemo = false;
       handleDockAction("practice", state);
+    }
+    if (action === "practice-save") {
+      const s = state.activeSection;
+      if (!s) return;
+      const prompt = state.practicePrompt || "";
+      const val = $("#practiceAnswer")?.value || "";
+      savePracticeAnswer(s.key, prompt, val);
+      _pulse($("#practiceAnswer"), "inputNudgePulse", 900);
+    }
+    if (action === "practice-clear") {
+      const ta = $("#practiceAnswer");
+      if (!ta) return;
+      ta.value = "";
+      ta.focus();
+    }
+    if (action === "practice-copy-cmd") {
+      const cmd = btn.getAttribute("data-cmd") || "";
+      navigator.clipboard?.writeText?.(cmd);
+      _pulse(btn, "inputNudgePulse", 900);
+    }
+    if (action === "practice-copy-code") {
+      const pre = $("#dockPracticeCard pre code");
+      const txt = pre?.innerText || "";
+      navigator.clipboard?.writeText?.(txt);
+      _pulse(btn, "inputNudgePulse", 900);
     }
   });
 
