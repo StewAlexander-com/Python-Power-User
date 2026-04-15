@@ -55,6 +55,9 @@ def _grab_def(lines: list[str], def_idx: int) -> str:
     i += 1
     while i < len(lines):
         line = lines[i]
+        # Demo bodies are indented; stop when we return to top-level.
+        if line.strip() and not line.startswith((" ", "\t")) and line.lstrip().startswith("#"):
+            break
         if line.startswith("def ") and not line.startswith("def demo_"):
             break
         if line.startswith("# %% ") and SECTION_HEADER_RE.match(line):
@@ -93,6 +96,12 @@ def build() -> dict[str, Any]:
         if dm:
             key = dm.group("key")
             demo_by_key[key] = _grab_def(lines, idx)
+
+    # Some section keys have intentionally more descriptive demo function names.
+    # Keep the web GUI aligned with SECTION_META keys.
+    demo_key_aliases: dict[str, str] = {
+        "structures": "advanced_structures",
+    }
 
     out_sections: list[dict[str, Any]] = []
     for key, num, title in meta:
@@ -153,7 +162,7 @@ def build() -> dict[str, Any]:
                 "goal_beginner": goal_beg,
                 "goal_power": goal_pwr,
                 "prompts": prompts[:12],
-                "demo_source": demo_by_key.get(key, ""),
+                "demo_source": demo_by_key.get(key, "") or demo_by_key.get(demo_key_aliases.get(key, ""), ""),
                 "try_this_source": try_this_src.strip(),
                 "speed_run_source": speed_run_src.strip(),
             }
