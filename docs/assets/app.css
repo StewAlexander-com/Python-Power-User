@@ -643,6 +643,18 @@ a{ color: inherit; text-decoration: none; }
   color: rgba(56,189,248,.85);
   font-weight: 900;
 }
+.teachText{
+  display:block;
+  color: rgba(255,255,255,.90);
+  font-weight: 750;
+}
+.teachExample{
+  margin-top: 10px;
+}
+.teachExample .code{
+  margin: 0;
+  background: rgba(0,0,0,.22);
+}
 
 @media (max-width: 980px){
   .flowTeachings{ grid-template-columns: 1fr; }

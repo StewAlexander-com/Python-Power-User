@@ -69,11 +69,37 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
     const docEnd = lines.findIndex((l, i) => i > docStart && l.includes('"""'));
     if (docEnd > docStart) {
       const doc = lines.slice(docStart + 1, docEnd);
+      let current = null;
+      const flush = () => {
+        if (!current) return;
+        pushBullet(current.replace(/\s+/g, " ").trim());
+        current = null;
+      };
+
       for (const l of doc) {
-        const t = l.trim();
-        if (t.startsWith("- ")) pushBullet(t.replace(/^-+\s*/, ""));
-        if (/^big picture:/i.test(t)) pushBullet("Big picture:");
+        const raw = l.replace(/\t/g, "  ");
+        const t = raw.trim();
+        if (!t) {
+          flush();
+          continue;
+        }
+        if (/^big picture:/i.test(t)) {
+          flush();
+          pushBullet("Big picture:");
+          continue;
+        }
+        if (t.startsWith("- ")) {
+          flush();
+          current = t.replace(/^-+\s*/, "").trim();
+          continue;
+        }
+        // Continuation line for a bullet (indented in the docstring).
+        if (current && /^\s{2,}\S/.test(raw)) {
+          current += " " + t;
+          continue;
+        }
       }
+      flush();
     }
   }
 
@@ -117,19 +143,80 @@ function extractTeachings(section, track = "beginner", maxItems = 6) {
 
   // Track-specific ordering: beginner prefers simpler bullets first.
   // Remove anything that looks like a practice prompt/question.
-  const cleaned = bullets.filter((b) => !/\?$/.test(b) && !/^what do you think/i.test(b));
-  const ordered = cleaned.slice(0, maxItems);
+  const cleaned = bullets
+    .map((b) => b.replace(/\s+/g, " ").trim())
+    .filter((b) => b.length > 0)
+    .filter((b) => !/^what do you think/i.test(b));
+
+  // Drop super-short headings unless we have room (e.g. "Big picture:").
+  const ordered = cleaned
+    .filter((b) => b.length >= 18 || /big picture:/i.test(b))
+    .slice(0, maxItems);
+
   if (track === "power") return ordered;
   return ordered;
 }
 
-function renderTeachingsList(items) {
+function snippetAround(section, needle, before = 3, after = 6) {
+  const src = section?.demo_source || "";
+  if (!src) return "";
+  const lines = src.split("\n");
+  const n = String(needle || "").trim().toLowerCase();
+  let idx = -1;
+  if (n) idx = lines.findIndex((l) => l.toLowerCase().includes(n));
+  if (idx < 0) return "";
+  const start = Math.max(0, idx - before);
+  const end = Math.min(lines.length, idx + after + 1);
+  return lines.slice(start, end).join("\n").trim();
+}
+
+function exampleForTeaching(section, teaching) {
+  const t = String(teaching || "").toLowerCase();
+  if (!t) return "";
+
+  // Heuristics for common core concepts (variables section and beyond).
+  if (t.includes("variable") || t.includes("name pointing") || t.includes("sticky note")) {
+    return snippetAround(section, "name =", 2, 6) || snippetAround(section, "type(", 2, 6);
+  }
+  if (t.includes("shared reference") || t.includes("two names") || t.includes("same value")) {
+    return snippetAround(section, "b = a", 3, 8) || snippetAround(section, "append", 3, 8);
+  }
+  if (t.includes("copy") || t.includes("never copies") || t.includes("assignment")) {
+    return snippetAround(section, "copy", 2, 8) || snippetAround(section, "=", 2, 8);
+  }
+  if (t.includes("list") || t.includes("dict")) {
+    return snippetAround(section, "list", 2, 8) || snippetAround(section, "[", 2, 6);
+  }
+
+  // Fallback: try using a few keywords from the teaching sentence.
+  const words = t
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((w) => w.length >= 5)
+    .slice(0, 3);
+  for (const w of words) {
+    const snip = snippetAround(section, w, 2, 6);
+    if (snip) return snip;
+  }
+  return "";
+}
+
+function renderTeachingsList(items, section) {
   if (!items || items.length === 0) {
     return `<div class="muted">No teaching notes were extracted for this section yet.</div>`;
   }
   return `
     <ul class="teachList">
-      ${items.map((t) => `<li class="teachItem">${escapeHtml(t)}</li>`).join("")}
+      ${items
+        .map((t) => {
+          const ex = section ? exampleForTeaching(section, t) : "";
+          return `<li class="teachItem">
+            <div class="teachText">${escapeHtml(t)}</div>
+            ${ex ? `<div class="teachExample">${renderCodeBlock(ex)}</div>` : ``}
+          </li>`;
+        })
+        .join("")}
     </ul>
   `;
 }
@@ -446,7 +533,7 @@ function renderPracticeFlowCard(state) {
   const step1 = `
     <div class="flowPanel">
       <div class="flowHeadline">Here are ${escapeHtml(s.title)}</div>
-      ${renderTeachingsList(teachings)}
+      ${renderTeachingsList(teachings, s)}
       <div class="flowTeachings">
         <div class="flowTeach">
           <div class="flowTeachTitle">${track === "power" ? "Beginner goal (supporting)" : "Beginner goal"}</div>
