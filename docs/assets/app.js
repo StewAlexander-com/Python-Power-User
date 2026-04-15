@@ -22,7 +22,114 @@ function scoreMatch(hay, needle) {
 
 function renderCodeBlock(src) {
   if (!src) return "";
+
+  // If the snippet is mostly Python comments, render it as readable teaching text.
+  const lines = String(src).split("\n");
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  const commentish = nonEmpty.filter((l) => l.trim().startsWith("#")).length;
+  const looksLikeTeachings = nonEmpty.length > 0 && (commentish / nonEmpty.length) >= 0.65;
+  if (looksLikeTeachings) {
+    // Show both: rendered markdown-like discussion + the raw snippet.
+    return `
+      ${renderCommentMarkdown(src)}
+      <div class="mdRawLabel">Raw snippet</div>
+      <pre class="code"><code>${escapeHtml(src)}</code></pre>
+    `;
+  }
+
   return `<pre class="code"><code>${escapeHtml(src)}</code></pre>`;
+}
+
+function renderCommentMarkdown(src) {
+  const lines = String(src).split("\n");
+  const out = [];
+
+  const push = (html) => {
+    if (html) out.push(html);
+  };
+
+  const flushPara = (() => {
+    let buf = [];
+    return {
+      add(text) {
+        buf.push(text);
+      },
+      flush() {
+        const t = buf.join(" ").replace(/\s+/g, " ").trim();
+        buf = [];
+        if (t) push(`<p class="mdP">${escapeHtml(t)}</p>`);
+      },
+    };
+  })();
+
+  let inList = false;
+  const closeList = () => {
+    if (inList) {
+      push(`</ul>`);
+      inList = false;
+    }
+  };
+
+  for (const raw of lines) {
+    const t = raw.trim();
+    if (!t) {
+      flushPara.flush();
+      closeList();
+      continue;
+    }
+
+    // Only interpret comment lines; fall back to raw code if we see real code.
+    if (!t.startsWith("#")) {
+      flushPara.flush();
+      closeList();
+      push(`<pre class="code"><code>${escapeHtml(lines.join("\n"))}</code></pre>`);
+      return out.join("");
+    }
+
+    const body = t.replace(/^#\s?/, "");
+    if (!body) continue;
+
+    // Headings: "#* ── TITLE ──" or "# TITLE"
+    const h1 = body.match(/^(\*?\s*─+)\s*(.+?)\s*─+\s*$/);
+    if (h1) {
+      flushPara.flush();
+      closeList();
+      push(`<div class="mdH">${escapeHtml(h1[2])}</div>`);
+      continue;
+    }
+
+    if (body.startsWith("* ")) {
+      // Bullet
+      flushPara.flush();
+      if (!inList) {
+        push(`<ul class="mdList">`);
+        inList = true;
+      }
+      push(`<li class="mdLi">${escapeHtml(body.slice(2).trim())}</li>`);
+      continue;
+    }
+
+    if (body.startsWith("? ")) {
+      flushPara.flush();
+      closeList();
+      push(`<div class="mdCallout">${escapeHtml(body.slice(2).trim())}</div>`);
+      continue;
+    }
+
+    if (body.startsWith("! ")) {
+      flushPara.flush();
+      closeList();
+      push(`<div class="mdWarn">${escapeHtml(body.slice(2).trim())}</div>`);
+      continue;
+    }
+
+    // Default paragraph line
+    flushPara.add(body);
+  }
+
+  flushPara.flush();
+  closeList();
+  return `<div class="mdBlock">${out.join("")}</div>`;
 }
 
 function contextSnippet(section, prompt) {
