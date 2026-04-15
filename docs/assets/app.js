@@ -379,6 +379,7 @@ function ensurePracticeFlow(state, section) {
     sectionKey: section.key,
     step: 1, // 1..6
     practiceEnabled: false, // steps 3-6 only when user opts in
+    track: state.defaultTrack || "beginner",
     prompts,
     idx,
     showCode: false,
@@ -444,7 +445,7 @@ function renderPracticeFlowCard(state) {
 
   const step1 = `
     <div class="flowPanel">
-      <div class="flowHeadline">Here are the teachings</div>
+      <div class="flowHeadline">Here are ${escapeHtml(s.title)}</div>
       ${renderTeachingsList(teachings)}
       <div class="flowTeachings">
         <div class="flowTeach">
@@ -464,7 +465,7 @@ function renderPracticeFlowCard(state) {
 
   const step2 = `
     <div class="flowPanel">
-      <div class="flowHeadline">Here is what the teaching is doing</div>
+      <div class="flowHeadline">Here is how the above teaching works</div>
       <div class="flowPromptBig">
         <div class="flowPromptLabel">${practiceEnabled ? "Focus question" : "What to notice"}</div>
         <div class="flowPromptText">${
@@ -483,9 +484,10 @@ function renderPracticeFlowCard(state) {
         </button>
         <button class="ghost" type="button" data-inline-action="lf-copy-cmd" data-cmd="${escapeHtml(runCmd)}">Copy run command</button>
         <div class="spacer"></div>
-        <button class="primary" type="button" data-inline-action="lf-start-practice">
-          Start practice problems
+        <button class="ghost" type="button" data-inline-action="lf-skip-practice">
+          Skip practice → next teaching
         </button>
+        <button class="primary" type="button" data-inline-action="lf-start-practice">Practice these teachings</button>
       </div>
       ${pf.showCode ? renderCodeBlock(snippet || fullDemo) : `<div class="muted">Code is hidden to reduce clutter. Use “Show code” if you need it.</div>`}
       <div class="muted" style="margin-top:10px;">
@@ -711,42 +713,8 @@ function handleDockAction(action, state) {
     return;
   }
 
-  if (action === "explain") {
-    setFlowMode(state, "explain");
-    upsertDockCard({
-      id: "dockExplainCard",
-      title: `Explain · ${s.title}`,
-      body: `Use the goals to guide what “done” looks like. Then run the <span class="kbd">Try this</span> or <span class="kbd">Speed run</span> cells in VS Code.<br/><br/>
-      <div class="muted">Beginner goal: ${escapeHtml(s.goal_beginner || "—")}</div>
-      <div class="muted">Power goal: ${escapeHtml(s.goal_power || "—")}</div>`,
-    });
-    scrollToTopMain();
-    return;
-  }
-
-  if (action === "show-try-this") {
-    setFlowMode(state, "try_this");
-    upsertDockCard({
-      id: "dockTryThisCard",
-      title: `Try this (Beginner) · ${s.title}`,
-      body: `These are the runnable “Try this” cells captured from the section.`,
-      code: s.try_this_source || "",
-    });
-    scrollToTopMain();
-    return;
-  }
-
-  if (action === "show-speed-run") {
-    setFlowMode(state, "speed_run");
-    upsertDockCard({
-      id: "dockSpeedRunCard",
-      title: `Speed run (Power User) · ${s.title}`,
-      body: `These are the runnable “Speed run” cells captured from the section.`,
-      code: s.speed_run_source || "",
-    });
-    scrollToTopMain();
-    return;
-  }
+  // Intentionally no extra dashboard cards here.
+  // The UI is a linear lesson: Teachings → How it works → optional Practice.
 }
 
 function attachNavHandlers(state) {
@@ -785,12 +753,20 @@ function selectSectionByKey(state, key) {
   state.activeSection = s;
   setFlowMode(state, "section_selected");
 
-  $("#content").innerHTML = renderSection(s);
+  // Default to the linear lesson view for the selected section.
+  ensurePracticeFlow(state, s);
+  if (state.practiceFlow) {
+    state.practiceFlow.step = 1;
+    state.practiceFlow.practiceEnabled = false;
+    state.practiceFlow.showCode = false;
+  }
+  const card = renderPracticeFlowCard(state);
+  upsertDockCard({ id: card.id, title: card.title, body: card.body });
   renderNavList(state.sections, state.activeKey, state.filterText);
 
   // Close nav on mobile
   setNavOpen(state, false);
-  $("#dockHint").textContent = `Active: ${String(s.number).padStart(2, "0")} — ${s.title}. Use the dock pills to practice.`;
+  $("#dockHint").textContent = `Active: ${String(s.number).padStart(2, "0")} — ${s.title}. Follow Teachings → How it works. Practice is optional.`;
 
   // Clear any "pick a section first" nudge card.
   $("#nudgePickSectionCard")?.remove();
@@ -826,7 +802,7 @@ function attachDockHandlers(state) {
     }
 
     // Learning flow (new progressive UI)
-    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" || action === "lf-start-practice" ||
+    if (action === "lf-back" || action === "lf-next" || action === "lf-toggle-code" || action === "lf-start-practice" || action === "lf-skip-practice" ||
         action === "lf-pick-problem" || action === "lf-save-answer" || action === "lf-clear-answer" ||
         action === "lf-grade" || action === "lf-copy-cmd" || action === "lf-copy-code" ||
         action === "lf-restart" || action === "lf-go-speedrun") {
@@ -857,6 +833,17 @@ function attachDockHandlers(state) {
       if (action === "lf-start-practice") {
         pf.practiceEnabled = true;
         pf.step = 3;
+      }
+
+      if (action === "lf-skip-practice") {
+        const idx = state.sections.findIndex((x) => x.key === state.activeKey);
+        const next = idx >= 0 ? state.sections[idx + 1] : null;
+        if (next) {
+          selectSectionByKey(state, next.key);
+          // Auto-open Learn for the next teaching.
+          handleDockAction("learn", state);
+        }
+        return;
       }
 
       if (action === "lf-toggle-code") {
@@ -915,7 +902,7 @@ function attachDockHandlers(state) {
       }
 
       if (action === "lf-go-speedrun") {
-        handleDockAction("show-speed-run", state);
+        // Deprecated in the linear lesson UI; no-op.
         return;
       }
 
@@ -1012,6 +999,7 @@ async function main() {
     // Process flow state (UI/HMI)
     flowMode: "boot",
     navOpen: false,
+    defaultTrack: "beginner",
   };
 
   try {
