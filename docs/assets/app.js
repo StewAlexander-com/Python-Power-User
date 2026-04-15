@@ -60,6 +60,16 @@ function renderCommentMarkdown(src) {
     if (html) blocks.push(html);
   };
 
+  const cleanLessonMarkers = (s) => {
+    let t = String(s || "");
+    // Remove cell markers like "%%" or "# %%"
+    t = t.replace(/^%{2,}\s*/g, "");
+    // Remove Better Comments / lesson markers once we're already in "rendered" mode.
+    t = t.replace(/^#\*\s*/g, "");
+    t = t.replace(/^#!\s*/g, "");
+    return t.trimEnd();
+  };
+
   const flushPara = (() => {
     let buf = [];
     return {
@@ -125,7 +135,7 @@ function renderCommentMarkdown(src) {
     // Ignore practice prompt markers in teachings snippets.
     if (trimmed.startsWith("#?")) continue;
 
-    const body = trimmed.replace(/^#\s?/, "").trimEnd();
+    const body = cleanLessonMarkers(trimmed.replace(/^#\s?/, ""));
     if (!body) continue;
 
     // Divider headings: "#* ── TITLE ──"
