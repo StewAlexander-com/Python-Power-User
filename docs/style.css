@@ -13,6 +13,9 @@
   align-items: center;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-5);
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top, 0px));
+  padding-left: calc(var(--sp-5) + env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--sp-5) + env(safe-area-inset-right, 0px));
   background: color-mix(in oklab, var(--bg-0) 85%, transparent);
   backdrop-filter: saturate(140%) blur(14px);
   -webkit-backdrop-filter: saturate(140%) blur(14px);
@@ -83,7 +86,7 @@
 .topbar__menu[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
 @media (min-width: 760px) {
-  .topbar { padding: var(--sp-4) var(--sp-7); }
+  .topbar { padding: var(--sp-4) var(--sp-7); padding-top: calc(var(--sp-4) + env(safe-area-inset-top, 0px)); }
   .topbar__nav { display: inline-flex; gap: var(--sp-4); }
 }
 @media (min-width: 960px) {
@@ -124,6 +127,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-5) var(--sp-5) var(--sp-3);
+  padding-top: calc(var(--sp-5) + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--line-1);
 }
 .drawer__head h2 {
@@ -770,6 +774,9 @@
   border-top: 1px solid var(--line-1);
   margin-top: var(--sp-12);
   padding: var(--sp-7) var(--sp-5);
+  padding-bottom: calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(var(--sp-5) + env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--sp-5) + env(safe-area-inset-right, 0px));
   position: relative;
   z-index: 1;
 }
