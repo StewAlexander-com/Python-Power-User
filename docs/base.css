@@ -157,6 +157,14 @@ p > code, li > code, .prose code:not(pre code), .inline-code {
   font-size: 0.88em;
   white-space: nowrap;
 }
+/* Long inline code must wrap on small screens instead of overflowing */
+@media (max-width: 759px) {
+  p > code, li > code, .prose code:not(pre code), .inline-code {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
 
 a { color: var(--ink-0); border-bottom: 1px solid var(--line-2); transition: color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease); }
 a:hover { color: var(--amber); border-bottom-color: var(--amber); }

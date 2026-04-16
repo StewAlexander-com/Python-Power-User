@@ -3,7 +3,7 @@
    Cache-first for shell, network-first for content
    ============================================================ */
 
-const CACHE_VERSION = 'ppu-v2026-04-16b';
+const CACHE_VERSION = 'ppu-v2026-04-16c';
 const SHELL_ASSETS = [
   './',
   './index.html',
