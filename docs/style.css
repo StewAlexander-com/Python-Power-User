@@ -632,6 +632,7 @@
 .codeblock__copy:hover { color: var(--amber); background: var(--bg-3); }
 
 .codeblock pre {
+  position: relative;
   margin: 0;
   padding: var(--sp-4) var(--sp-5);
   overflow-x: auto;
@@ -641,6 +642,44 @@
   tab-size: 4;
 }
 .codeblock pre code { white-space: pre; display: block; min-width: max-content; }
+
+/* ---- Scroll-hint chevron for overflowing code blocks ---- */
+.codeblock__scroll-hint {
+  position: absolute;
+  right: 1px;  /* inside the border */
+  top: calc(1px + 2.1rem); /* clear the header bar */
+  bottom: 1px;
+  width: 44px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  background: linear-gradient(to right, transparent 0%, var(--bg-1) 60%);
+  border-radius: 0 0 var(--r-md) 0;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+.codeblock__scroll-hint.is-hidden { opacity: 0; pointer-events: none; }
+.codeblock__scroll-hint svg {
+  width: 20px;
+  height: 20px;
+  color: var(--amber);
+  opacity: 0.7;
+  animation: scrollhint-bounce 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(0,0,0,0.6));
+  pointer-events: auto;
+  cursor: pointer;
+}
+@keyframes scrollhint-bounce {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(4px); }
+}
+/* Hide on wider screens — desktop users know to scroll */
+@media (min-width: 760px) {
+  .codeblock__scroll-hint { display: none; }
+}
 
 /* Syntax tokens */
 .tok-kw      { color: var(--t-kw); font-weight: 600; }

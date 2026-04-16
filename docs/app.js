@@ -712,6 +712,7 @@
 
     el.secBody.innerHTML = html;
     wireCopyButtons(el.secBody);
+    wireScrollHints(el.secBody);
   }
 
   function renderReferenceBody(sec) {
@@ -793,6 +794,7 @@
 
     el.secBody.innerHTML = html;
     wireCopyButtons(el.secBody);
+    wireScrollHints(el.secBody);
   }
 
   function codeBlock(text, lang = 'python', label = 'python') {
@@ -826,6 +828,49 @@
           sel.removeAllRanges(); sel.addRange(range);
         }
       });
+    }
+  }
+
+  /* ---- Scroll-hint chevrons for overflowing code blocks ---- */
+  function wireScrollHints(root) {
+    // Skip on desktop — only helpful on mobile
+    if (window.innerWidth >= 760) return;
+
+    for (const block of $$('.codeblock', root)) {
+      const pre = block.querySelector('pre');
+      if (!pre) continue;
+
+      // Remove any existing hint (re-render safety)
+      const old = block.querySelector('.codeblock__scroll-hint');
+      if (old) old.remove();
+
+      // Only add if content actually overflows
+      if (pre.scrollWidth <= pre.clientWidth + 2) continue;
+
+      const hint = document.createElement('div');
+      hint.className = 'codeblock__scroll-hint';
+      hint.setAttribute('aria-hidden', 'true');
+      hint.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+      // Tap the chevron → scroll the pre a bit to the right
+      hint.querySelector('svg').addEventListener('click', () => {
+        pre.scrollBy({ left: 120, behavior: 'smooth' });
+      });
+
+      block.appendChild(hint);
+
+      // Hide the hint once the user scrolls, show again if scrolled back to start
+      let ticking = false;
+      pre.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const atEnd = pre.scrollLeft + pre.clientWidth >= pre.scrollWidth - 8;
+          const scrolled = pre.scrollLeft > 10;
+          hint.classList.toggle('is-hidden', atEnd || scrolled);
+          ticking = false;
+        });
+      }, { passive: true });
     }
   }
 
