@@ -229,7 +229,7 @@
     const introRaw = rawLines.slice(0, firstIdx).join('\n').trim();
     if (introRaw) {
       // Collapse to paragraph(s); strip leading "NN — TITLE" prefix from each.
-      const titlePrefix = /^\d+\s*[—\-]\s*[A-Z][A-Z0-9 &()'/\-]*\s*[:.—\-]?\s*/;
+      const titlePrefix = /^\d+\s*[—\-]\s*[A-Za-z][A-Za-z0-9 &()'\/_\-]*\s*[:.—\-]?\s*/;
       result.intro = introRaw.split(/\n\s*\n/)
         .map((p) => p.replace(/\s+/g, ' ').trim())
         .map((p) => p.replace(titlePrefix, '').trim())
