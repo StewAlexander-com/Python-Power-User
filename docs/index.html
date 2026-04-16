@@ -1,99 +1,199 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="Python Power User — interactive learning interface for the one-file Python reference." />
-    <title>Python Power User</title>
-    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./assets/app.css?v=2026-04-15-ppu-flow-19" />
-  </head>
-  <body>
-    <div class="app" id="appRoot">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brandMark" aria-hidden="true">PPU</div>
-          <div class="brandText">
-            <div class="brandTitle">Python Power User</div>
-            <div class="brandSubtitle">Learn & practice from the one-file reference</div>
-          </div>
-        </div>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0f0f10" />
+<title>Python Power User — a reference that actually teaches</title>
+<meta name="description" content="46 sections from zero to power user. Clean, dark, and honest about what you need to know." />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 
-        <div class="topActions">
-          <button class="ghost" id="btnToggleNav" type="button" aria-label="Toggle navigation">Sections</button>
-          <a class="ghost" href="https://github.com/StewAlexander-com/Python-Power-User" target="_blank" rel="noreferrer">GitHub</a>
-        </div>
-      </header>
+<!-- Fonts: Satoshi (Fontshare) + JetBrains Mono (Google) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
 
-      <div class="shell">
-        <aside class="nav" id="nav">
-          <div class="navHeader">
-            <div class="navTitle">Sections</div>
-            <div class="navSearchWrap">
-              <input id="sectionSearch" class="navSearch" type="search" placeholder="Search sections…" autocomplete="off" />
-            </div>
-          </div>
-          <div class="navList" id="navList" role="list"></div>
-        </aside>
+<link rel="stylesheet" href="base.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-        <main class="main" id="main">
-          <div class="hero" id="hero">
-            <div class="heroKicker">GUI / HMI</div>
-            <h1 class="heroTitle">A professional learning cockpit for Python</h1>
-            <p class="heroBody">
-              Pick a section. Read the goals. Run practice prompts. Use the interaction dock below to search, quiz yourself,
-              and keep a clean learning loop on desktop or mobile.
+<!-- ============ TOP BAR ============ -->
+<header class="topbar" id="topbar">
+  <a class="brand" href="#/" aria-label="Python Power User home">
+    <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M18 22 L26 32 L18 42" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="31" y="39" width="14" height="3.5" rx="1" fill="currentColor"/>
+    </svg>
+    <span class="brand__name">Python<span class="brand__dot">.</span>PowerUser</span>
+  </a>
+  <nav class="topbar__nav" aria-label="Primary">
+    <a href="#/beginner" class="topbar__link" data-path="beginner">Beginner path</a>
+    <a href="#/power" class="topbar__link" data-path="power">Quick reference</a>
+    <a href="https://github.com/stewalexander-com/Python-Power-User" target="_blank" rel="noopener" class="topbar__link topbar__link--ghost">
+      GitHub <span aria-hidden="true">↗</span>
+    </a>
+  </nav>
+  <button class="topbar__menu" id="menuBtn" aria-label="Open section list" aria-expanded="false" aria-controls="drawer">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- ============ MOBILE / DRAWER SECTION LIST ============ -->
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Section list" hidden>
+  <div class="drawer__head">
+    <h2>Sections</h2>
+    <button class="drawer__close" id="drawerClose" aria-label="Close section list">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <label class="drawer__search">
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input type="search" id="drawerSearch" placeholder="Search 46 sections…" autocomplete="off" />
+  </label>
+  <nav class="drawer__list" id="drawerList" aria-label="All sections"></nav>
+</aside>
+
+<!-- ============ MAIN ============ -->
+<main id="main" class="main">
+
+  <!-- HERO / HOME ROUTE -->
+  <section class="hero" id="view-home" data-view="home">
+    <div class="hero__inner">
+      <p class="eyebrow">A reference that actually teaches</p>
+      <h1 class="hero__title">
+        Python, <span class="amber">from zero</span><br />
+        to power user.
+      </h1>
+      <p class="hero__lede">
+        46 sections. Honest prose, not code dumps. Pick a path and start where you are.
+      </p>
+
+      <div class="paths">
+        <a href="#/beginner" class="path path--beginner">
+          <div class="path__num">01</div>
+          <div class="path__body">
+            <h3 class="path__title">I'm new to Python</h3>
+            <p class="path__desc">
+              Start at variables. Walk through the language in the order your brain wants. Each section explains the <em>why</em> before the syntax.
             </p>
-            <div class="heroChips" id="heroChips"></div>
+            <span class="path__cta">Begin the beginner path →</span>
           </div>
+        </a>
 
-          <article class="content" id="content" aria-live="polite">
-            <section class="card">
-              <div class="cardTitle">Getting started</div>
-              <div class="cardBody">
-                <div class="callouts">
-                  <div class="callout">
-                    <div class="calloutTitle">Run locally (full TUI)</div>
-                    <pre class="code"><code>python python_poweruser.py</code></pre>
-                  </div>
-                  <div class="callout">
-                    <div class="calloutTitle">Jump to a section</div>
-                    <pre class="code"><code>python python_poweruser.py -s dicts</code></pre>
-                  </div>
-                </div>
-                <div class="muted">
-                  This page is static and client-side. It doesn’t execute Python; it helps you navigate the learning and practice
-                  loop in a clean interface.
-                </div>
-              </div>
-            </section>
-          </article>
-        </main>
+        <a href="#/power" class="path path--power">
+          <div class="path__num">02</div>
+          <div class="path__body">
+            <h3 class="path__title">I need a quick reference</h3>
+            <p class="path__desc">
+              Every section as a TL;DR: core idea, copy-ready patterns, speed-run challenges, and the root cause of <em>why the feature exists</em>.
+            </p>
+            <span class="path__cta">Open the quick reference →</span>
+          </div>
+        </a>
       </div>
 
-      <section class="dock" id="dock" aria-label="Interaction dock">
-        <div class="dockInner">
-          <div class="dockPills" id="dockPills" role="list">
-            <button class="pill" type="button" data-action="learn">Learn</button>
-          </div>
-
-          <form class="dockRow" id="dockForm">
-            <label class="srOnly" for="dockInput">Ask or search</label>
-            <input
-              id="dockInput"
-              class="dockInput"
-              type="text"
-              placeholder="Ask a question, or type a topic (e.g. 'truthiness', 'dict merge', 'decorators')…"
-              autocomplete="off"
-            />
-            <button class="primary" type="submit">Send</button>
-          </form>
-          <div class="dockHint" id="dockHint">Tip: type <span class="kbd">/</span> to focus search. Use the pills for a clean loop.</div>
+      <div class="hero__meta">
+        <div class="meta">
+          <div class="meta__k">46</div>
+          <div class="meta__v">sections, from variables to one-liners</div>
         </div>
-      </section>
+        <div class="meta">
+          <div class="meta__k">2</div>
+          <div class="meta__v">reading modes per section</div>
+        </div>
+        <div class="meta">
+          <div class="meta__k">0</div>
+          <div class="meta__v">tracking, accounts, or fluff</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION BROWSER (beginner or power) -->
+  <section class="browser" id="view-browser" data-view="browser" hidden>
+    <div class="browser__head">
+      <p class="eyebrow" id="browserEyebrow">Beginner path</p>
+      <h2 class="browser__title" id="browserTitle">The 46 sections</h2>
+      <p class="browser__lede" id="browserLede">
+        Each card shows the core goal. Tap one to read.
+      </p>
+      <div class="browser__tools">
+        <label class="search">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="browserSearch" placeholder="Filter sections…" autocomplete="off" />
+        </label>
+        <div class="toggle" role="tablist" aria-label="Reading mode">
+          <button class="toggle__btn" role="tab" data-mode="beginner" aria-selected="true">Beginner</button>
+          <button class="toggle__btn" role="tab" data-mode="power" aria-selected="false">Power user</button>
+        </div>
+      </div>
+    </div>
+    <div class="browser__groups" id="browserGroups" aria-live="polite"></div>
+  </section>
+
+  <!-- SECTION VIEW -->
+  <article class="section" id="view-section" data-view="section" hidden>
+    <header class="section__head">
+      <div class="section__crumbs">
+        <a href="#/" class="crumb">Home</a>
+        <span class="crumb__sep">/</span>
+        <a href="#/beginner" class="crumb" id="crumbPath">Beginner</a>
+        <span class="crumb__sep">/</span>
+        <span class="crumb__cur" id="crumbTitle">Section</span>
+      </div>
+      <p class="section__num" id="secNum">Section 01</p>
+      <h1 class="section__title" id="secTitle">Title</h1>
+      <p class="section__why" id="secWhy">Why this matters…</p>
+
+      <div class="tabs" role="tablist" aria-label="Reading mode">
+        <button class="tabs__btn" role="tab" data-tab="teaching" aria-selected="true">Teaching</button>
+        <button class="tabs__btn" role="tab" data-tab="reference" aria-selected="false">Quick reference</button>
+      </div>
+    </header>
+
+    <div class="section__body" id="secBody">
+      <!-- rendered by app.js -->
     </div>
 
-    <script type="module" src="./assets/app.js?v=2026-04-15-ppu-flow-19"></script>
-  </body>
-</html>
+    <nav class="section__nav" aria-label="Section navigation">
+      <a href="#" class="secnav secnav--prev" id="secPrev">
+        <span class="secnav__label">Previous</span>
+        <span class="secnav__title">—</span>
+      </a>
+      <a href="#" class="secnav secnav--next" id="secNext">
+        <span class="secnav__label">Next</span>
+        <span class="secnav__title">—</span>
+      </a>
+    </nav>
+  </article>
 
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <p class="footer__line">
+      <strong>Python Power User</strong> — a learning reference, not a tutorial farm.
+    </p>
+    <p class="footer__line footer__muted">
+      Content generated from a single annotated Python file.
+      <a href="https://github.com/stewalexander-com/Python-Power-User" target="_blank" rel="noopener">Source on GitHub ↗</a>
+    </p>
+  </div>
+</footer>
+
+<!-- Hidden noscript fallback -->
+<noscript>
+  <div class="noscript">
+    This site reads <code>content/sections.json</code> with JavaScript to render 46 Python sections.
+    Enable JavaScript, or browse the raw JSON directly.
+  </div>
+</noscript>
+
+<script src="app.js" defer></script>
+</body>
+</html>
