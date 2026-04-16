@@ -5,9 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
 <meta name="theme-color" content="#0f0f10" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="PyPowerUser" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="application-name" content="Python Power User" />
+<meta name="msapplication-TileColor" content="#0c0c0d" />
+<meta name="msapplication-TileImage" content="assets/icons/icon-144x144.png" />
+
 <title>Python Power User — a reference that actually teaches</title>
-<meta name="description" content="46 sections from zero to power user. Clean, dark, and honest about what you need to know." />
+<meta name="description" content="A complete Python reference that actually teaches. 46 sections from your first variable to the patterns that separate senior devs from everyone else. Two learning paths, zero dependencies, works offline." />
+<meta name="keywords" content="python, python tutorial, python reference, learn python, python cheat sheet, python guide, python for beginners, python power user, python TUI, python quiz" />
+<meta name="author" content="Stew Alexander" />
+<link rel="canonical" href="https://stewalexander-com.github.io/Python-Power-User/" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://stewalexander-com.github.io/Python-Power-User/" />
+<meta property="og:title" content="Python Power User — from zero to power user" />
+<meta property="og:description" content="A complete Python reference that actually teaches. 46 sections, two learning paths, zero fluff. Open source, no accounts, no tracking." />
+<meta property="og:image" content="https://stewalexander-com.github.io/Python-Power-User/assets/screenshots/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="Python Power User" />
+<meta property="og:locale" content="en_US" />
+
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Python Power User — from zero to power user" />
+<meta name="twitter:description" content="46 sections. Two learning paths. Zero dependencies. A Python reference that actually teaches." />
+<meta name="twitter:image" content="https://stewalexander-com.github.io/Python-Power-User/assets/screenshots/og-image.png" />
+<meta name="twitter:image:alt" content="Python Power User — a dark-themed learning interface for Python" />
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Python Power User",
+  "description": "A complete Python reference that actually teaches. 46 sections from your first variable to senior-dev patterns.",
+  "url": "https://stewalexander-com.github.io/Python-Power-User/",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Stew Alexander",
+    "url": "https://github.com/StewAlexander-com"
+  },
+  "isAccessibleForFree": true,
+  "inLanguage": "en",
+  "screenshot": "https://stewalexander-com.github.io/Python-Power-User/assets/screenshots/web-home.png",
+  "featureList": [
+    "46 Python teaching sections",
+    "Two learning paths: beginner and power user",
+    "Interactive quiz with spaced repetition",
+    "Works offline as a PWA",
+    "Zero dependencies",
+    "Terminal TUI with syntax highlighting"
+  ]
+}
+</script>
+
+<!-- Favicons & PWA -->
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="assets/icons/icon-96x96.png" sizes="96x96" type="image/png" />
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+<link rel="manifest" href="manifest.json" />
 
 <!-- Fonts: Satoshi (Fontshare) + JetBrains Mono (Google) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,8 +85,8 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="base.css" />
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="base.css?v=20260416" />
+<link rel="stylesheet" href="style.css?v=20260416" />
 </head>
 <body>
 
@@ -194,6 +263,30 @@
   </div>
 </noscript>
 
-<script src="app.js" defer></script>
+<script src="app.js?v=20260416" defer></script>
+
+<!-- Service Worker Registration + Cache Bust -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        // Check for updates every 30 min
+        setInterval(() => reg.update(), 30 * 60 * 1000);
+        // Force update on activation
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'activated') {
+              // New SW active — reload only if user isn't mid-read
+              if (document.hidden) location.reload();
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
 </body>
 </html>

@@ -1,59 +1,88 @@
-# Python Power User
+<p align="center">
+  <img src="docs/assets/screenshots/og-image.png" alt="Python Power User — from zero to power user" width="720" />
+</p>
 
-A complete Python language reference and interactive learning tool in a single file. No installs, no dependencies, no setup. Just run it.
+<h1 align="center">Python Power User</h1>
 
-**47 sections** across 15 parts — from your first variable to the patterns that separate senior devs from everyone else. Read it in VS Code or run it in your terminal for the full experience.
+<p align="center">
+  <strong>A complete Python reference that actually teaches.</strong><br/>
+  46 sections &middot; Two learning paths &middot; Zero dependencies<br/><br/>
+  <a href="https://stewalexander-com.github.io/Python-Power-User/">Live Site</a> &middot;
+  <a href="#quick-start">Quick Start</a> &middot;
+  <a href="#the-quiz">Quiz</a> &middot;
+  <a href="#whats-inside">What's Inside</a>
+</p>
 
-Built with the help of [Perplexity Computer](https://www.perplexity.ai/).
+<p align="center">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-e8a13b?style=flat-square&logo=python&logoColor=white" />
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-0c0c0d?style=flat-square" />
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-e8a13b?style=flat-square" />
+  <img alt="46 sections" src="https://img.shields.io/badge/sections-46-0c0c0d?style=flat-square" />
+</p>
 
 ---
 
-## Web GUI (GitHub Pages)
+## TL;DR
 
-A professional, mobile-friendly learning cockpit lives in `docs/` and can be hosted with GitHub Pages.
+One Python file. No installs, no frameworks, no accounts. Run it and learn — from your first variable to the patterns that separate senior devs from everyone else.
 
-- **Live site**: [Python Power User (GitHub Pages)](https://stewalexander-com.github.io/Python-Power-User/)
-- **Screenshots**
-
-  ![Web GUI — home](docs/assets/screenshots/web-home.png)
-
-  ![Web GUI — lesson flow](docs/assets/screenshots/web-lesson.png)
-
-- **Open locally**: open `docs/index.html` in your browser
-- **Publish**: in GitHub → Settings → Pages → “Deploy from a branch” → select `main` and `/docs`
-- **Update content** after editing `python_poweruser.py`:
+- **New to Python?** Start at Section 1, follow the beginner path
+- **Already know Python?** Skim the TL;DRs and power tips, use `-s` to jump to any section
+- **Prefer a browser?** Open the [live site](https://stewalexander-com.github.io/Python-Power-User/) — it's a PWA, works offline
 
 ```bash
-python tools/build_web_content.py
+python python_poweruser.py       # full TUI
 ```
 
-## Table of Contents
+---
 
-- [The TUI](#the-tui)
-- [Quick Start](#quick-start)
-- [Download & Run](#download--run)
-- [The Quiz](#the-quiz)
-- [How to use this](#how-to-use-this-two-paths)
-- [What's Inside](#whats-inside)
-- [VS Code Setup](#vs-code-setup)
-- [Test platform](#test-platform)
-- [Requirements](#requirements)
+## Web GUI
+
+A mobile-first, dark-themed learning interface. Install it as an app on any device — no app store required.
+
+**[→ Open the live site](https://stewalexander-com.github.io/Python-Power-User/)**
+
+<p align="center">
+  <img src="docs/assets/screenshots/web-home.png" alt="Web GUI — Home" width="720" /><br/>
+  <sub>Home — pick a learning path</sub>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshots/web-teaching.png" alt="Web GUI — Teaching view" width="720" /><br/>
+  <sub>Teaching view — Big Picture → Walk Through → Try It Yourself</sub>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshots/web-quickref.png" alt="Web GUI — Quick Reference" width="720" /><br/>
+  <sub>Quick Reference — TL;DR → Core Pattern → Speed Run → Why This Exists</sub>
+</p>
+
+<details>
+<summary>Mobile screenshots</summary>
+<br/>
+<p align="center">
+  <img src="docs/assets/screenshots/mobile-home.png" alt="Mobile home" width="280" />&nbsp;&nbsp;
+  <img src="docs/assets/screenshots/mobile-teaching.png" alt="Mobile teaching" width="280" />
+</p>
+</details>
 
 ---
 
 ## The TUI
 
-<sub>[Back to TOC](#table-of-contents)</sub>
+A real terminal interface — not a wall of text. Two-pane navigation, Monokai syntax highlighting, vim keys, search, and scroll.
 
-Not a wall of text. A real terminal interface with two-pane navigation, syntax highlighting, and vim keys.
+Falls back gracefully: full curses TUI → lightweight console menu (Windows) → plain CLI (piped output).
 
-On Windows, the app now falls back gracefully: full curses TUI when available, a lightweight console menu when curses isn't, and plain CLI when output is piped or non-interactive.
+<p align="center">
+  <img src="screenshots/tui-main-menu.png" alt="TUI main menu" width="720" /><br/>
+  <sub>Browse 46 sections with keyboard navigation</sub>
+</p>
 
-![Main Menu](screenshots/tui-main-menu.png)
-
-Browse any section's source with Monokai-themed syntax highlighting, line numbers, and scroll.
-
-![Syntax-Highlighted Viewer](screenshots/tui-viewer.png)
+<p align="center">
+  <img src="screenshots/tui-viewer.png" alt="TUI syntax viewer" width="720" /><br/>
+  <sub>Monokai-themed source viewer with line numbers</sub>
+</p>
 
 ---
 
@@ -63,210 +92,169 @@ Browse any section's source with Monokai-themed syntax highlighting, line number
 python python_poweruser.py
 ```
 
-That's it. Arrow keys or j/k to navigate, Enter to open, / to search, q to quit.
+Arrow keys or `j/k` to navigate, `Enter` to open, `/` to search, `q` to quit.
 
 ```bash
-python python_poweruser.py -s decorators   # Jump straight to a section
-python python_poweruser.py -f lambda        # Search across all 47 sections
-python python_poweruser.py -l               # See everything at a glance
-python python_poweruser.py -r               # Run all demos back to back
-python python_poweruser.py -t               # Take the interactive quiz (saves progress)
-python python_poweruser.py -t --no-save    # Quiz without saving (CI / shared machines)
+python python_poweruser.py -s decorators   # jump to a section
+python python_poweruser.py -f lambda        # search across all sections
+python python_poweruser.py -l               # list everything
+python python_poweruser.py -r               # run all demos
+python python_poweruser.py -t               # take the quiz
 ```
 
-Typo? It'll suggest what you meant. Wrong flag? It'll tell you why and how to fix it. Piped to `head`? No crash. No curses? Falls back gracefully. It handles the weird stuff so you don't have to.
+Typo? It suggests what you meant. Wrong flag? It tells you why. Piped to `head`? No crash. No curses? Falls back. It handles the weird stuff so you don't have to.
 
 ---
 
 ## Download & Run
 
-<sub>[Back to TOC](#table-of-contents)</sub>
-
-You can use Python Power User in two ways: **directly from the script** or **installed as a CLI tool**.
-
-### 1. Run the single file directly
-
-1. Download `python_poweruser.py` from the repo (`Code → Download ZIP` or `curl`/`wget`).
-2. Put it anywhere on your machine.
-3. Run it with your system Python:
+**Option 1 — Single file (zero setup)**
 
 ```bash
-cd /path/to/where/you/saved/it
-python python_poweruser.py          # full TUI
-python python_poweruser.py -l       # list all sections
-python python_poweruser.py -s dicts # jump to a section
-python python_poweruser.py -t       # quiz
+# Download and run. That's it.
+curl -O https://raw.githubusercontent.com/StewAlexander-com/Python-Power-User/main/python_poweruser.py
+python python_poweruser.py
 ```
 
-No virtualenv required, no external deps — just Python 3.10+.
-
-### 2. Install as a global command (PyPI-style)
-
-With the included `pyproject.toml`, you can install it in editable mode and get a `python-power-user` command:
+**Option 2 — Clone + install as CLI tool**
 
 ```bash
-git clone https://github.com/stewalexander/Python-Power-User.git
+git clone https://github.com/StewAlexander-com/Python-Power-User.git
 cd Python-Power-User
 pip install -e .
-
-python-power-user            # same as: python python_poweruser.py
-python-power-user -l
-python-power-user -s strings
-python-power-user -t
+python-power-user              # now works as a command
 ```
 
-This keeps the script in one file but makes it feel like a normal CLI tool.
+---
 
 ## The Quiz
 
-<sub>[Back to TOC](#table-of-contents)</sub>
+50 questions across beginner, intermediate, and advanced. Type what you think Python evaluates to, and learn from every answer — right or wrong.
 
-Not a checkbox test. You read the expression, type what you think Python will do, and hit Enter.
-
-**50 questions** across beginner, intermediate, and advanced — with an optional difficulty filter so you can focus on one level. Progress is saved to `~/.python_poweruser_progress.json`: weak sections and previously missed questions appear first next time (spaced repetition), and a streak counter encourages consistency (70%+ to maintain it).
+- **Spaced repetition** — weak sections and missed questions appear first next time
+- **Streak tracking** — 70%+ maintains your streak across sessions
+- **Difficulty filter** — focus on one level or take them all
+- **Smart matching** — accepts aliases, numeric tolerance, fuzzy answers
 
 ```
-  Last session: 24/50 on 2025-01-15.  Weak areas: gotchas, dicts.
-  Tip: Questions from those sections will appear first today.
-  🔥 3-session streak — keep the momentum!
+[6/50] What does this evaluate to?
+       bool([0])
 
-  Difficulty filter? [A]ll / [B]eginner / [I]ntermediate / [Adv]anced (default: All): a
-
-  [6/50] What does this evaluate to?
-         bool([0])
-
-    > False
-    Not quite — the answer is True
-      (Right type (bool), wrong value — good instinct!)
+  > False
+  Not quite — the answer is True
     Python asks "is the container empty?" not "are the contents truthy?"
     [0] has one element, so the list is not empty → True.
 ```
 
-Get it right and you'll learn something extra. Get it wrong and the explanation teaches you why — with hints when you're close (right type, wrong value) or when the value is correct but the repr differs (e.g. `1` for `True`). Skipped questions show the full explanation. Answers accept aliases (`yes`/`no`, `True`/`False`), int/float cross-type (e.g. `3.0` for `3`), and fuzzy matching for longer answers.
-
-At the end you get a score, a visual bar, and targeted study suggestions:
-
+```bash
+python python_poweruser.py -t             # quiz with progress tracking
+python python_poweruser.py -t --no-save   # quiz without saving (CI / shared machines)
 ```
-  Score: 42/50  (2 skipped)
-
-  Answered: 48  ✓ Correct: 42  ✗ Wrong: 6  — Skipped: 2
-  [████████████████████████████░░] 87%
-
-  Next step: revisit these sections and re-run the quiz tomorrow.
-  Sections worth revisiting:
-    → 04 Booleans & None  (python python_poweruser.py -s booleans)
-    → 07 Dictionaries  (python python_poweruser.py -s dicts)
-```
-
-- **CI / read-only home:** run without saving progress: `python python_poweruser.py -t --no-save`
-
-**A 15-minute session looks like this:**  
-1. Pick a section from `python python_poweruser.py -l` (or the TUI).  
-2. Read the **Goal (Beginner)** or **Goal (Power User)** line at the top of that section.  
-3. Answer each **#?** in your head, then run the **Try this (Beginner)** or **Speed run (Power User)** cells.  
-4. Every few sessions, run `-t` and revisit the sections it suggests.
 
 ---
 
-## How to use this (two paths)
+## Two Paths
 
-<sub>[Back to TOC](#table-of-contents)</sub>
-
-- **If you're new to Python:** Start at Part 1 and always run the **Try this (Beginner)** cells. Follow the **Goal (Beginner)** line in each section; run the quiz every few sessions and revisit the sections it lists.
-- **If you already know Python:** Skim each Part's **TL;DR** and **#! Power tip** comments. Jump with `-s` and `-f`; run **Speed run (Power User)** cells and use the quiz to find weak spots.
+| Path | For | Start with |
+|------|-----|-----------|
+| **Beginner** | New to Python | Section 1, follow in order. Run every "Try this" cell. Quiz every few sessions. |
+| **Power User** | Working devs | Skim TL;DRs and `#!` power tips. Jump with `-s`. Run speed-run cells. Quiz to find blind spots. |
 
 ---
 
 ## What's Inside
 
-<sub>[Back to TOC](#table-of-contents)</sub>
-
 | Part | Topic | Sections |
 |------|-------|----------|
-| 1 | Foundations — types that don't surprise you | Variables & Types, Numbers, Strings, Booleans |
-| 2 | Data Structures — pick the right container fast | Lists, Tuples, Dicts, Sets, Advanced Structures |
-| 3 | Control Flow — branch and loop the Pythonic way | Conditionals, Loops, Comprehensions |
-| 4 | Functions — reuse, decorators, functools | Basics, Scope & Closures, Lambda, Decorators, Functools |
-| 5 | OOP — classes, dunders, protocols | Classes, Inheritance, Dunders, Properties, ABCs |
-| 6 | Error Handling — exceptions and context managers | Exceptions, Context Managers, Custom Exceptions |
-| 7 | Iterators & Generators — lazy pipelines | Iterators, Generators, itertools |
-| 8 | File I/O — read, write, pathlib | File Ops, JSON & CSV, Pathlib |
-| 9 | Text Mastery — regex, formatting, datetime | Regex, String Formatting, Datetime |
-| 10 | Stdlib Tools — collections, subprocess, typing | Collections, OS & Subprocess, Typing |
-| 11 | The Edge — idioms, performance, gotchas that senior devs use | Idioms, Performance, Gotchas |
-| 12 | Reference Tables — precedence, built-ins, exception tree | Operator Precedence, Built-ins, Exception Hierarchy |
-| 13 | Env & Tooling — venvs, debugging, profiling | Virtual Environments, Debugging & Profiling |
-| 14 | Recipes — copy-paste one-liners | One-Liner Recipes |
-| A | Appendix — cheat sheet at a glance | Cheat Sheet |
+| 1 | **Foundations** — types that don't surprise you | Variables & Types · Numbers · Strings · Booleans |
+| 2 | **Data Structures** — pick the right container | Lists · Tuples · Dicts · Sets · Advanced Structures |
+| 3 | **Control Flow** — branch and loop idiomatically | Conditionals · Loops · Comprehensions |
+| 4 | **Functions** — reuse, decorate, compose | Basics · Scope & Closures · Lambda · Decorators · Functools |
+| 5 | **OOP** — classes through protocols | Classes · Inheritance · Dunders · Properties · ABCs |
+| 6 | **Error Handling** — fail gracefully | Exceptions · Context Managers · Custom Exceptions |
+| 7 | **Iterators & Generators** — lazy pipelines | Iterators · Generators · itertools |
+| 8 | **File I/O** — read, write, pathlib | File Ops · JSON & CSV · Pathlib |
+| 9 | **Text** — regex, formatting, time | Regex · String Formatting · Datetime |
+| 10 | **Stdlib** — batteries included | Collections · OS & Subprocess · Typing |
+| 11 | **The Edge** — what senior devs actually use | Idioms · Performance · Gotchas |
+| 12 | **Reference** — lookup tables | Operator Precedence · Built-ins · Exception Hierarchy |
+| 13 | **Tooling** — environments and debugging | Virtual Environments · Debugging & Profiling |
+| 14 | **Recipes** — copy-paste one-liners | One-Liner Recipes |
 
-Every section has Einstein/Feynman-style explanations that make hard concepts click fast. Comments are written to teach, not to document.
+Every section has Einstein/Feynman-style explanations — concepts explained so clearly you remember them, not just recognize them.
 
 ---
 
 ## VS Code Setup
 
-<sub>[Back to TOC](#table-of-contents)</sub>
+Three extensions, then you're set:
 
-Three extensions, one-time install:
+1. **Python** (`ms-python.python`) — Run Cell, IntelliSense, `# %%` markers
+2. **Better Comments** — colors `#*` `#!` `#?` markers used throughout
+3. **Indent Rainbow** — nesting depth at a glance
 
-1. **Python** (`ms-python.python`) — enables Run Cell, IntelliSense, and the `# %%` cell markers
-2. **Better Comments** — colors the `#*` `#!` `#?` `#TODO` markers used throughout
-3. **Indent Rainbow** — makes nesting depth visually obvious
+`Ctrl+K Ctrl+0` to fold everything. Unfold the section you're studying. Each `# %%` is a runnable cell.
 
-Then: `Ctrl+K Ctrl+0` to fold everything, unfold the section you're studying. Each `# %%` marker is a runnable cell.
-
-**Comment markers used here**
+<details>
+<summary>Comment markers reference</summary>
 
 | Marker | Meaning |
 |--------|---------|
-| `#* Goal (Beginner)` | What a new user should get from the section. |
-| `#* Goal (Power User)` | What an experienced dev sharpens or unlearns. |
-| `#* Big idea:` | One-line mental model. |
-| `#! Power tip:` | Idiom, gotcha, or performance angle. |
-| `#?` | Prediction question (answer in your head, then run). |
-| `#* Try this (Beginner)` / `#* Speed run (Power User)` | Hands-on practice. |
-| `#* Answers:` | Brief follow-up to Try this / Speed run (1–2 sentences). |
-| `#* Quiz tag:` / `#* See also:` | Quiz alignment and cross-references to other sections. |
+| `#* Goal (Beginner)` | What a new user should learn |
+| `#* Goal (Power User)` | What an experienced dev sharpens |
+| `#* Big idea:` | One-line mental model |
+| `#! Power tip:` | Idiom, gotcha, or performance angle |
+| `#?` | Prediction prompt — answer in your head, then run |
+| `#* Try this (Beginner)` | Guided practice |
+| `#* Speed run (Power User)` | Challenge drills |
+
+</details>
 
 ---
 
-## Test platform
-
-<sub>[Back to TOC](#table-of-contents)</sub>
-
-A separate test script exercises the quiz and NLP answer-matching logic so changes can be validated without running the full TUI.
+## Web GUI — Local & Hosting
 
 ```bash
-python test_quiz.py
-python test_quiz.py -v    # verbose
+# Update content after editing python_poweruser.py
+python tools/build_web_content.py
+
+# Run locally
+open docs/index.html
+
+# Host on GitHub Pages
+# Settings → Pages → Deploy from branch → main → /docs
 ```
 
-**What it tests (stdlib `unittest` only, no pytest):**
+The site is a PWA — installable, works offline, no server required.
 
-- **`_normalize`** — quote stripping, spacing around commas/brackets/colons
-- **`_synonym_expand`** — alias canonicals and prefix stripping ("the answer is 3", "returns True", etc.)
-- **`_tokens_match`** — order-insensitive set/dict comparison
-- **`_hint_tier`** — contextual hints (right type/wrong value, off-by-one, similarity)
-- **`_check_answer`** — full pipeline: aliases, repr, synonym expansion, eval, numeric tolerance, fuzzy match; bool-only aliases rejected for non-bool
-- **Integration** — `run_self_tests(no_save=True)` with mocked input completes and prints a score
+---
 
-Run from the repo root (same directory as `python_poweruser.py`). Exit code 0 if all tests pass.
+## Test Suite
+
+```bash
+python test_quiz.py         # run tests
+python test_quiz.py -v      # verbose
+```
+
+Stdlib `unittest` only. Tests cover normalization, synonym expansion, NLP matching, hint tiers, and the full answer-checking pipeline.
 
 ---
 
 ## Requirements
 
-<sub>[Back to TOC](#table-of-contents)</sub>
-
 - Python 3.10+ (uses `match/case`)
-- A terminal with at least 80×22 for the TUI
-- No external dependencies — stdlib only
+- Terminal 80×22+ for TUI
+- Zero external dependencies
 - `windows-curses` auto-installs on Windows if needed
 
-### Prerequisites & classroom use
-
-No prior coding required; basic terminal usage (run a command, move between folders) is enough. For instructors: assign specific Parts as weekly reading; have students run the quiz and revisit the sections it suggests; use `python python_poweruser.py -r` for in-class demos.
+---
 
 ## License
 
-MIT
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  Built by <a href="https://github.com/StewAlexander-com">Stew Alexander</a> with the help of <a href="https://www.perplexity.ai/">Perplexity Computer</a>
+</p>
