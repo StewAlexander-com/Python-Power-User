@@ -20,6 +20,13 @@
   <img alt="46 sections" src="https://img.shields.io/badge/sections-46-0c0c0d?style=flat-square" />
 </p>
 
+<p align="center">
+  <a href="https://youtube.com/shorts/eLGogARaZa8">
+    <img src="docs/assets/screenshots/walkthrough-thumb.jpg" alt="Watch the walkthrough" width="480" />
+  </a><br/>
+  <sub>30-second walkthrough — see the app in action</sub>
+</p>
+
 ---
 
 ## TL;DR
